@@ -31,6 +31,30 @@ export interface SharedData {
     [key: string]: unknown;
 }
 
+export interface PaginatedData<T> {
+    data: T[];
+    links: {
+        first: string;
+        last: string;
+        prev: string | null;
+        next: string | null;
+    };
+    meta: {
+        total: ReactNode;
+        to: ReactNode;
+        current_page: number;
+        from: number;
+        last_page: number;
+        links: {
+            url: string | null;
+            label: string;
+            active: boolean;
+        }[];
+        from: number;
+        last_page: number;
+    };
+}
+
 export interface User {
     id: number;
     name: string;

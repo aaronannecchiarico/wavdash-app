@@ -11,6 +11,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::resource('contests', \App\Http\Controllers\ContestController::class)
+        ->only(['index'])
+        ->names([
+            'index' => 'contests.index',
+        ]);
 });
 
 require __DIR__.'/settings.php';
