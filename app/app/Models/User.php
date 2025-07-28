@@ -45,4 +45,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the uploads for the user.
+     */
+    public function uploads()
+    {
+        return $this->hasMany(Upload::class);
+    }
+
+    /**
+     * Get the contest entries for the user.
+     */
+    public function contestEntries()
+    {
+        return $this->hasMany(ContestUser::class);
+    }
 }

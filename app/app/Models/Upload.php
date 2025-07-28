@@ -7,24 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ContestUser extends Model
+class Upload extends Model
 {
     use HasFactory;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<string, mixed>
      */
     protected $fillable = [
         'user_id',
-        'contest_id',
-        'upload_id',
         'title',
-        'rating_at_contest',
+        'description',
+        'genre',
         'original_path',
-        'streamable_path',
+        'web_path',
         'status',
+        'duration_seconds',
     ];
 
     /**
@@ -37,31 +37,23 @@ class ContestUser extends Model
         return [
             'id' => 'integer',
             'user_id' => 'integer',
-            'contest_id' => 'integer',
-            'upload_id' => 'integer',
+            'duration_seconds' => 'integer',
         ];
     }
 
+    /**
+     * Get the user that owns the upload.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function contest(): BelongsTo
-    {
-        return $this->belongsTo(Contest::class);
-    }
-
-    public function votes(): HasMany
-    {
-        return $this->hasMany(Vote::class);
-    }
-
     /**
-     * Get the upload associated with this contest entry.
+     * Get the contest entries using this upload.
      */
-    public function upload(): BelongsTo
+    public function contestEntries(): HasMany
     {
-        return $this->belongsTo(Upload::class);
+        return $this->hasMany(ContestUser::class);
     }
 }
