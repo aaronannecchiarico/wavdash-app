@@ -1,0 +1,151 @@
+import { Head, Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatDistance } from 'date-fns';
+import { PencilIcon, Trash2Icon as TrashIcon, ArrowLeftIcon } from 'lucide-react';
+
+interface Upload {
+  id: number;
+  title: string;
+  description: string | null;
+  filename: string;
+  mime_type: string;
+  size: number;
+  status: string;
+  stream_url: string | null;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: number;
+    name: string;
+  };
+}
+
+interface Props {
+  upload: Upload;
+}
+
+export default function Show({ upload }: Props) {
+  // Format file size to human-readable format
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  // Get status badge color based on status
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'ready':
+        return 'bg-green-100 text-green-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
+  return (
+    <>
+      <Head title={upload.title} />
+      
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Button variant="outline" onClick={() => window.history.back()}>
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>{upload.title}</CardTitle>
+                  <CardDescription>
+                    Uploaded {formatDistance(new Date(upload.created_at), new Date(), { addSuffix: true })}
+                  </CardDescription>
+                </div>
+                <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(upload.status)}`}>
+                  {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
+                </span>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {upload.description && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                  <p className="text-gray-600">{upload.description}</p>
+                </div>
+              )}
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">File Details</h3>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Filename</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{upload.filename}</dd>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Type</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{upload.mime_type}</dd>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Size</dt>
+                    <dd className="mt-1 text-sm text-gray-900">{formatFileSize(upload.size)}</dd>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {formatDistance(new Date(upload.updated_at), new Date(), { addSuffix: true })}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              
+              {upload.status === 'ready' && upload.stream_url && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Preview</h3>
+                  <audio controls className="w-full">
+                    <source src={upload.stream_url} type={upload.mime_type} />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              )}
+            </CardContent>
+            
+            <CardFooter className="bg-gray-50 flex justify-between">
+              <Link href={route('uploads.edit', upload.id)}>
+                <Button variant="outline">
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </Link>
+              
+              <Link
+                href={route('uploads.destroy', upload.id)}
+                method="delete"
+                as="button"
+                type="button"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <TrashIcon className="h-4 w-4 mr-2" />
+                Delete
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    </>
+  );
+}

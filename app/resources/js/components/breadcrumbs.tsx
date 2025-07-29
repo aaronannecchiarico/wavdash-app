@@ -14,13 +14,25 @@ export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[]
                             return (
                                 <Fragment key={index}>
                                     <BreadcrumbItem>
-                                        {isLast ? (
-                                            <BreadcrumbPage>{item.title}</BreadcrumbPage>
-                                        ) : (
-                                            <BreadcrumbLink asChild>
-                                                <Link href={item.href}>{item.title}</Link>
-                                            </BreadcrumbLink>
-                                        )}
+                                        <div className="flex flex-col">
+                                            {isLast ? (
+                                                <>
+                                                    <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                                                    {item.description && (
+                                                        <span className="text-xs text-muted-foreground">{item.description}</span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <BreadcrumbLink asChild>
+                                                        <Link href={item.href}>{item.title}</Link>
+                                                    </BreadcrumbLink>
+                                                    {item.description && (
+                                                        <span className="text-xs text-muted-foreground">{item.description}</span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                     </BreadcrumbItem>
                                     {!isLast && <BreadcrumbSeparator />}
                                 </Fragment>

@@ -17,8 +17,11 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('genre')->nullable();
-            $table->string('original_path');
-            $table->string('web_path')->nullable(); // OGG Vorbis version for web playback
+            $table->string('filename');
+            $table->string('path'); // Original file path
+            $table->string('stream_path')->nullable(); // Web-friendly version for playback
+            $table->string('mime_type');
+            $table->bigInteger('size'); // File size in bytes
             $table->string('status')->default('pending'); // pending, processing, ready, failed
             $table->integer('duration_seconds')->nullable();
             $table->timestamps();

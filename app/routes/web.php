@@ -17,6 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->names([
             'index' => 'contests.index',
         ]);
+
+    Route::resource('uploads', \App\Http\Controllers\UploadController::class);
 });
 
 require __DIR__.'/settings.php';

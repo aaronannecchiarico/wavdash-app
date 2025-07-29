@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         $contests = Contest::factory(5)
             ->for($adminUser)
             ->create([
-                'state' => 'active',
+                'state' => 'open',
                 'start_date' => now()->subDays(10),
                 'end_date' => now()->addDays(20),
             ]);

@@ -21,8 +21,11 @@ class Upload extends Model
         'title',
         'description',
         'genre',
-        'original_path',
-        'web_path',
+        'filename',
+        'path',
+        'stream_path',
+        'mime_type',
+        'size',
         'status',
         'duration_seconds',
     ];
