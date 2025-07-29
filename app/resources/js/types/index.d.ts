@@ -66,3 +66,21 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Upload {
+    id: number;
+    title: string;
+    description: string | null;
+    filename: string;
+    mime_type: string;
+    size: number;
+    status: string;
+    stream_url: string | null;
+    created_at: string;
+    updated_at: string;
+    user: User;
+    artist?: string;
+    duration?: number;
+    genre?: string;
+    bitrate?: number;
+}

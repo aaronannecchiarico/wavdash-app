@@ -18,7 +18,7 @@ class UploadController extends Controller
     public function index(Request $request)
     {
         $uploads = Auth::user()->uploads()->latest()->paginate(10);
-        
+
         return inertia('Uploads/Index', [
             'uploads' => UploadResource::collection($uploads),
         ]);
@@ -41,13 +41,13 @@ class UploadController extends Controller
         $file = $request->file('audio_file');
         $originalFilename = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
-        
+
         // Generate a unique filename
         $filename = Str::uuid() . '.' . $extension;
-        
+
         // Store the original file in the private storage
         $path = $file->storeAs('uploads/original', $filename, 'private');
-        
+
         // Create the upload record with pending status
         $upload = $user->uploads()->create([
             'title' => $request->input('title'),
@@ -58,10 +58,10 @@ class UploadController extends Controller
             'size' => $file->getSize(),
             'status' => 'pending', // Set as pending since we need to process it
         ]);
-        
+
         // Dispatch a job to process the audio file
         \App\Jobs\ProcessAudioUpload::dispatch($upload);
-        
+
         return redirect()->route('uploads.index')
             ->with('success', 'Audio file uploaded successfully and is now being processed!');
     }
@@ -72,7 +72,7 @@ class UploadController extends Controller
     public function show(Upload $upload)
     {
         $this->authorize('view', $upload);
-        
+
         return inertia('Uploads/Show', [
             'upload' => new UploadResource($upload),
         ]);
@@ -84,7 +84,7 @@ class UploadController extends Controller
     public function edit(Upload $upload)
     {
         $this->authorize('update', $upload);
-        
+
         return inertia('Uploads/Edit', [
             'upload' => new UploadResource($upload),
         ]);
@@ -96,14 +96,14 @@ class UploadController extends Controller
     public function update(Request $request, Upload $upload)
     {
         $this->authorize('update', $upload);
-        
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
         ]);
-        
+
         $upload->update($validated);
-        
+
         return redirect()->route('uploads.show', $upload)
             ->with('success', 'Upload details updated successfully!');
     }
@@ -114,19 +114,19 @@ class UploadController extends Controller
     public function destroy(Upload $upload)
     {
         $this->authorize('delete', $upload);
-        
+
         // Delete the files from storage
         if (Storage::disk('private')->exists($upload->path)) {
             Storage::disk('private')->delete($upload->path);
         }
-        
+
         if (Storage::disk('public')->exists($upload->stream_path)) {
             Storage::disk('public')->delete($upload->stream_path);
         }
-        
+
         // Delete the database record
         $upload->delete();
-        
+
         return redirect()->route('uploads.index')
             ->with('success', 'Upload deleted successfully!');
     }
