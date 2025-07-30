@@ -28,6 +28,8 @@ interface Props {
 }
 
 export default function Show({ upload }: Props) {
+    const uploadData = 'data' in upload && upload.data ? (upload.data as Upload) : upload;
+
     // Format file size to human-readable format
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
@@ -57,34 +59,34 @@ export default function Show({ upload }: Props) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Music Library', href: route('uploads.index') },
-        { title: upload.title, href: route('uploads.show', { upload: upload.id }), description: 'View track details' },
+        { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={upload.title} />
+            <Head title={uploadData.title} />
 
             <div className="mx-auto max-w-4xl py-8">
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle>{upload.title}</CardTitle>
+                                <CardTitle>{uploadData.title}</CardTitle>
                                 <CardDescription>
-                                    Uploaded {formatDistance(new Date(upload.created_at), new Date(), { addSuffix: true })}
+                                    Uploaded {formatDistance(new Date(uploadData.created_at), new Date(), { addSuffix: true })}
                                 </CardDescription>
                             </div>
-                            <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(upload.status)}`}>
-                                {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
+                            <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(uploadData.status)}`}>
+                                {uploadData.status.charAt(0).toUpperCase() + uploadData.status.slice(1)}
                             </span>
                         </div>
                     </CardHeader>
 
                     <CardContent className="space-y-6">
-                        {upload.description && (
+                        {uploadData.description && (
                             <div>
                                 <h3 className="mb-2 text-sm font-medium text-gray-700">Description</h3>
-                                <p className="text-gray-600">{upload.description}</p>
+                                <p className="text-gray-600">{uploadData.description}</p>
                             </div>
                         )}
 
@@ -93,30 +95,30 @@ export default function Show({ upload }: Props) {
                             <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
                                 <div className="sm:col-span-1">
                                     <dt className="text-sm font-medium text-gray-500">Filename</dt>
-                                    <dd className="mt-1 text-sm text-gray-900">{upload.filename}</dd>
+                                    <dd className="mt-1 text-sm text-gray-900">{uploadData.filename}</dd>
                                 </div>
                                 <div className="sm:col-span-1">
                                     <dt className="text-sm font-medium text-gray-500">Type</dt>
-                                    <dd className="mt-1 text-sm text-gray-900">{upload.mime_type}</dd>
+                                    <dd className="mt-1 text-sm text-gray-900">{uploadData.mime_type}</dd>
                                 </div>
                                 <div className="sm:col-span-1">
                                     <dt className="text-sm font-medium text-gray-500">Size</dt>
-                                    <dd className="mt-1 text-sm text-gray-900">{formatFileSize(upload.size)}</dd>
+                                    <dd className="mt-1 text-sm text-gray-900">{formatFileSize(uploadData.size)}</dd>
                                 </div>
                                 <div className="sm:col-span-1">
                                     <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                                     <dd className="mt-1 text-sm text-gray-900">
-                                        {formatDistance(new Date(upload.updated_at), new Date(), { addSuffix: true })}
+                                        {formatDistance(new Date(uploadData.updated_at), new Date(), { addSuffix: true })}
                                     </dd>
                                 </div>
                             </dl>
                         </div>
 
-                        {upload.status === 'ready' && upload.stream_url && (
+                        {uploadData.status === 'ready' && uploadData.stream_url && (
                             <div>
                                 <h3 className="mb-2 text-sm font-medium text-gray-700">Preview</h3>
                                 <audio controls className="w-full">
-                                    <source src={upload.stream_url} type={upload.mime_type} />
+                                    <source src={uploadData.stream_url} type={uploadData.mime_type} />
                                     Your browser does not support the audio element.
                                 </audio>
                             </div>
@@ -124,7 +126,7 @@ export default function Show({ upload }: Props) {
                     </CardContent>
 
                     <CardFooter className="flex justify-between bg-gray-50">
-                        <Link href={route('uploads.edit', { upload: upload.id })}>
+                        <Link href={route('uploads.edit', uploadData.id)}>
                             <Button variant="outline">
                                 <PencilIcon className="mr-2 h-4 w-4" />
                                 Edit
@@ -132,7 +134,7 @@ export default function Show({ upload }: Props) {
                         </Link>
 
                         <Link
-                            href={route('uploads.destroy', { upload: upload.id })}
+                            href={route('uploads.destroy', uploadData.id)}
                             method="delete"
                             as="button"
                             type="button"

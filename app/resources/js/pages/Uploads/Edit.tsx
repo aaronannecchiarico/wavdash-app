@@ -37,7 +37,7 @@ export default function Edit({ upload }: EditUploadProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        form.post(route('uploads.update', { upload: uploadData.id }), {
+        form.post(route('uploads.update', uploadData.id), {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -50,8 +50,8 @@ export default function Edit({ upload }: EditUploadProps) {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Music Library', href: route('uploads.index') },
-        // { title: upload.title, href: route('uploads.show', { upload: upload.id }), description: 'View track details' },
-        // { title: 'Edit', href: route('uploads.edit', { upload: upload.id }), description: 'Edit this track' },
+        { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
+        { title: 'Edit', href: route('uploads.edit', uploadData.id), description: 'Edit this track' },
     ];
 
     return (

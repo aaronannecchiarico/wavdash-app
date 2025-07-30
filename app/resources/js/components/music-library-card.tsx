@@ -102,7 +102,7 @@ export const MusicCard = ({
     const handleDelete = () => {
         setIsDeleting(true);
 
-        router.delete(route('uploads.destroy', { upload: upload.id }), {
+        router.delete(route('uploads.destroy', upload.id), {
             onSuccess: () => {
                 setIsDeleteDialogOpen(false);
                 setIsDeleting(false);
@@ -131,7 +131,7 @@ export const MusicCard = ({
                     return;
                 }
 
-                router.visit(route('uploads.show', { upload: upload.id }));
+                router.visit(route('uploads.show', upload.id));
             }}
         >
             <CardHeader className="pb-3">
@@ -153,7 +153,7 @@ export const MusicCard = ({
                                 <DropdownMenuItem
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        router.visit(route('uploads.edit', { upload: upload.id }));
+                                        router.visit(route('uploads.edit', upload.id));
                                     }}
                                 >
                                     <Pencil className="mr-2 h-4 w-4" />
