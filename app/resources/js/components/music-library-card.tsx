@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { router } from '@inertiajs/react';
+import { toast } from "sonner";
 
 export interface Upload {
     id: number;
@@ -92,11 +96,44 @@ export const MusicCard = ({
     isLast: boolean
     lastElementRef?: (node: HTMLDivElement | null) => void
 }) => {
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = () => {
+        setIsDeleting(true);
+
+        router.delete(route('uploads.destroy', { upload: upload.id }), {
+            onSuccess: () => {
+                setIsDeleteDialogOpen(false);
+                setIsDeleting(false);
+                // Toast will be handled by the flash message in the Index component
+            },
+            onError: (errors) => {
+                setIsDeleteDialogOpen(false);
+                setIsDeleting(false);
+                // Show error toast if there's a client-side error
+                toast.error("Failed to delete the upload. Please try again.");
+            },
+            // Important: preserve the flash message state but don't preserve scroll position
+            preserveScroll: false,
+            preserveState: false
+        });
+    };
+
     return (
         <Card
             ref={isLast ? lastElementRef : null}
             className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
-            onClick={() => window.location.href = route('uploads.show', { upload: upload.id })}
+            onClick={(e) => {
+                // Prevent navigation during delete actions
+                if (isDeleteDialogOpen || isDeleting) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                router.visit(route('uploads.show', { upload: upload.id }));
+            }}
         >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -116,7 +153,10 @@ export const MusicCard = ({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem onClick={() => window.location.href = route('uploads.edit', { upload: upload.id })}>
+                                <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.visit(route('uploads.edit', { upload: upload.id }));
+                                }}>
                                     <Pencil className="w-4 h-4 mr-2" />
                                     Edit
                                 </DropdownMenuItem>
@@ -124,7 +164,13 @@ export const MusicCard = ({
                                     <Download className="w-4 h-4 mr-2" />
                                     Download
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => alert('Delete functionality not yet implemented.')}>
+                                <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsDeleteDialogOpen(true);
+                                    }}
+                                >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Delete
                                 </DropdownMenuItem>
@@ -133,6 +179,17 @@ export const MusicCard = ({
                     </div>
                 </div>
             </CardHeader>
+
+            <DeleteConfirmationDialog
+                isOpen={isDeleteDialogOpen}
+                onClose={() => setIsDeleteDialogOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Audio File"
+                description={`Are you sure you want to delete "${upload.title}"? This action cannot be undone and all data will be permanently removed.`}
+                deleteButtonText="Delete"
+                cancelButtonText="Cancel"
+                isLoading={isDeleting}
+            />
 
             <CardContent className="space-y-4">
                 {/* Music Visualization */}

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateUploadRequest;
 use App\Http\Resources\UploadResource;
 use App\Models\Upload;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -127,11 +128,11 @@ class UploadController extends Controller
 
             \App\Jobs\ProcessAudioUpload::dispatch($upload);
 
-            return redirect()->route('uploads.edit', $upload)
+            return redirect()->route('uploads.index', $upload)
                 ->with('success', 'Upload details updated and the new audio file is processing!');
         }
 
-        return redirect()->route('uploads.edit', $upload)
+        return redirect()->route('uploads.index', $upload)
             ->with('success', 'Upload details updated successfully!');
     }
 
@@ -140,21 +141,35 @@ class UploadController extends Controller
      */
     public function destroy(Upload $upload)
     {
-        $this->authorize('delete', $upload);
+        try {
+            $this->authorize('delete', $upload);
 
-        // Delete the files from storage
-        if (Storage::disk('private')->exists($upload->path)) {
-            Storage::disk('private')->delete($upload->path);
+            // Store title for message
+            $title = $upload->title;
+
+            // Delete the files from storage
+            if (Storage::disk('private')->exists($upload->path)) {
+                Storage::disk('private')->delete($upload->path);
+            } else {
+                Log::warning("Original file not found for upload ID: {$upload->id}");
+            }
+
+            if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
+                Storage::disk('public')->delete($upload->stream_path);
+            } else if ($upload->stream_path) {
+                Log::warning("Stream file not found for upload ID: {$upload->id}");
+            }
+
+            // Delete the database record
+            $upload->delete();
+
+            return redirect()->route('uploads.index')
+                ->with('success', "\"$title\" was deleted successfully!");
+        } catch (\Exception $e) {
+            Log::error("Error deleting upload ID {$upload->id}: " . $e->getMessage());
+
+            return redirect()->route('uploads.index')
+                ->with('error', 'Failed to delete the upload. ' . $e->getMessage());
         }
-
-        if (Storage::disk('public')->exists($upload->stream_path)) {
-            Storage::disk('public')->delete($upload->stream_path);
-        }
-
-        // Delete the database record
-        $upload->delete();
-
-        return redirect()->route('uploads.index')
-            ->with('success', 'Upload deleted successfully!');
     }
 }

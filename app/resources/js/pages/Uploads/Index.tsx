@@ -1,10 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { Music, PlusIcon } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { MusicCard, type Upload } from '@/components/music-library-card';
+import { toast } from "sonner";
+import { useEffect } from 'react';
 
 interface Props {
   uploads: {
@@ -30,7 +32,18 @@ const formatDuration = (seconds: number): string => {
 }
 
 export default function Index({ uploads }: Props) {
-  // Estimate total duration for display purposes (since we don't have actual duration in the data)
+  const { flash } = usePage().props as any;
+
+  useEffect(() => {
+    if (flash?.success) {
+      toast.success(flash.success);
+    }
+
+    if (flash?.error) {
+      toast.error(flash.error);
+    }
+  }, [flash]);
+
   const estimatedTotalDuration = uploads.data.reduce((acc, upload) =>
     acc + (upload.duration || Math.floor(upload.size / 10000)), 0);
   const totalSize = uploads.data.reduce((acc, upload) => acc + upload.size, 0);
@@ -46,14 +59,14 @@ export default function Index({ uploads }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Music Library" />
-        <Link href={route('uploads.create')}>
-            <Button
-                className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 z-50 p-0"
-                size="lg"
-            >
-                <PlusIcon className="w-6 h-6" />
-            </Button>
-        </Link>
+      <Link href={route('uploads.create')}>
+          <Button
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 z-50 p-0"
+              size="lg"
+          >
+              <PlusIcon className="w-6 h-6" />
+          </Button>
+      </Link>
       <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
         {uploads.data.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
