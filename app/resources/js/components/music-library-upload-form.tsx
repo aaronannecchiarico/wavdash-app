@@ -77,12 +77,14 @@ export function MusicLibraryUploadForm({
 
     useEffect(() => {
         if (mode === 'edit' && upload) {
-            setFileMetadata({
-                name: upload.filename,
-                size: formatFileSize(upload.size),
-                type: upload.mime_type,
-                duration: formatDuration(upload.duration || 0),
-            });
+            if (upload.filename && upload.size && upload.mime_type) {
+                setFileMetadata({
+                    name: upload.filename,
+                    size: formatFileSize(upload.size),
+                    type: upload.mime_type,
+                    duration: formatDuration(upload.duration || 0),
+                });
+            }
         }
     }, [mode, upload]);
 

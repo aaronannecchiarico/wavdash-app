@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Calendar, Clock, Download, Music, Play, User, Volume2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
 
 export interface Upload {
     id: number;
@@ -95,7 +96,7 @@ export const MusicCard = ({
         <Card
             ref={isLast ? lastElementRef : null}
             className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer"
-            onClick={() => window.location.href = route('uploads.show', upload.id)}
+            onClick={() => window.location.href = route('uploads.show', { upload: upload.id })}
         >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -107,21 +108,28 @@ export const MusicCard = ({
                             {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
                         </Badge>
                     </div>
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {upload.stream_url && (
-                            <Button variant="ghost" size="sm" onClick={(e) => {
-                                e.stopPropagation();
-                                // Play audio functionality could be added here
-                            }}>
-                                <Play className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            </Button>
-                        )}
-                        <Button variant="ghost" size="sm" onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = route('uploads.edit', upload.id);
-                        }}>
-                            <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        </Button>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                                    <MoreVertical className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={() => window.location.href = route('uploads.edit', { upload: upload.id })}>
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Download
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => alert('Delete functionality not yet implemented.')}>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </CardHeader>

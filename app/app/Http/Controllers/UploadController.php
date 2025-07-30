@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUploadRequest;
+use App\Http\Requests\UpdateUploadRequest;
 use App\Http\Resources\UploadResource;
 use App\Models\Upload;
 use Illuminate\Http\Request;
@@ -93,18 +94,44 @@ class UploadController extends Controller
     /**
      * Update the specified upload in storage.
      */
-    public function update(Request $request, Upload $upload)
+    public function update(UpdateUploadRequest $request, Upload $upload)
     {
         $this->authorize('update', $upload);
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-        ]);
+        $upload->update($request->only('title', 'description'));
 
-        $upload->update($validated);
+        if ($request->hasFile('audio_file')) {
+            // Delete the old files from storage
+            if (Storage::disk('private')->exists($upload->path)) {
+                Storage::disk('private')->delete($upload->path);
+            }
+            if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
+                Storage::disk('public')->delete($upload->stream_path);
+            }
 
-        return redirect()->route('uploads.show', $upload)
+            $file = $request->file('audio_file');
+            $originalFilename = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::uuid() . '.' . $extension;
+            $path = $file->storeAs('uploads/original', $filename, 'private');
+
+            $upload->update([
+                'filename' => $originalFilename,
+                'path' => $path,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'status' => 'pending',
+                'stream_path' => null,
+                'duration' => null,
+            ]);
+
+            \App\Jobs\ProcessAudioUpload::dispatch($upload);
+
+            return redirect()->route('uploads.edit', $upload)
+                ->with('success', 'Upload details updated and the new audio file is processing!');
+        }
+
+        return redirect()->route('uploads.edit', $upload)
             ->with('success', 'Upload details updated successfully!');
     }
 

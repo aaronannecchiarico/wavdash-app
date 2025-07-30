@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDistance } from 'date-fns';
-import { PencilIcon, Trash2Icon as TrashIcon, ArrowLeftIcon } from 'lucide-react';
+import { PencilIcon, Trash2Icon as TrashIcon } from 'lucide-react';
+import { type BreadcrumbItem } from '@/types';
 
 interface Upload {
   id: number;
@@ -29,14 +31,14 @@ export default function Show({ upload }: Props) {
   // Format file size to human-readable format
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  
+
   // Get status badge color based on status
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -52,20 +54,17 @@ export default function Show({ upload }: Props) {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
+  const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Music Library', href: route('uploads.index') },
+    { title: upload.title, href: route('uploads.show', { upload: upload.id }), description: 'View track details' },
+  ];
+
   return (
-    <>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={upload.title} />
-      
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <Button variant="outline" onClick={() => window.history.back()}>
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </div>
-          
+
+      <div className="max-w-4xl mx-auto py-8">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
@@ -80,7 +79,7 @@ export default function Show({ upload }: Props) {
                 </span>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               {upload.description && (
                 <div>
@@ -88,7 +87,7 @@ export default function Show({ upload }: Props) {
                   <p className="text-gray-600">{upload.description}</p>
                 </div>
               )}
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">File Details</h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
@@ -112,7 +111,7 @@ export default function Show({ upload }: Props) {
                   </div>
                 </dl>
               </div>
-              
+
               {upload.status === 'ready' && upload.stream_url && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Preview</h3>
@@ -123,17 +122,17 @@ export default function Show({ upload }: Props) {
                 </div>
               )}
             </CardContent>
-            
+
             <CardFooter className="bg-gray-50 flex justify-between">
-              <Link href={route('uploads.edit', upload.id)}>
+              <Link href={route('uploads.edit', { upload: upload.id })}>
                 <Button variant="outline">
                   <PencilIcon className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
               </Link>
-              
+
               <Link
-                href={route('uploads.destroy', upload.id)}
+                href={route('uploads.destroy', { upload: upload.id })}
                 method="delete"
                 as="button"
                 type="button"
@@ -144,8 +143,7 @@ export default function Show({ upload }: Props) {
               </Link>
             </CardFooter>
           </Card>
-        </div>
       </div>
-    </>
+    </AppLayout>
   );
 }
