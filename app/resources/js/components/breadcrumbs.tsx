@@ -18,18 +18,14 @@ export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[]
                                             {isLast ? (
                                                 <>
                                                     <BreadcrumbPage>{item.title}</BreadcrumbPage>
-                                                    {item.description && (
-                                                        <span className="text-xs text-muted-foreground">{item.description}</span>
-                                                    )}
+                                                    {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
                                                 </>
                                             ) : (
                                                 <>
                                                     <BreadcrumbLink asChild>
                                                         <Link href={item.href}>{item.title}</Link>
                                                     </BreadcrumbLink>
-                                                    {item.description && (
-                                                        <span className="text-xs text-muted-foreground">{item.description}</span>
-                                                    )}
+                                                    {item.description && <span className="text-xs text-muted-foreground">{item.description}</span>}
                                                 </>
                                             )}
                                         </div>

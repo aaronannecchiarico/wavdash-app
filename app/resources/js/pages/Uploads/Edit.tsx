@@ -1,21 +1,17 @@
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import { MusicLibraryUploadForm } from '@/components/music-library-upload-form';
+import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload as UploadType } from '@/types';
+import { Head, useForm } from '@inertiajs/react';
 
 interface EditUploadProps {
     upload: UploadType;
 }
 
 export default function Edit({ upload }: EditUploadProps) {
-    // Ensure upload has the expected properties before initializing the form
-    if (!upload || typeof upload !== 'object') {
-        return <div>Loading upload data...</div>;
-    }
-
     // Extract the actual upload data - it might be nested inside a data property
-    const uploadData = 'data' in upload && upload.data ? upload.data as UploadType : upload;
+    const uploadData = 'data' in upload && upload.data ? (upload.data as UploadType) : upload;
 
+    // Initialize the form with the upload data
     const form = useForm<{
         title: string;
         description: string;
@@ -29,13 +25,18 @@ export default function Edit({ upload }: EditUploadProps) {
     });
 
     // Adapter function to match the expected signature in MusicLibraryUploadForm
-    const setFormData = (key: string, value: any) => {
-        form.setData(key as any, value);
+    const setFormData = (key: string, value: unknown) => {
+        // Type guard to ensure value is compatible with expected form data types
+        if ((key === 'audio_file' && value instanceof File) || value === null) {
+            form.setData(key as 'audio_file', value as File | null);
+        } else if (typeof value === 'string' && (key === 'title' || key === 'description' || key === '_method')) {
+            form.setData(key, value);
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         form.post(route('uploads.update', { upload: uploadData.id }), {
             forceFormData: true,
             preserveScroll: true,
@@ -56,7 +57,7 @@ export default function Edit({ upload }: EditUploadProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${uploadData.title}`} />
-            <div className="max-w-2xl mx-auto py-8">
+            <div className="mx-auto max-w-2xl py-8">
                 <MusicLibraryUploadForm
                     mode="edit"
                     data={form.data}

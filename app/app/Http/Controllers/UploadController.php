@@ -21,7 +21,7 @@ class UploadController extends Controller
     {
         $uploads = Auth::user()->uploads()->latest()->paginate(10);
 
-        return inertia('Uploads/Index', [
+        return inertia('uploads/index', [
             'uploads' => UploadResource::collection($uploads),
         ]);
     }
@@ -31,7 +31,7 @@ class UploadController extends Controller
      */
     public function create()
     {
-        return inertia('Uploads/Create');
+        return inertia('uploads/create');
     }
 
     /**
@@ -75,7 +75,7 @@ class UploadController extends Controller
     {
         $this->authorize('view', $upload);
 
-        return inertia('Uploads/Show', [
+        return inertia('uploads/show', [
             'upload' => new UploadResource($upload),
         ]);
     }
@@ -87,7 +87,7 @@ class UploadController extends Controller
     {
         $this->authorize('update', $upload);
 
-        return inertia('Uploads/Edit', [
+        return inertia('uploads/edit', [
             'upload' => new UploadResource($upload),
         ]);
     }

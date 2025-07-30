@@ -1,13 +1,13 @@
-import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { Loader2, Upload, File as FileIcon, Music } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
 import { type Upload as UploadType } from '@/types';
+import { Loader2, Music, Upload } from 'lucide-react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 export interface UploadFormData {
     title: string;
@@ -19,7 +19,7 @@ export interface UploadFormData {
 interface MusicLibraryUploadFormProps {
     mode: 'create' | 'edit';
     data: UploadFormData;
-    setData: (key: keyof UploadFormData | string, value: any) => void;
+    setData: (key: keyof UploadFormData | string, value: unknown) => void;
     errors: Partial<Record<keyof UploadFormData, string>>;
     processing: boolean;
     onSubmit: (e: React.FormEvent) => void;
@@ -60,7 +60,7 @@ export function MusicLibraryUploadForm({
     upload,
     uploadProgress = 0,
     wasSuccessful,
-    onReset
+    onReset,
 }: MusicLibraryUploadFormProps) {
     const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
     const [isProcessingFile, setIsProcessingFile] = useState(false);
@@ -124,10 +124,10 @@ export function MusicLibraryUploadForm({
                     <div className="space-y-2">
                         <Label htmlFor="audio_file">Audio File {mode === 'create' && <span className="text-destructive">*</span>}</Label>
                         <div
-                            className={`flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted/50 ${errors.audio_file ? 'border-destructive' : ''}`}
+                            className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-6 hover:bg-muted/50 ${errors.audio_file ? 'border-destructive' : ''}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Upload className="w-10 h-10 mb-3 text-muted-foreground" />
+                            <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
                             <p className="mb-2 text-sm text-muted-foreground">
                                 <span className="font-semibold">Click to upload</span> or drag and drop
                             </p>
@@ -148,36 +148,40 @@ export function MusicLibraryUploadForm({
                     {(isProcessingFile || fileMetadata) && (
                         <div className="space-y-2">
                             <Label>File Details</Label>
-                            <div className="p-4 border rounded-lg bg-muted/50">
+                            <div className="rounded-lg border bg-muted/50 p-4">
                                 {isProcessingFile ? (
                                     <div className="flex items-center text-sm text-muted-foreground">
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Processing file...
                                     </div>
-                                ) : fileMetadata && (
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                        <div className="flex items-center col-span-2 space-x-2 font-medium">
-                                            <Music className="w-4 h-4" />
-                                            <span className="truncate">{fileMetadata.name}</span>
+                                ) : (
+                                    fileMetadata && (
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                            <div className="col-span-2 flex items-center space-x-2 font-medium">
+                                                <Music className="h-4 w-4" />
+                                                <span className="truncate">{fileMetadata.name}</span>
+                                            </div>
+                                            <div>
+                                                <strong className="font-semibold">Size:</strong> {fileMetadata.size}
+                                            </div>
+                                            <div>
+                                                <strong className="font-semibold">Duration:</strong> {fileMetadata.duration}
+                                            </div>
+                                            <div className="col-span-2">
+                                                <strong className="font-semibold">Type:</strong> {fileMetadata.type}
+                                            </div>
                                         </div>
-                                        <div><strong className="font-semibold">Size:</strong> {fileMetadata.size}</div>
-                                        <div><strong className="font-semibold">Duration:</strong> {fileMetadata.duration}</div>
-                                        <div className="col-span-2"><strong className="font-semibold">Type:</strong> {fileMetadata.type}</div>
-                                    </div>
+                                    )
                                 )}
                             </div>
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
-                        <Input
-                            id="title"
-                            type="text"
-                            value={data.title}
-                            onChange={(e) => setData('title', e.target.value)}
-                            disabled={processing}
-                        />
+                        <Label htmlFor="title">
+                            Title <span className="text-destructive">*</span>
+                        </Label>
+                        <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} disabled={processing} />
                         <InputError message={errors.title} />
                     </div>
 
@@ -205,17 +209,12 @@ export function MusicLibraryUploadForm({
                     </div>
                 )}
                 <CardFooter className="flex justify-end space-x-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => window.history.back()}
-                        disabled={processing}
-                    >
+                    <Button type="button" variant="outline" onClick={() => window.history.back()} disabled={processing}>
                         Cancel
                     </Button>
                     <Button type="submit" disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)}>
-                        {processing && uploadProgress === 0 && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        {processing ? 'Uploading...' : (mode === 'create' ? 'Upload' : 'Save Changes')}
+                        {processing && uploadProgress === 0 && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {processing ? 'Uploading...' : mode === 'create' ? 'Upload' : 'Save Changes'}
                     </Button>
                 </CardFooter>
             </form>

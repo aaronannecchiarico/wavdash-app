@@ -1,7 +1,7 @@
-import { Head, useForm } from '@inertiajs/react';
+import { MusicLibraryUploadForm } from '@/components/music-library-upload-form';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { MusicLibraryUploadForm, type UploadFormData } from '@/components/music-library-upload-form';
+import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Create() {
@@ -28,7 +28,7 @@ export default function Create() {
             },
             onFinish: () => {
                 setUploadProgress(0);
-            }
+            },
         });
     };
 
@@ -40,7 +40,7 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Upload Audio" />
-            <div className="max-w-2xl mx-auto py-8">
+            <div className="mx-auto max-w-2xl py-8">
                 <MusicLibraryUploadForm
                     mode="create"
                     data={data}

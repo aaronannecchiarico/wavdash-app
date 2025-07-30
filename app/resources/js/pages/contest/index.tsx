@@ -1,19 +1,12 @@
-import React from 'react';
-import { Head, Link } from '@inertiajs/react';
-import { PaginatedData, User, type BreadcrumbItem } from '@/types';
-import AppLayout from '@/layouts/app-layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import { PaginatedData, User, type BreadcrumbItem } from '@/types';
+import { Head, Link } from '@inertiajs/react';
+import React from 'react';
 
 interface Contest {
     id: number;
@@ -57,9 +50,9 @@ const Pagination: React.FC<{ links: PaginationLink[] }> = ({ links }) => (
                 href={link.url ?? ''}
                 preserveScroll
                 className={cn(
-                    'flex items-center justify-center px-3 h-8 text-sm font-medium rounded-md',
+                    'flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium',
                     link.active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent',
-                    !link.url && 'text-muted-foreground cursor-not-allowed'
+                    !link.url && 'cursor-not-allowed text-muted-foreground',
                 )}
                 dangerouslySetInnerHTML={{ __html: link.label }}
             />
@@ -67,14 +60,14 @@ const Pagination: React.FC<{ links: PaginationLink[] }> = ({ links }) => (
     </nav>
 );
 
-const ContestIndex: React.FC<Props> = ({ auth, contests }) => {
+const ContestIndex: React.FC<Props> = ({ contests }) => {
     const { data, meta } = contests;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contests" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>All Contests</CardTitle>
@@ -95,10 +88,15 @@ const ContestIndex: React.FC<Props> = ({ auth, contests }) => {
                                     <TableRow key={contest.id}>
                                         <TableCell className="font-medium">{contest.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant={
-                                                contest.status === 'Active' ? 'default' :
-                                                contest.status === 'Finished' ? 'destructive' : 'secondary'
-                                            }>
+                                            <Badge
+                                                variant={
+                                                    contest.status === 'Active'
+                                                        ? 'default'
+                                                        : contest.status === 'Finished'
+                                                          ? 'destructive'
+                                                          : 'secondary'
+                                                }
+                                            >
                                                 {contest.status}
                                             </Badge>
                                         </TableCell>
@@ -113,7 +111,7 @@ const ContestIndex: React.FC<Props> = ({ auth, contests }) => {
                                 ))}
                             </TableBody>
                         </Table>
-                        <div className="mt-4 flex justify-between items-center">
+                        <div className="mt-4 flex items-center justify-between">
                             <p className="text-sm text-muted-foreground">
                                 Showing {meta.from} to {meta.to} of {meta.total} results
                             </p>
