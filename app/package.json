@@ -45,6 +45,7 @@
         "@types/react": "^19.0.3",
         "@types/react-dom": "^19.0.2",
         "@vitejs/plugin-react": "^4.3.4",
+        "@wavesurfer/react": "^1.0.11",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^9.0.1",
@@ -62,6 +63,7 @@
         "tailwindcss-animate": "^1.0.7",
         "typescript": "^5.7.2",
         "vite": "^6.0",
+        "wavesurfer.js": "^7.10.1",
         "zod": "^4.0.10"
     },
     "optionalDependencies": {
