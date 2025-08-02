@@ -4,10 +4,10 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import WavesurferPlayer from '@wavesurfer/react';
-import type WaveSurfer from 'wavesurfer.js';
 import { formatDistance } from 'date-fns';
 import { PauseIcon, PencilIcon, PlayIcon, Trash2Icon as TrashIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import type WaveSurfer from 'wavesurfer.js';
 
 interface Upload {
     id: number;

@@ -1,33 +1,12 @@
-import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { router } from '@inertiajs/react';
+import { Upload } from '@/types';
+import { Link, router, useForm } from '@inertiajs/react';
 import { Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-
-export interface Upload {
-    id: number;
-    title: string;
-    description: string | null;
-    filename: string;
-    mime_type: string;
-    size: number;
-    status: string;
-    stream_url: string | null;
-    created_at: string;
-    updated_at: string;
-    user: {
-        id: number;
-        name: string;
-    };
-    artist?: string;
-    duration?: number;
-    genre?: string;
-    bitrate?: number;
-}
+import { useState, FormEventHandler } from 'react';
 
 // Helper function to format file size
 const formatFileSize = (bytes: number): string => {
@@ -68,7 +47,6 @@ const getAudioFormat = (mimeType: string): string => {
     return formats[mimeType] || 'AUDIO';
 };
 
-// Helper function to get status color
 const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
         case 'completed':
@@ -96,44 +74,41 @@ export const MusicCard = ({
     isLast: boolean;
     lastElementRef?: (node: HTMLDivElement | null) => void;
 }) => {
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const handleDelete = () => {
-        setIsDeleting(true);
+    const {
+        delete: destroy,
+        processing,
+        reset,
+        clearErrors,
+    } = useForm();
 
-        router.delete(route('uploads.destroy', upload.id), {
-            onSuccess: () => {
-                setIsDeleteDialogOpen(false);
-                setIsDeleting(false);
-                // Toast will be handled by the flash message in the Index component
-            },
-            onError: () => {
-                setIsDeleteDialogOpen(false);
-                setIsDeleting(false);
-                toast.error('Failed to delete the upload. Please try again.');
-            },
-            // Important: preserve the flash message state but don't preserve scroll position
-            preserveScroll: false,
-            preserveState: false,
+    const closeDeleteModal = () => {
+        clearErrors();
+        reset();
+        setDeleteDialogOpen(false);
+    };
+
+    const deleteUpload: FormEventHandler = (e) => {
+        e.preventDefault();
+        destroy(route('uploads.destroy', upload.id), {
+            preserveScroll: true,
+            onSuccess: () => closeDeleteModal(),
         });
     };
 
-    return (
-        <Card
-            ref={isLast ? lastElementRef : null}
-            className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-            onClick={(e) => {
-                // Prevent navigation during delete actions
-                if (isDeleteDialogOpen || isDeleting) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
+    const handleCardClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.visit(route('uploads.show', upload.id));
+    };
 
-                router.visit(route('uploads.show', upload.id));
-            }}
-        >
+    return (
+        <>
+            <Card
+                ref={isLast ? lastElementRef : null}
+                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+                onClick={handleCardClick}
+            >
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2">
@@ -143,52 +118,42 @@ export const MusicCard = ({
                         <Badge className={getStatusColor(upload.status)}>{upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}</Badge>
                     </div>
                     <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        router.visit(route('uploads.edit', upload.id));
-                                    }}
-                                >
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
+                            <DropdownMenuContent className="w-56" align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem>
+                                    <Link href={route('uploads.edit', upload.id)} className="flex w-full items-center">
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download
+                                    <Link href={route('uploads.index', upload.id)} className="flex w-full items-center">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    className="text-destructive"
+                                    className="text-red-600 focus:bg-red-100 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-950/50 dark:focus:text-red-400"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setIsDeleteDialogOpen(true);
+                                        setDeleteDialogOpen(true);
                                     }}
                                 >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    <div className="flex items-center">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </div>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </div>
             </CardHeader>
-
-            <DeleteConfirmationDialog
-                isOpen={isDeleteDialogOpen}
-                onClose={() => setIsDeleteDialogOpen(false)}
-                onConfirm={handleDelete}
-                title="Delete Audio File"
-                description={`Are you sure you want to delete "${upload.title}"? This action cannot be undone and all data will be permanently removed.`}
-                deleteButtonText="Delete"
-                cancelButtonText="Cancel"
-                isLoading={isDeleting}
-            />
 
             <CardContent className="space-y-4">
                 {/* Music Visualization */}
@@ -257,5 +222,33 @@ export const MusicCard = ({
                 </div>
             </CardFooter>
         </Card>
+
+        {/* Delete Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent
+                onClick={(e) => {
+                    e.stopPropagation();
+                }}
+            >
+                <DialogTitle>Are you sure you want to delete this upload?</DialogTitle>
+                <DialogDescription>
+                    Once this upload is deleted, it will be permanently gone. This action cannot be undone.
+                </DialogDescription>
+                <form onSubmit={deleteUpload} className="pt-4">
+                    <DialogFooter className="gap-2">
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary" onClick={closeDeleteModal}>
+                                Cancel
+                            </Button>
+                        </DialogClose>
+
+                        <Button variant="destructive" disabled={processing}>
+                            Delete Upload
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };

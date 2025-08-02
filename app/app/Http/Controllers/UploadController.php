@@ -160,7 +160,6 @@ class UploadController extends Controller
                 Log::warning("Stream file not found for upload ID: {$upload->id}");
             }
 
-            // Delete the database record
             $upload->delete();
 
             return redirect()->route('uploads.index')
