@@ -1,4 +1,4 @@
-import { MusicCard, type Upload } from '@/components/music-library-card';
+import { MusicCard} from '@/components/music-library-card';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -6,6 +6,8 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Music, PlusIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import type { Upload } from '@/types';
+import { formatFileSize, formatDuration } from '@/lib/formatters';
 
 interface Props {
     uploads: {
@@ -19,27 +21,9 @@ interface Props {
     };
 }
 
-// Helper function to format file size
-const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Helper function to format duration
-const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 export default function Index({ uploads }: Props) {
-    // Get the page props with proper type
     const { props } = usePage();
 
-    // Use a more specific type for accessing flash messages
     const flash = props.flash as { success?: string; error?: string } | undefined;
 
     useEffect(() => {

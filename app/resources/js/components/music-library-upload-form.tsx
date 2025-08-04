@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { type Upload as UploadType } from '@/types';
+import { useAudioFileHandler } from '@/hooks/useAudioFileHandler';
 import { Loader2, Music, Upload } from 'lucide-react';
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 
 export interface UploadFormData {
     title: string;
@@ -29,27 +30,6 @@ interface MusicLibraryUploadFormProps {
     onReset?: () => void;
 }
 
-interface FileMetadata {
-    name: string;
-    size: string;
-    type: string;
-    duration: string;
-}
-
-const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 export function MusicLibraryUploadForm({
     mode,
     data,
@@ -62,60 +42,44 @@ export function MusicLibraryUploadForm({
     wasSuccessful,
     onReset,
 }: MusicLibraryUploadFormProps) {
-    const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
-    const [isProcessingFile, setIsProcessingFile] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const {
+        fileMetadata,
+        isProcessingFile,
+        fileInputRef,
+        handleFileChange: handleAudioFileChange,
+        resetFileInput
+    } = useAudioFileHandler({
+        initialTitle: data.title,
+        onTitleSuggestion: (title) => setData('title', title)
+    });
 
     useEffect(() => {
         if (wasSuccessful && onReset) {
-            setFileMetadata(null);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
+            resetFileInput();
         }
-    }, [wasSuccessful, onReset]);
+    }, [wasSuccessful, onReset, resetFileInput]);
 
+    // Set file from existing upload in edit mode
     useEffect(() => {
-        if (mode === 'edit' && upload) {
-            if (upload.filename && upload.size && upload.mime_type) {
-                setFileMetadata({
-                    name: upload.filename,
-                    size: formatFileSize(upload.size),
-                    type: upload.mime_type,
-                    duration: formatDuration(upload.duration || 0),
-                });
-            }
+        if (mode === 'edit' && upload && !fileMetadata) {
+            // Let the form know the file is present but don't upload again
+            setData('audio_file', null);
         }
-    }, [mode, upload]);
+    }, [mode, upload, fileMetadata]);
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleAudioFileChange(e);
         const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsProcessingFile(true);
-        setData('audio_file', file);
-
-        const audio = document.createElement('audio');
-        audio.src = URL.createObjectURL(file);
-        audio.onloadedmetadata = () => {
-            setFileMetadata({
-                name: file.name,
-                size: formatFileSize(file.size),
-                type: file.type,
-                duration: formatDuration(audio.duration),
-            });
-            setIsProcessingFile(false);
-            if (!data.title) {
-                setData('title', file.name.replace(/\.[^/.]+$/, ''));
-            }
-        };
+        if (file) {
+            setData('audio_file', file);
+        }
     };
 
     return (
         <Card>
             <form onSubmit={onSubmit}>
                 <CardHeader>
-                    <CardTitle>{mode === 'create' ? 'Upload Audio' : 'Edit Audio'}</CardTitle>
+                        <CardTitle>{mode === 'create' ? 'Upload Audio' : 'Edit Audio'}</CardTitle>
                     <CardDescription>
                         {mode === 'create' ? 'Upload an audio file to use in beats and contests.' : 'Update the details for this audio file.'}
                     </CardDescription>
@@ -124,12 +88,12 @@ export function MusicLibraryUploadForm({
                     <div className="space-y-2">
                         <Label htmlFor="audio_file">Audio File {mode === 'create' && <span className="text-destructive">*</span>}</Label>
                         <div
-                            className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-6 hover:bg-muted/50 ${errors.audio_file ? 'border-destructive' : ''}`}
+                            className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-6 hover:bg-muted/50 dark:hover:bg-slate-800/70 transition-colors duration-200 ${errors.audio_file ? 'border-destructive' : 'dark:border-slate-700'}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Upload className="mb-3 h-10 w-10 text-muted-foreground" />
+                            <Upload className="mb-3 h-10 w-10 text-muted-foreground dark:text-slate-400" />
                             <p className="mb-2 text-sm text-muted-foreground">
-                                <span className="font-semibold">Click to upload</span> or drag and drop
+                                <span className="font-semibold dark:text-slate-300">Click to upload</span> or drag and drop
                             </p>
                             <p className="text-xs text-muted-foreground">MP3, WAV, AIFF or FLAC (max. 50MB)</p>
                             <input
@@ -148,7 +112,7 @@ export function MusicLibraryUploadForm({
                     {(isProcessingFile || fileMetadata) && (
                         <div className="space-y-2">
                             <Label>File Details</Label>
-                            <div className="rounded-lg border bg-muted/50 p-4">
+                            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-muted/50 dark:bg-slate-900/40 p-4">
                                 {isProcessingFile ? (
                                     <div className="flex items-center text-sm text-muted-foreground">
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -158,17 +122,20 @@ export function MusicLibraryUploadForm({
                                     fileMetadata && (
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                                             <div className="col-span-2 flex items-center space-x-2 font-medium">
-                                                <Music className="h-4 w-4" />
+                                                <Music className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                                                 <span className="truncate">{fileMetadata.name}</span>
                                             </div>
                                             <div>
-                                                <strong className="font-semibold">Size:</strong> {fileMetadata.size}
+                                                <strong className="font-semibold">Size:</strong>{' '}
+                                                <span className="text-muted-foreground">{fileMetadata.size}</span>
                                             </div>
                                             <div>
-                                                <strong className="font-semibold">Duration:</strong> {fileMetadata.duration}
+                                                <strong className="font-semibold">Duration:</strong>{' '}
+                                                <span className="text-muted-foreground">{fileMetadata.duration}</span>
                                             </div>
                                             <div className="col-span-2">
-                                                <strong className="font-semibold">Type:</strong> {fileMetadata.type}
+                                                <strong className="font-semibold">Type:</strong>{' '}
+                                                <span className="text-muted-foreground">{fileMetadata.type}</span>
                                             </div>
                                         </div>
                                     )
@@ -200,9 +167,12 @@ export function MusicLibraryUploadForm({
                 {processing && uploadProgress > 0 && (
                     <div className="px-6 pb-4">
                         <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span>Uploading...</span>
-                                <span>{uploadProgress}%</span>
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                                <span className="flex items-center">
+                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                    Uploading...
+                                </span>
+                                <span className="font-medium text-foreground">{uploadProgress}%</span>
                             </div>
                             <Progress value={uploadProgress} className="h-2" />
                         </div>

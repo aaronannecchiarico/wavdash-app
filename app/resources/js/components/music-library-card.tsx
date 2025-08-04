@@ -1,70 +1,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
+import { formatFileSize, formatDuration, formatDate } from '@/lib/formatters';
+import { getAudioFormat, getStatusColor } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
-import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
-import { useState, FormEventHandler } from 'react';
+import { useState } from 'react';
 
-// Helper function to format file size
-const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
 
-// Helper function to format duration
-const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-// Helper function to format date
-const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
-
-// Helper function to get audio format from mime type
-const getAudioFormat = (mimeType: string): string => {
-    const formats: { [key: string]: string } = {
-        'audio/mpeg': 'MP3',
-        'audio/wav': 'WAV',
-        'audio/flac': 'FLAC',
-        'audio/aac': 'AAC',
-        'audio/ogg': 'OGG',
-        'audio/m4a': 'M4A',
-        'audio/wma': 'WMA',
-    };
-    return formats[mimeType] || 'AUDIO';
-};
-
-const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-        case 'completed':
-        case 'success':
-        case 'ready':
-            return 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/40';
-        case 'processing':
-        case 'pending':
-            return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:hover:bg-yellow-900/40';
-        case 'failed':
-        case 'error':
-            return 'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/40';
-        default:
-            return 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700';
-    }
-};
-
-// Individual music upload card component
 export const MusicCard = ({
     upload,
     isLast,
@@ -76,27 +22,6 @@ export const MusicCard = ({
 }) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    const {
-        delete: destroy,
-        processing,
-        reset,
-        clearErrors,
-    } = useForm();
-
-    const closeDeleteModal = () => {
-        clearErrors();
-        reset();
-        setDeleteDialogOpen(false);
-    };
-
-    const deleteUpload: FormEventHandler = (e) => {
-        e.preventDefault();
-        destroy(route('uploads.destroy', upload.id), {
-            preserveScroll: true,
-            onSuccess: () => closeDeleteModal(),
-        });
-    };
-
     const handleCardClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         router.visit(route('uploads.show', upload.id));
@@ -106,7 +31,7 @@ export const MusicCard = ({
         <>
             <Card
                 ref={isLast ? lastElementRef : null}
-                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-slate-700/20 dark:border-slate-800"
                 onClick={handleCardClick}
             >
             <CardHeader className="pb-3">
@@ -120,11 +45,11 @@ export const MusicCard = ({
                     <div className="opacity-0 transition-opacity group-hover:opacity-100">
                         <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56" align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuContent className="w-56" align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                 <DropdownMenuItem>
                                     <Link href={route('uploads.edit', upload.id)} className="flex w-full items-center">
                                         <Pencil className="mr-2 h-4 w-4" />
@@ -139,7 +64,7 @@ export const MusicCard = ({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     className="text-red-600 focus:bg-red-100 focus:text-red-700 dark:text-red-500 dark:focus:bg-red-950/50 dark:focus:text-red-400"
-                                    onClick={(e) => {
+                                    onClick={(e: React.MouseEvent) => {
                                         e.stopPropagation();
                                         setDeleteDialogOpen(true);
                                     }}
@@ -157,7 +82,7 @@ export const MusicCard = ({
 
             <CardContent className="space-y-4">
                 {/* Music Visualization */}
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-white to-blue-100 dark:from-slate-800 dark:to-blue-950">
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-white to-blue-100 dark:from-slate-800/80 dark:to-blue-950/90 border dark:border-slate-700/50">
                     <div className="flex flex-col items-center justify-center">
                         <Music className="mb-2 h-12 w-12 text-blue-500 dark:text-blue-400" />
                         <div className="flex items-center space-x-1">
@@ -224,31 +149,11 @@ export const MusicCard = ({
         </Card>
 
         {/* Delete Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogContent
-                onClick={(e) => {
-                    e.stopPropagation();
-                }}
-            >
-                <DialogTitle>Are you sure you want to delete this upload?</DialogTitle>
-                <DialogDescription>
-                    Once this upload is deleted, it will be permanently gone. This action cannot be undone.
-                </DialogDescription>
-                <form onSubmit={deleteUpload} className="pt-4">
-                    <DialogFooter className="gap-2">
-                        <DialogClose asChild>
-                            <Button type="button" variant="secondary" onClick={closeDeleteModal}>
-                                Cancel
-                            </Button>
-                        </DialogClose>
-
-                        <Button variant="destructive" disabled={processing}>
-                            Delete Upload
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+        <DeleteUploadDialog
+            upload={upload}
+            isOpen={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+        />
         </>
     );
 };
