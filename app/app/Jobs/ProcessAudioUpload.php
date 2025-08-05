@@ -80,6 +80,9 @@ class ProcessAudioUpload implements ShouldQueue
                 'duration' => $duration,
             ]);
 
+            // Broadcast the event
+            \App\Events\UploadProcessed::dispatch($this->upload);
+
             Log::info('Audio file processed successfully', ['upload_id' => $this->upload->id]);
         } catch (\Exception $e) {
             Log::error('Failed to process audio file', [
@@ -88,6 +91,9 @@ class ProcessAudioUpload implements ShouldQueue
             ]);
 
             $this->upload->update(['status' => 'failed']);
+
+            // Broadcast the event
+            \App\Events\UploadProcessed::dispatch($this->upload);
 
             throw $e;
         }
