@@ -19,10 +19,39 @@ class UploadController extends Controller
      */
     public function index(Request $request)
     {
-        $uploads = Auth::user()->uploads()->latest()->paginate(10);
+        $query = Auth::user()->uploads();
+
+        // Filtering
+        if ($request->has('status')) {
+            $query->where('status', $request->input('status'));
+        }
+        if ($request->has('type')) {
+            $query->where('mime_type', 'like', 'audio/' . $request->input('type'));
+        }
+
+        // Sorting
+        $sort = $request->input('sort', 'updated_at');
+        $direction = $request->input('direction', 'desc');
+        if (in_array($sort, ['title', 'size', 'duration', 'updated_at'])) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->latest('updated_at');
+        }
+
+        $uploads = $query->paginate(10)->withQueryString();
+
+        $statuses = Upload::distinct()->pluck('status')->toArray();
+        $types = Upload::distinct()->pluck('mime_type')->map(function ($mime) {
+            return explode('/', $mime)[1];
+        })->unique()->toArray();
 
         return inertia('uploads/index', [
             'uploads' => UploadResource::collection($uploads),
+            'filters' => $request->only(['sort', 'direction', 'status', 'type']),
+            'filterOptions' => [
+                'statuses' => $statuses,
+                'types' => $types,
+            ],
         ]);
     }
 
