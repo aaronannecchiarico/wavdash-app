@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import WaveSurfer from 'wavesurfer.js';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useWavesurfer } from '@wavesurfer/react';
+import type WaveSurfer from 'wavesurfer.js';
 import { formatDuration } from '@/lib/formatters';
 
 interface SoundcloudWaveformProps {
@@ -15,23 +16,34 @@ export function SoundcloudWaveform({
     onReady,
     onPlay,
     onPause,
-    onFinish
+    onFinish,
 }: SoundcloudWaveformProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const hoverRef = useRef<HTMLDivElement>(null);
-    const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
-    const [currentTime, setCurrentTime] = useState<number>(0);
     const [duration, setDuration] = useState<number>(0);
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
-    // Create and initialize wavesurfer instance
     useEffect(() => {
-        if (!containerRef.current) return;
+        const checkDarkMode = () => document.documentElement.classList.contains('dark');
+        setIsDarkMode(checkDarkMode());
 
-        // Create canvas to define gradients
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.attributeName === 'class') {
+                    setIsDarkMode(checkDarkMode());
+                }
+            }
+        });
+
+        observer.observe(document.documentElement, { attributes: true });
+
+        return () => observer.disconnect();
+    }, []);
+
+    const { waveColor, progressColor } = useMemo(() => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) return { waveColor: '', progressColor: '' };
 
         canvas.height = 100;
 
@@ -52,7 +64,7 @@ export function SoundcloudWaveform({
         lightModeProgressGradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#818cf8'); // indigo-400
         lightModeProgressGradient.addColorStop(1, '#a5b4fc'); // indigo-300
 
-        // Dark mode gradients (used via CSS variables for theme switching)
+        // Dark mode gradients
         const darkModeWaveGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 1.35);
         darkModeWaveGradient.addColorStop(0, '#475569'); // slate-600
         darkModeWaveGradient.addColorStop((canvas.height * 0.7) / canvas.height, '#475569');
@@ -69,50 +81,55 @@ export function SoundcloudWaveform({
         darkModeProgressGradient.addColorStop((canvas.height * 0.7 + 3) / canvas.height, '#4f46e5'); // indigo-600
         darkModeProgressGradient.addColorStop(1, '#4338ca'); // indigo-700
 
-        // Initialize wavesurfer - using string for waveColor as CanvasGradient isn't directly supported in TypeScript defs
-        const ws = WaveSurfer.create({
-            container: containerRef.current,
-            waveColor: lightModeWaveGradient as unknown as string,
-            progressColor: lightModeProgressGradient as unknown as string,
-            barWidth: 2,
-            barGap: 1,
-            barRadius: 1,
-            url: url,
-            height: 75,
-        });
-
-        // Set up events
-        ws.on('ready', () => {
-            setDuration(ws.getDuration());
-            if (onReady) onReady(ws);
-        });
-
-        ws.on('play', () => {
-            setIsPlaying(true);
-            if (onPlay) onPlay();
-        });
-
-        ws.on('pause', () => {
-            setIsPlaying(false);
-            if (onPause) onPause();
-        });
-
-        ws.on('finish', () => {
-            setIsPlaying(false);
-            if (onFinish) onFinish();
-        });
-
-        ws.on('timeupdate', (currentTime: number) => {
-            setCurrentTime(currentTime);
-        });
-
-        setWavesurfer(ws);
-
-        // Cleanup
-        return () => {
-            ws.destroy();
+        return {
+            waveColor: isDarkMode ? darkModeWaveGradient : lightModeWaveGradient,
+            progressColor: isDarkMode ? darkModeProgressGradient : lightModeProgressGradient,
         };
-    }, [url, onReady, onPlay, onPause, onFinish]);
+    }, [isDarkMode]);
+
+    const { wavesurfer, isPlaying, currentTime } = useWavesurfer({
+        container: containerRef,
+        waveColor: waveColor,
+        progressColor: progressColor,
+        barWidth: 2,
+        barGap: 1,
+        barRadius: 1,
+        url: url,
+        height: 75,
+    });
+
+    useEffect(() => {
+        if (wavesurfer) {
+            wavesurfer.setOptions({
+                waveColor: waveColor,
+                progressColor: progressColor,
+            });
+        }
+    }, [waveColor, progressColor, wavesurfer]);
+
+    useEffect(() => {
+        if (!wavesurfer) return;
+
+        const subscriptions = [
+            wavesurfer.on('ready', () => {
+                setDuration(wavesurfer.getDuration());
+                if (onReady) onReady(wavesurfer);
+            }),
+            wavesurfer.on('play', () => {
+                if (onPlay) onPlay();
+            }),
+            wavesurfer.on('pause', () => {
+                if (onPause) onPause();
+            }),
+            wavesurfer.on('finish', () => {
+                if (onFinish) onFinish();
+            }),
+        ];
+
+        return () => {
+            subscriptions.forEach((unsub) => unsub());
+        };
+    }, [wavesurfer, onReady, onPlay, onPause, onFinish]);
 
     // Handle hover effect
     useEffect(() => {
@@ -135,28 +152,11 @@ export function SoundcloudWaveform({
     }, []);
 
     // Handle play/pause on interaction
-    const handleInteraction = () => {
+    const handleInteraction = useCallback(() => {
         if (wavesurfer) {
             wavesurfer.playPause();
         }
-    };
-
-    // Add CSS for dark mode theming
-    useEffect(() => {
-        // Add CSS for dark mode support
-        const style = document.createElement('style');
-        style.textContent = `
-            .dark .soundcloud-waveform wave {
-                --wave-bg-color: #475569; /* slate-600 */
-                --wave-progress-color: #818cf8; /* indigo-400 */
-            }
-        `;
-        document.head.appendChild(style);
-
-        return () => {
-            document.head.removeChild(style);
-        };
-    }, []);
+    }, [wavesurfer]);
 
     return (
         <div className="relative w-full soundcloud-waveform group">

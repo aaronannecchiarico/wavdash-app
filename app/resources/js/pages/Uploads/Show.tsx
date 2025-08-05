@@ -1,31 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { SoundcloudWaveform } from '@/components/soundcloud-waveform';
 import AppLayout from '@/layouts/app-layout';
-import { formatDuration, formatFileSize } from '@/lib/formatters';
+import { formatFileSize } from '@/lib/formatters';
 import { getStatusColor } from '@/lib/upload-helpers';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { useWavesurfer } from '@wavesurfer/react';
 import { formatDistance } from 'date-fns';
 import { Loader2, PauseIcon, PencilIcon, PlayIcon, Trash2Icon as TrashIcon } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-interface Upload {
-    id: number;
-    title: string;
-    description: string | null;
-    filename: string;
-    mime_type: string;
-    size: number;
-    status: string;
-    stream_url: string | null;
-    created_at: string;
-    updated_at: string;
-    user: {
-        id: number;
-        name: string;
-    };
-}
+import { useState } from 'react';
+import type WaveSurfer from 'wavesurfer.js';
+import { Upload } from '@/types';
 
 interface Props {
     upload: Upload;
@@ -33,57 +18,15 @@ interface Props {
 
 export default function Show({ upload }: Props) {
     const uploadData = 'data' in upload && upload.data ? (upload.data as Upload) : upload;
-    const visualizerContainerRef = useRef<HTMLDivElement | null>(null);
-    const [duration, setDuration] = useState<number>(0);
+    const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const waveSurferTheme = {
-        height: 75,
-        waveColor: '#64748B',
-        progressColor: '#4F46E5',
-        cursorColor: '#4338CA',
-        barWidth: 1,
-        barGap: 0,
-        barRadius: 2,
-    };
-
-    const { wavesurfer, isPlaying, currentTime, isReady } = useWavesurfer({
-        container: visualizerContainerRef,
-        url: uploadData.stream_url || '',
-        ...waveSurferTheme,
-    });
-
-    useEffect(() => {
-        if (!wavesurfer) return;
-
-        const onReady = () => {
-            setDuration(wavesurfer.getDuration());
-        };
-
-        wavesurfer.on('ready', onReady);
-
-        const handleResize = () => {
-            // This is a bit of a hack to force a redraw on resize
-            wavesurfer.setOptions({ ...wavesurfer.options });
-        };
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            wavesurfer.un('ready', onReady);
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [wavesurfer]);
-
-    // Toggle play/pause
-    const handlePlayPause = useCallback(() => {
+    const handlePlayPause = () => {
         if (wavesurfer) {
             wavesurfer.playPause();
         }
-    }, [wavesurfer]);
-
-
-    // This function is now imported from upload-helpers.ts
-
+    };
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Music Library', href: route('uploads.index') },
         { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
@@ -152,9 +95,9 @@ export default function Show({ upload }: Props) {
                                             variant="outline"
                                             size="icon"
                                             className="h-10 w-10 rounded-full"
-                                            disabled={!isReady}
+                                            disabled={isLoading}
                                         >
-                                            {!isReady ? (
+                                            {isLoading ? (
                                                 <Loader2 className="h-5 w-5 animate-spin" />
                                             ) : isPlaying ? (
                                                 <PauseIcon className="h-5 w-5" />
@@ -164,16 +107,16 @@ export default function Show({ upload }: Props) {
                                         </Button>
 
                                         <div className="w-full">
-                                            {/* Waveform with dark mode support */}
-                                            <div
-                                                className="dark:[--wave-bg:#4B5563] dark:[--wave-progress:#A5B4FC] dark:[--wave-cursor:#818CF8]"
-                                                ref={visualizerContainerRef}
+                                            <SoundcloudWaveform
+                                                url={uploadData.stream_url}
+                                                onReady={(ws) => {
+                                                    setWavesurfer(ws);
+                                                    setIsLoading(false);
+                                                }}
+                                                onPlay={() => setIsPlaying(true)}
+                                                onPause={() => setIsPlaying(false)}
+                                                onFinish={() => setIsPlaying(false)}
                                             />
-
-                                            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                                                <span>{formatDuration(isFinite(currentTime) ? currentTime : 0)}</span>
-                                                <span>{formatDuration(isFinite(duration) ? duration : 0)}</span>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
