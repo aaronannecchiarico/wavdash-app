@@ -1,0 +1,58 @@
+# Web Framework (Python 3.13 compatible)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+
+# Task Queue
+celery==5.3.4
+redis==5.0.1
+
+# Audio Processing
+librosa>=0.10.0
+soundfile>=0.12.0
+demucs>=4.0.0
+
+# Machine Learning
+torch>=2.6.0
+torchaudio>=2.6.0
+numpy>=1.24.0
+
+# Note: For CUDA GPU support on Linux/Windows, install with:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# Apple Silicon Macs use Metal Performance Shaders (MPS) automatically
+
+# Data Models (Python 3.13 compatible)
+pydantic>=2.6.0
+
+# Configuration
+python-decouple==3.8
+
+# HTTP Client
+httpx==0.25.2
+
+# File Processing
+python-multipart>=0.0.9
+
+# Monitoring and Logging
+structlog==23.2.0
+
+# Development Dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+
+# Optional: Additional audio formats support
+ffmpeg-python==0.2.0
+
+# Optional: Progress bars
+tqdm==4.66.1
+
+# Optional: Scientific computing (use latest compatible version)
+scipy>=1.10.0
+
+# CORS middleware
+python-jose[cryptography]==3.3.0
+
+# Health checks
+psutil==5.9.6
