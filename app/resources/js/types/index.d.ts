@@ -41,8 +41,8 @@ export interface PaginatedData<T> {
         next: string | null;
     };
     meta: {
-        total: ReactNode;
-        to: ReactNode;
+        total: number;
+        to: number;
         current_page: number;
         from: number;
         last_page: number;
@@ -51,8 +51,6 @@ export interface PaginatedData<T> {
             label: string;
             active: boolean;
         }[];
-        from: number;
-        last_page: number;
     };
 }
 
@@ -67,6 +65,42 @@ export interface User {
     [key: string]: unknown; // This allows for additional properties...
 }
 
+export interface UploadAnalysisTask {
+    id: number;
+    task_id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    progress: number;
+    submitted_at: string;
+    completed_at: string | null;
+    error_message: string | null;
+}
+
+export interface UploadAnalysis {
+    id: number;
+    musical_key: string | null;
+    key_confidence: number | null;
+    bpm: number | null;
+    beat_regularity: number | null;
+    loudness_db: number | null;
+    dynamic_range_db: number | null;
+    brightness: number | null;
+    timbral_complexity: number | null;
+    analysis_duration: number | null;
+    chunk_count: number | null;
+    key_changes: number | null;
+    created_at: string;
+    categories?: {
+        bpm: string | null;
+        loudness: string | null;
+        dynamic_range: string | null;
+        brightness: string | null;
+    };
+    reliability?: {
+        has_reliable_key: boolean;
+        is_atonal_complex: boolean;
+    };
+}
+
 export interface Upload {
     id: number;
     title: string;
@@ -75,12 +109,17 @@ export interface Upload {
     mime_type: string;
     size: number;
     status: string;
+    duration?: number;
     stream_url: string | null;
     created_at: string;
     updated_at: string;
     user: User;
     artist?: string;
-    duration?: number;
     genre?: string;
     bitrate?: number;
+    // Analysis-related properties
+    analysis_task?: UploadAnalysisTask | null;
+    analysis?: UploadAnalysis | null;
+    has_analysis?: boolean;
+    is_analysis_in_progress?: boolean;
 }

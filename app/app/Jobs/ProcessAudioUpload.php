@@ -77,7 +77,7 @@ class ProcessAudioUpload implements ShouldQueue
             $this->upload->update([
                 'stream_path' => $destinationPath,
                 'status' => 'ready',
-                'duration' => $duration,
+                'duration_seconds' => $duration,
             ]);
 
             // Broadcast the event

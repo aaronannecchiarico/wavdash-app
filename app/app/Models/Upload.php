@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Upload extends Model
 {
@@ -58,5 +59,37 @@ class Upload extends Model
     public function contestEntries(): HasMany
     {
         return $this->hasMany(ContestUser::class);
+    }
+
+    /**
+     * Get the analysis task for this upload.
+     */
+    public function analysisTask(): HasOne
+    {
+        return $this->hasOne(UploadAnalysisTask::class);
+    }
+
+    /**
+     * Get the analysis results for this upload.
+     */
+    public function analysis(): HasOne
+    {
+        return $this->hasOne(UploadAnalysis::class);
+    }
+
+    /**
+     * Check if this upload has analysis results.
+     */
+    public function hasAnalysis(): bool
+    {
+        return $this->analysis !== null;
+    }
+
+    /**
+     * Check if analysis is in progress.
+     */
+    public function isAnalysisInProgress(): bool
+    {
+        return $this->analysisTask && $this->analysisTask->isProcessing();
     }
 }

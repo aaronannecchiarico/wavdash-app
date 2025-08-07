@@ -7,7 +7,7 @@ import { formatFileSize, formatDuration, formatDate } from '@/lib/formatters';
 import { getAudioFormat, getStatusColor } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
+import { BarChart3, Calendar, Clock, Download, MoreVertical, Music, Pencil, Trash2, User, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 
 
@@ -24,7 +24,7 @@ export const MusicCard = ({
 
     const handleCardClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        router.visit(route('uploads.show', upload.id));
+        router.visit(route('uploads.show', { upload: upload.id }));
     };
 
     return (
@@ -51,15 +51,31 @@ export const MusicCard = ({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                 <DropdownMenuItem>
-                                    <Link href={route('uploads.edit', upload.id)} className="flex w-full items-center">
+                                    <Link href={route('uploads.analysis.show', { upload: upload.id })} className="flex w-full items-center">
+                                        <BarChart3 className="mr-2 h-4 w-4" />
+                                        Audio Analysis
+                                        {upload.has_analysis && (
+                                            <Badge variant="secondary" className="ml-auto text-xs">
+                                                Done
+                                            </Badge>
+                                        )}
+                                        {upload.is_analysis_in_progress && (
+                                            <Badge variant="outline" className="ml-auto text-xs">
+                                                Processing
+                                            </Badge>
+                                        )}
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Link href={route('uploads.edit', { upload: upload.id })} className="flex w-full items-center">
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Edit
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <Link href={route('uploads.index', upload.id)} className="flex w-full items-center">
+                                    <Link href={route('uploads.show', { upload: upload.id })} className="flex w-full items-center">
                                         <Download className="mr-2 h-4 w-4" />
-                                        Download
+                                        View Details
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem

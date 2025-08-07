@@ -38,7 +38,7 @@ class UploadController extends Controller
             $query->latest('updated_at');
         }
 
-        $uploads = $query->paginate(10)->withQueryString();
+        $uploads = $query->with(['analysisTask', 'analysis'])->paginate(10)->withQueryString();
 
         $statuses = Upload::distinct()->pluck('status')->toArray();
         $types = Upload::distinct()->pluck('mime_type')->map(function ($mime) {
@@ -103,6 +103,8 @@ class UploadController extends Controller
     public function show(Upload $upload)
     {
         $this->authorize('view', $upload);
+
+        $upload->load(['analysisTask', 'analysis']);
 
         return inertia('uploads/show', [
             'upload' => new UploadResource($upload),

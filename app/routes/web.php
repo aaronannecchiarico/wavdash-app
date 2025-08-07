@@ -22,6 +22,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->parameters([
             'uploads' => 'upload'
         ]);
+
+    // Upload Analysis Routes (Web/Inertia)
+    Route::prefix('uploads/{upload}/analysis')->name('uploads.analysis.')->group(function () {
+        Route::post('/', [\App\Http\Controllers\UploadAnalysisController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\UploadAnalysisController::class, 'show'])->name('show');
+        Route::delete('/', [\App\Http\Controllers\UploadAnalysisController::class, 'destroy'])->name('destroy');
+        Route::get('/similar', [\App\Http\Controllers\UploadAnalysisController::class, 'similar'])->name('similar');
+    });
+
+    // Analysis service status (API)
+    Route::get('api/analysis/status', [\App\Http\Controllers\UploadAnalysisController::class, 'status'])->name('analysis.status');
 });
 
 require __DIR__.'/settings.php';
