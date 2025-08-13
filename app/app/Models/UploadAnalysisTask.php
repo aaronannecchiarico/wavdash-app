@@ -96,4 +96,20 @@ class UploadAnalysisTask extends Model
     {
         return in_array($this->status, ['pending', 'processing']);
     }
+
+    /**
+     * Check if the task has been deleted.
+     */
+    public function isDeleted(): bool
+    {
+        return $this->status === 'deleted';
+    }
+
+    /**
+     * Check if the task can be deleted (is in progress or has failed).
+     */
+    public function canBeDeleted(): bool
+    {
+        return in_array($this->status, ['pending', 'processing', 'failed']);
+    }
 }

@@ -254,4 +254,206 @@ class AudioAnalysisServiceTest extends TestCase
 
         $this->assertEquals($expectedFiles, $result);
     }
+
+    public function test_delete_task_successfully(): void
+    {
+        $task = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing',
+            'progress' => 50
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('deleteTask')
+            ->with('test-task-123')
+            ->willReturn([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully'
+            ]);
+
+        $result = $this->analysisService->deleteTask($task);
+
+        $this->assertTrue($result);
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+        $this->assertEquals('Task deleted by user', $task->error_message);
+    }
+
+    public function test_delete_task_removes_existing_analysis(): void
+    {
+        // Create analysis data first
+        $analysis = $this->upload->analysis()->create([
+            'musical_key' => 'C major',
+            'bpm' => 120,
+        ]);
+
+        $task = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing'
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('deleteTask')
+            ->with('test-task-123')
+            ->willReturn(['status' => 'deleted']);
+
+        $result = $this->analysisService->deleteTask($task);
+
+        $this->assertTrue($result);
+        
+        // Check that analysis was deleted
+        $this->upload->refresh();
+        $this->assertNull($this->upload->analysis);
+        $this->assertDatabaseMissing('upload_analyses', ['id' => $analysis->id]);
+    }
+
+    public function test_delete_task_handles_microservice_failure(): void
+    {
+        $task = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing'
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('deleteTask')
+            ->with('test-task-123')
+            ->willThrowException(new \Exception('Microservice error'));
+
+        $result = $this->analysisService->deleteTask($task);
+
+        $this->assertFalse($result);
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+        $this->assertStringContainsString('Task deletion failed', $task->error_message);
+    }
+
+    public function test_delete_task_for_failed_task(): void
+    {
+        $task = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'failed',
+            'error_message' => 'Original failure reason'
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('deleteTask')
+            ->with('test-task-123')
+            ->willReturn(['status' => 'deleted']);
+
+        $result = $this->analysisService->deleteTask($task);
+
+        $this->assertTrue($result);
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+        $this->assertEquals('Task deleted by user', $task->error_message);
+    }
+
+    public function test_delete_task_for_pending_task(): void
+    {
+        $task = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'pending',
+            'progress' => 0
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('deleteTask')
+            ->with('test-task-123')
+            ->willReturn([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'deleted_from_celery' => true,
+                'marked_as_deleted' => true
+            ]);
+
+        $result = $this->analysisService->deleteTask($task);
+
+        $this->assertTrue($result);
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+        $this->assertEquals('Task deleted by user', $task->error_message);
+    }
+
+    public function test_submit_for_analysis_removes_existing_deleted_task(): void
+    {
+        // Create a deleted task first
+        $deletedTask = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'deleted-task-123',
+            'status' => 'deleted',
+            'error_message' => 'Task deleted by user'
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('extractFeatures')
+            ->willReturn([
+                'task_id' => 'new-task-456',
+                'status' => 'pending'
+            ]);
+
+        $newTask = $this->analysisService->submitForAnalysis($this->upload);
+
+        $this->assertNotNull($newTask);
+        $this->assertEquals('new-task-456', $newTask->task_id);
+        $this->assertEquals('pending', $newTask->status);
+
+        // Verify old deleted task was removed
+        $this->assertDatabaseMissing('upload_analysis_tasks', ['id' => $deletedTask->id]);
+    }
+
+    public function test_submit_for_analysis_removes_existing_failed_task(): void
+    {
+        // Create a failed task first
+        $failedTask = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'failed-task-123',
+            'status' => 'failed',
+            'error_message' => 'Analysis failed'
+        ]);
+
+        $this->mockClient->expects($this->once())
+            ->method('extractFeatures')
+            ->willReturn([
+                'task_id' => 'new-task-789',
+                'status' => 'pending'
+            ]);
+
+        $newTask = $this->analysisService->submitForAnalysis($this->upload);
+
+        $this->assertNotNull($newTask);
+        $this->assertEquals('new-task-789', $newTask->task_id);
+        $this->assertEquals('pending', $newTask->status);
+
+        // Verify old failed task was removed
+        $this->assertDatabaseMissing('upload_analysis_tasks', ['id' => $failedTask->id]);
+    }
+
+    public function test_submit_for_analysis_keeps_processing_task(): void
+    {
+        // Create a processing task
+        $processingTask = UploadAnalysisTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'processing-task-123',
+            'status' => 'processing',
+            'progress' => 50
+        ]);
+
+        // Should not call extractFeatures since there's an active task
+        $this->mockClient->expects($this->never())
+            ->method('extractFeatures');
+
+        $result = $this->analysisService->submitForAnalysis($this->upload);
+
+        // Should return null since there's already a processing task
+        $this->assertNull($result);
+
+        // Verify processing task still exists
+        $this->assertDatabaseHas('upload_analysis_tasks', ['id' => $processingTask->id]);
+    }
 }

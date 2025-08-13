@@ -28,6 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [\App\Http\Controllers\UploadAnalysisController::class, 'store'])->name('store');
         Route::get('/', [\App\Http\Controllers\UploadAnalysisController::class, 'show'])->name('show');
         Route::delete('/', [\App\Http\Controllers\UploadAnalysisController::class, 'destroy'])->name('destroy');
+        Route::delete('/task', [\App\Http\Controllers\UploadAnalysisController::class, 'deleteTask'])->name('delete-task');
         Route::get('/similar', [\App\Http\Controllers\UploadAnalysisController::class, 'similar'])->name('similar');
     });
 

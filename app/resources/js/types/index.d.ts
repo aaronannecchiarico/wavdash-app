@@ -68,7 +68,7 @@ export interface User {
 export interface UploadAnalysisTask {
     id: number;
     task_id: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'deleted';
     progress: number;
     submitted_at: string;
     completed_at: string | null;

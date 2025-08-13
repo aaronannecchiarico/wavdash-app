@@ -138,4 +138,18 @@ class AudioMicroserviceClient
         
         return $response->json();
     }
+    
+    /**
+     * Delete a task from the microservice.
+     */
+    public function deleteTask(string $taskId): array
+    {
+        $response = Http::timeout(10)->delete("{$this->baseUrl}/task/{$taskId}");
+        
+        if ($response->failed()) {
+            throw new \Exception("Failed to delete task: " . $response->body());
+        }
+        
+        return $response->json();
+    }
 }

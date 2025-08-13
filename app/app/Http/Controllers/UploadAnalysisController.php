@@ -116,6 +116,45 @@ class UploadAnalysisController extends Controller
     }
 
     /**
+     * Delete an active analysis task and cancel it in the microservice.
+     */
+    public function deleteTask(Upload $upload): RedirectResponse
+    {
+        $this->authorize('update', $upload);
+
+        if (!config('services.audio_analysis.enabled')) {
+            return redirect()->back()->with('error', 'Audio analysis is currently disabled.');
+        }
+
+        if (!$upload->analysisTask) {
+            return redirect()->back()->with('error', 'No analysis task found to delete.');
+        }
+
+        if (!$upload->analysisTask->canBeDeleted()) {
+            return redirect()->back()->with('error', 'This analysis task cannot be deleted in its current state.');
+        }
+
+        // Check service availability
+        if (!$this->analysisService->isServiceAvailable()) {
+            return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
+        }
+
+        $success = $this->analysisService->deleteTask($upload->analysisTask);
+
+        if ($success) {
+            Log::info('Analysis task deleted via user action', [
+                'upload_id' => $upload->id,
+                'task_id' => $upload->analysisTask->task_id,
+                'user_id' => Auth::user()->id,
+            ]);
+            
+            return redirect()->back()->with('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
+        } else {
+            return redirect()->back()->with('warning', 'Analysis task was marked as deleted locally, but there may have been an issue communicating with the analysis service.');
+        }
+    }
+
+    /**
      * Show similar uploads page based on analysis.
      */
     public function similar(Upload $upload): Response|RedirectResponse

@@ -235,4 +235,57 @@ class AudioMicroserviceClientTest extends TestCase
         $this->assertEquals(2, $result['total_count']);
         $this->assertEquals('local', $result['storage_type']);
     }
+
+    public function test_delete_task_makes_correct_api_call(): void
+    {
+        Http::fake([
+            'localhost:8001/task/test-task-123' => Http::response([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully',
+                'deleted_from_celery' => true,
+                'marked_as_deleted' => true
+            ])
+        ]);
+
+        $result = $this->client->deleteTask('test-task-123');
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'DELETE' &&
+                   $request->url() === 'http://localhost:8001/task/test-task-123';
+        });
+
+        $this->assertEquals('test-task-123', $result['task_id']);
+        $this->assertEquals('deleted', $result['status']);
+        $this->assertTrue($result['deleted_from_celery']);
+        $this->assertTrue($result['marked_as_deleted']);
+    }
+
+    public function test_delete_task_handles_api_failure(): void
+    {
+        Http::fake([
+            'localhost:8001/task/test-task-123' => Http::response([
+                'error' => 'Task not found'
+            ], 404)
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to delete task:');
+
+        $this->client->deleteTask('test-task-123');
+    }
+
+    public function test_delete_task_handles_service_error(): void
+    {
+        Http::fake([
+            'localhost:8001/task/test-task-123' => Http::response([
+                'error' => 'Internal server error'
+            ], 500)
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to delete task:');
+
+        $this->client->deleteTask('test-task-123');
+    }
 }

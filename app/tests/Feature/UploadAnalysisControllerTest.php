@@ -7,6 +7,7 @@ use App\Models\UploadAnalysis;
 use App\Models\UploadAnalysisTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -77,7 +78,7 @@ class UploadAnalysisControllerTest extends TestCase
     public function test_cannot_start_analysis_when_upload_not_ready(): void
     {
         config(['services.audio_analysis.enabled' => true]);
-        
+
         $this->upload->update(['status' => 'processing']);
 
         $response = $this->actingAs($this->user)
@@ -187,7 +188,7 @@ class UploadAnalysisControllerTest extends TestCase
             'user_id' => $this->user->id,
             'status' => 'ready'
         ]);
-        
+
         UploadAnalysis::create([
             'upload_id' => $similarUpload->id,
             'musical_key' => 'E major',
@@ -261,12 +262,189 @@ class UploadAnalysisControllerTest extends TestCase
 
         // The response should be an Inertia response with upload data including analysis
         $response->assertOk();
-        
+
         // Check that the upload resource includes analysis data when loaded
         $this->upload->load(['analysisTask', 'analysis']);
         $this->assertNotNull($this->upload->analysisTask);
         $this->assertNotNull($this->upload->analysis);
         $this->assertEquals('E major', $this->upload->analysis->musical_key);
         $this->assertEquals(128, $this->upload->analysis->bpm);
+    }
+
+    public function test_can_delete_processing_analysis_task(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        Http::fake([
+            '*/health' => Http::response(['status' => 'healthy']),
+            '*/task/test-task-123' => Http::response([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully'
+            ])
+        ]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing',
+            'progress' => 50,
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
+
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+        $this->assertEquals('Task deleted by user', $task->error_message);
+    }
+
+    public function test_can_delete_pending_analysis_task(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'pending',
+            'progress' => 0,
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
+
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+    }
+
+    public function test_can_delete_failed_analysis_task(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'failed',
+            'error_message' => 'Original error',
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
+
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+    }
+
+    public function test_cannot_delete_completed_analysis_task(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'completed',
+            'progress' => 100,
+            'submitted_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('error', 'This analysis task cannot be deleted in its current state.');
+
+        $task->refresh();
+        $this->assertEquals('completed', $task->status); // Should remain unchanged
+    }
+
+    public function test_cannot_delete_task_when_no_task_exists(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('error', 'No analysis task found to delete.');
+    }
+
+    public function test_cannot_delete_task_when_service_disabled(): void
+    {
+        config(['services.audio_analysis.enabled' => false]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing',
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('error', 'Audio analysis is currently disabled.');
+    }
+
+    public function test_delete_task_removes_existing_analysis_data(): void
+    {
+        config(['services.audio_analysis.enabled' => true]);
+
+        // Create completed analysis first
+        $analysis = UploadAnalysis::create([
+            'upload_id' => $this->upload->id,
+            'musical_key' => 'C major',
+            'bpm' => 120,
+        ]);
+
+        $task = UploadAnalysisTask::create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing',
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $this->upload));
+
+        $response->assertRedirect()
+            ->assertSessionHas('success');
+
+        // Verify analysis data was removed
+        $this->assertDatabaseMissing('upload_analyses', ['id' => $analysis->id]);
+
+        $task->refresh();
+        $this->assertEquals('deleted', $task->status);
+    }
+
+    public function test_unauthorized_user_cannot_delete_analysis_task(): void
+    {
+        $otherUser = User::factory()->create();
+        $otherUpload = Upload::factory()->create(['user_id' => $otherUser->id]);
+
+        UploadAnalysisTask::create([
+            'upload_id' => $otherUpload->id,
+            'task_id' => 'test-task-123',
+            'status' => 'processing',
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.delete-task', $otherUpload));
+
+        $response->assertForbidden();
     }
 }

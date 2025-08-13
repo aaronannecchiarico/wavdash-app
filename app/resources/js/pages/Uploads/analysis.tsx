@@ -60,10 +60,16 @@ export default function Analysis({ upload, analysis_service }: Props) {
         }
     };
 
+    const handleDeleteTask = () => {
+        if (confirm('Are you sure you want to cancel and delete this analysis task? This will stop the analysis and allow you to start a new one.')) {
+            destroy(route('uploads.analysis.delete-task', { upload: uploadData.id }));
+        }
+    };
+
     console.log(uploadData);
 
     const renderAnalysisStatus = () => {
-        if (!uploadData.analysis_task) {
+        if (!uploadData.analysis_task || uploadData.analysis_task.status === 'deleted') {
             return (
                 <Card>
                     <CardHeader>
@@ -137,9 +143,15 @@ export default function Analysis({ upload, analysis_service }: Props) {
                         <p className="text-sm text-muted-foreground">
                             Started {new Date(uploadData.analysis_task.submitted_at).toLocaleString()}
                         </p>
-                        <Button variant="outline" onClick={() => window.location.reload()}>
-                            Refresh Status
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => window.location.reload()}>
+                                Refresh Status
+                            </Button>
+                            <Button variant="outline" onClick={handleDeleteTask} disabled={processing}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Cancel Task
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             );
@@ -164,15 +176,18 @@ export default function Analysis({ upload, analysis_service }: Props) {
                             </p>
                         </div>
                         <div className="flex gap-2">
-                            <Button onClick={handleStartAnalysis} disabled={processing}>
-                                <Zap className="h-4 w-4 mr-2" />
-                                Retry Analysis
+                            <Button onClick={handleDeleteTask} disabled={processing}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Failed Task
                             </Button>
                             <Button variant="outline" onClick={handleDeleteAnalysis} disabled={processing}>
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Clear Failed Analysis
+                                Clear All Data
                             </Button>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            Delete the failed task to start a new analysis, or clear all data to remove everything.
+                        </p>
                     </CardContent>
                 </Card>
             );

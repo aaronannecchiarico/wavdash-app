@@ -21,6 +21,28 @@ class AudioAnalysisService
     public function submitForAnalysis(Upload $upload): ?UploadAnalysisTask
     {
         try {
+            // Check if there's already a processing task
+            if ($upload->analysisTask && $upload->analysisTask->isProcessing()) {
+                Log::info('Analysis already in progress for upload', [
+                    'upload_id' => $upload->id,
+                    'task_id' => $upload->analysisTask->task_id,
+                    'status' => $upload->analysisTask->status
+                ]);
+                return null;
+            }
+
+            // Clean up any existing deleted or failed tasks before starting a new one
+            if ($upload->analysisTask && ($upload->analysisTask->isDeleted() || $upload->analysisTask->hasFailed())) {
+                Log::info('Removing existing deleted/failed task before starting new analysis', [
+                    'upload_id' => $upload->id,
+                    'old_task_status' => $upload->analysisTask->status,
+                    'old_task_id' => $upload->analysisTask->task_id
+                ]);
+                
+                $upload->analysisTask->delete();
+                $upload->unsetRelation('analysisTask'); // Clear the relationship cache
+            }
+
             // Determine storage path based on how the upload was stored
             $storagePath = $upload->getFilePath();
             
@@ -267,6 +289,62 @@ class AudioAnalysisService
                 'error' => $e->getMessage()
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Delete an analysis task from the microservice.
+     */
+    public function deleteTask(UploadAnalysisTask $task): bool
+    {
+        try {
+            Log::info('Deleting analysis task', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'current_status' => $task->status
+            ]);
+
+            // Call the microservice to delete the task
+            $result = $this->client->deleteTask($task->task_id);
+
+            // Update the task status to deleted
+            $task->update([
+                'status' => 'deleted',
+                'error_message' => 'Task deleted by user',
+            ]);
+
+            // Remove any existing analysis data since we're starting fresh
+            if ($task->upload->analysis) {
+                $task->upload->analysis->delete();
+                Log::info('Removed existing analysis data for deleted task', [
+                    'upload_id' => $task->upload_id,
+                    'task_id' => $task->task_id
+                ]);
+            }
+
+            Log::info('Analysis task deleted successfully', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'microservice_response' => $result
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Exception while deleting analysis task', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Still mark the task as deleted locally even if microservice call fails
+            // This prevents the UI from getting stuck
+            $task->update([
+                'status' => 'deleted',
+                'error_message' => 'Task deletion failed: ' . $e->getMessage(),
+            ]);
+            
+            return false;
         }
     }
 }
