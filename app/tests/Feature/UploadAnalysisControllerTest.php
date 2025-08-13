@@ -7,6 +7,7 @@ use App\Models\UploadAnalysis;
 use App\Models\UploadAnalysisTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UploadAnalysisControllerTest extends TestCase
@@ -42,8 +43,24 @@ class UploadAnalysisControllerTest extends TestCase
 
     public function test_can_view_analysis_page_for_upload(): void
     {
-        // Skip this test during development - requires vite build
-        $this->markTestSkipped('Requires vite build - test manually');
+        $response = $this->actingAs($this->user)
+            ->get(route('uploads.analysis.show', $this->upload));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('uploads/analysis')
+                ->has('upload.data', fn (Assert $upload) => $upload
+                    ->where('id', $this->upload->id)
+                    ->has('id')
+                    ->has('title')
+                    ->has('status')
+                    ->etc()
+                )
+                ->has('analysis_service', fn (Assert $service) => $service
+                    ->has('enabled')
+                    ->has('available')
+                )
+            );
     }
 
     public function test_cannot_start_analysis_when_service_disabled(): void
@@ -155,8 +172,47 @@ class UploadAnalysisControllerTest extends TestCase
 
     public function test_can_view_similar_uploads_page(): void
     {
-        // Skip this test during development - requires vite build
-        $this->markTestSkipped('Requires vite build - test manually');
+        // Create analysis data for the upload
+        UploadAnalysis::create([
+            'upload_id' => $this->upload->id,
+            'musical_key' => 'E major',
+            'key_confidence' => 0.85,
+            'bpm' => 128,
+            'loudness_db' => -12.0,
+            'brightness' => 1800,
+        ]);
+
+        // Create similar uploads for comparison
+        $similarUpload = Upload::factory()->create([
+            'user_id' => $this->user->id,
+            'status' => 'ready'
+        ]);
+        
+        UploadAnalysis::create([
+            'upload_id' => $similarUpload->id,
+            'musical_key' => 'E major',
+            'bpm' => 126,
+            'brightness' => 1750,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('uploads.analysis.similar', $this->upload));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('uploads/similar')
+                ->has('upload.data', fn (Assert $upload) => $upload
+                    ->where('id', $this->upload->id)
+                    ->etc()
+                )
+                ->has('similar_uploads')
+                ->has('analysis_criteria', fn (Assert $criteria) => $criteria
+                    ->where('musical_key', 'E major')
+                    ->where('bpm', 128)
+                    ->where('brightness', 1800)
+                    ->where('key_confidence', 0.85)
+                )
+            );
     }
 
     public function test_cannot_view_similar_uploads_without_analysis(): void

@@ -35,8 +35,8 @@ class AudioAnalysisService
                 'detailed' => false, // We only need summary data
                 'callback_url' => route('api.audio.analysis.callback', $upload->id),
                 'metadata' => [
-                    'upload_id' => $upload->id,
-                    'user_id' => $upload->user_id,
+                    'upload_id' => (string) $upload->id,
+                    'user_id' => (string) $upload->user_id,
                     'original_filename' => $upload->filename,
                 ]
             ]);

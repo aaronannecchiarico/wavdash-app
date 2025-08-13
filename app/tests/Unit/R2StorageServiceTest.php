@@ -77,7 +77,7 @@ class R2StorageServiceTest extends TestCase
 
     public function test_get_file_returns_null_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        Config::set('filesystems.default', 'local');
 
         $result = $this->r2Service->getFile('test/path.mp3');
 
@@ -98,7 +98,7 @@ class R2StorageServiceTest extends TestCase
 
     public function test_file_exists_returns_false_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        Config::set('filesystems.default', 'local');
 
         $result = $this->r2Service->fileExists('test/path.mp3');
 
@@ -118,7 +118,7 @@ class R2StorageServiceTest extends TestCase
 
     public function test_delete_file_returns_false_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        Config::set('filesystems.default', 'local');
 
         $result = $this->r2Service->deleteFile('test/path.mp3');
 
@@ -160,7 +160,7 @@ class R2StorageServiceTest extends TestCase
 
     public function test_upload_stems_returns_empty_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        Config::set('filesystems.default', 'local');
 
         $result = $this->r2Service->uploadStems(['vocals' => '/tmp/vocals.wav'], 'test-base');
 
@@ -199,7 +199,10 @@ class R2StorageServiceTest extends TestCase
 
     public function test_get_storage_info_returns_configuration(): void
     {
-        Config::set('filesystems.r2_enabled', true);
+        // Set up R2 configuration to match current implementation
+        Config::set('filesystems.default', 'r2');
+        Config::set('filesystems.disks.r2.key', 'test-key');
+        Config::set('filesystems.disks.r2.secret', 'test-secret');
         Config::set('filesystems.disks.r2.bucket', 'test-bucket');
         Config::set('filesystems.disks.r2.endpoint', 'https://test.endpoint');
         Config::set('filesystems.disks.r2.url', 'https://public.url');
@@ -216,7 +219,8 @@ class R2StorageServiceTest extends TestCase
 
     public function test_migrate_upload_returns_false_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        // Set filesystem to local to disable R2
+        Config::set('filesystems.default', 'local');
         
         $user = User::factory()->create();
         $upload = Upload::factory()->create([
@@ -246,7 +250,7 @@ class R2StorageServiceTest extends TestCase
 
     public function test_copy_from_local_returns_false_when_disabled(): void
     {
-        Config::set('filesystems.r2_enabled', false);
+        Config::set('filesystems.default', 'local');
 
         $result = $this->r2Service->copyFromLocal('/tmp/nonexistent', 'r2/path');
 

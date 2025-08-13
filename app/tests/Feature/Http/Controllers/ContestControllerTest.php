@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Request;
+use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -108,29 +109,38 @@ final class ContestControllerTest extends TestCase
     }
 
     /**
-     * Test the controller directly using mock request.
+     * Test the controller returns proper Inertia response with component and data.
      */
     #[Test]
-    public function controller_returns_correct_data()
+    public function index_returns_proper_inertia_response()
     {
-        // Create some test data
+        // Create authenticated user
         $user = User::factory()->create();
+        
+        // Create some test contests
         $contests = Contest::factory()
             ->count(3)
             ->for($user)
             ->create();
 
-        // Create a controller instance
-        $controller = new ContestController();
+        // Make authenticated request to contests index
+        $response = $this->actingAs($user)->get(route('contests.index'));
 
-        // Call the index method with a mock request
-        $response = $controller->index(new Request());
-
-        // For an Inertia response, simply verify it's not null
-        $this->assertNotNull($response);
-
-        // The Inertia response object is a particular structure
-        // Check that it's the expected type of response
-        $this->assertInstanceOf(\Inertia\Response::class, $response);
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('contest/index')
+                ->has('contests.data', 3)
+                ->has('contests.data.0', fn (Assert $contest) => $contest
+                    ->has('id')
+                    ->has('name')
+                    ->has('description')
+                    ->has('status')
+                    ->has('user')
+                    ->has('contest_users_count')
+                    ->etc()
+                )
+                ->has('contests.links')
+                ->has('contests.meta')
+            );
     }
 }

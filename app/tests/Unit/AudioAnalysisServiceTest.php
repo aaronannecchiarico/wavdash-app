@@ -42,8 +42,8 @@ class AudioAnalysisServiceTest extends TestCase
                 $this->callback(function ($options) {
                     return $options['detailed'] === false &&
                            str_contains($options['callback_url'], 'api/audio/analysis/callback') &&
-                           $options['metadata']['upload_id'] === $this->upload->id &&
-                           $options['metadata']['user_id'] === $this->upload->user_id;
+                           $options['metadata']['upload_id'] === (string) $this->upload->id &&
+                           $options['metadata']['user_id'] === (string) $this->upload->user_id;
                 })
             )
             ->willReturn([

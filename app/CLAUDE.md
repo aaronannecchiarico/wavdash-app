@@ -120,3 +120,170 @@ This is a Laravel 12 + React + Inertia.js application for audio file management 
 - Laravel Reverb configured for WebSocket connections
 - Upload processing status broadcasted via `UploadProcessed` event
 - Frontend listens for real-time updates during audio processing
+
+## Testing with Inertia.js
+
+This application uses comprehensive Inertia.js testing patterns to ensure proper server-side rendering and data flow between Laravel controllers and React components.
+
+### Testing Setup
+
+**Required Import:**
+```php
+use Inertia\Testing\AssertableInertia as Assert;
+```
+
+**Basic Test Structure:**
+```php
+public function test_controller_returns_proper_inertia_response()
+{
+    $user = User::factory()->create();
+    
+    $response = $this->actingAs($user)->get(route('route.name'));
+    
+    $response->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('page/component')
+            ->has('data.field')
+            ->where('data.id', $expectedValue)
+        );
+}
+```
+
+### Common Testing Patterns
+
+**1. Component Assertion:**
+```php
+->assertInertia(fn (Assert $page) => $page
+    ->component('uploads/index') // Verify correct component
+)
+```
+
+**2. Data Structure Testing:**
+```php
+->assertInertia(fn (Assert $page) => $page
+    ->has('uploads.data', 3) // Assert collection size
+    ->has('uploads.data.0', fn (Assert $upload) => $upload
+        ->has('id')
+        ->has('title')
+        ->has('status')
+        ->etc() // Allow additional fields
+    )
+)
+```
+
+**3. Specific Value Assertions:**
+```php
+->assertInertia(fn (Assert $page) => $page
+    ->where('upload.data.id', $upload->id)
+    ->where('filters.status', 'ready')
+)
+```
+
+**4. Resource Structure Testing:**
+```php
+->assertInertia(fn (Assert $page) => $page
+    ->has('upload.data', fn (Assert $upload) => $upload
+        ->has('id')
+        ->has('title')
+        ->has('user', fn (Assert $user) => $user
+            ->has('id')
+            ->has('name')
+        )
+        ->etc()
+    )
+)
+```
+
+### Controller-Specific Examples
+
+**Upload Controller:**
+```php
+// Index page with pagination and filtering
+$response->assertOk()
+    ->assertInertia(fn (Assert $page) => $page
+        ->component('uploads/index')
+        ->has('uploads.data')
+        ->has('uploads.links')
+        ->has('uploads.meta')
+        ->has('filters')
+        ->has('filterOptions')
+    );
+
+// Show page with resource data
+$response->assertOk()
+    ->assertInertia(fn (Assert $page) => $page
+        ->component('uploads/show')
+        ->has('upload.data', fn (Assert $upload) => $upload
+            ->where('id', $upload->id)
+            ->has('title')
+            ->has('filename')
+            ->has('user')
+            ->etc()
+        )
+    );
+```
+
+**Analysis Controller:**
+```php
+// Analysis page with service status
+$response->assertOk()
+    ->assertInertia(fn (Assert $page) => $page
+        ->component('uploads/analysis')
+        ->has('upload.data')
+        ->has('analysis_service', fn (Assert $service) => $service
+            ->has('enabled')
+            ->has('available')
+        )
+    );
+```
+
+### Testing Considerations
+
+**Resource Wrapping:**
+- Laravel resources wrap data in `.data` property
+- Always use `upload.data` not `upload` for resource assertions
+- Pagination data includes `.links` and `.meta` properties
+
+**Factory Hooks:**
+- Be aware of model factory `afterCreating` hooks
+- Use `make()` then `save()` to bypass hooks when needed
+- Use `state(['field' => 'value'])` to override defaults
+
+**Authentication:**
+- Always use `$this->actingAs($user)` for protected routes
+- Test authorization with different users when applicable
+
+**Data Types:**
+- Be precise with numeric types (int vs float)
+- Use exact values for assertions (`->where('id', 1)`)
+
+### Best Practices
+
+1. **Test Component and Data Together**: Always verify both the correct component loads and contains expected data
+2. **Use Nested Assertions**: Structure assertions to match your resource/component hierarchy  
+3. **Test Edge Cases**: Include authorization, validation, and error scenarios
+4. **Mock External Services**: Use fakes for storage, queues, and external APIs
+5. **Verify Relationships**: Test that related data (user, analysis) is properly loaded
+
+### Example Test File Structure
+
+```php
+class UploadControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    #[Test]
+    public function index_requires_authentication() { /* ... */ }
+    
+    #[Test] 
+    public function index_returns_proper_inertia_response() { /* ... */ }
+    
+    #[Test]
+    public function show_returns_proper_inertia_response() { /* ... */ }
+    
+    #[Test]
+    public function show_requires_upload_authorization() { /* ... */ }
+}
+```
+
+This testing approach ensures that your Inertia.js application works correctly across the full stack, from Laravel controllers to React components.
