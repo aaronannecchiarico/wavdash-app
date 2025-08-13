@@ -25,7 +25,10 @@ class UploadResource extends JsonResource
             'status' => $this->status,
             'duration' => $this->duration_seconds,
             'stream_url' => $this->when($this->stream_path && $this->status === 'ready',
-                                    Storage::url($this->stream_path)),
+                function() {
+                    // Use the model's method to get appropriate stream path
+                    return $this->getStreamPath() ?? Storage::url($this->stream_path);
+                }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'user' => [

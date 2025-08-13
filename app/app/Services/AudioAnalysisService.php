@@ -3,65 +3,55 @@
 namespace App\Services;
 
 use App\Models\Upload;
-use App\Models\UploadAnalysis;
 use App\Models\UploadAnalysisTask;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class AudioAnalysisService
 {
-    private string $baseUrl;
+    private AudioMicroserviceClient $client;
 
-    public function __construct()
+    public function __construct(AudioMicroserviceClient $client)
     {
-        $this->baseUrl = config('services.audio_analysis.base_url', 'http://localhost:8000');
+        $this->client = $client;
     }
 
     /**
-     * Submit an audio file for analysis.
+     * Submit an audio file for analysis using the new storage-based API.
      */
     public function submitForAnalysis(Upload $upload): ?UploadAnalysisTask
     {
         try {
-            // Get the file path from private storage
-            $filePath = Storage::disk('private')->path($upload->path);
+            // Determine storage path based on how the upload was stored
+            $storagePath = $upload->getFilePath();
             
-            if (!file_exists($filePath)) {
-                Log::error('Audio file not found for analysis', ['upload_id' => $upload->id, 'path' => $filePath]);
-                return null;
-            }
+            Log::info('Submitting upload for analysis', [
+                'upload_id' => $upload->id,
+                'storage_path' => $storagePath,
+                'uses_r2' => $upload->usesR2Storage()
+            ]);
 
-            // Submit to the analysis API
-            $response = Http::timeout(30)
-                ->attach('audio_file', file_get_contents($filePath), $upload->filename)
-                ->post($this->baseUrl . '/extract-features', [
-                    'async_processing' => true,
-                    'extract_detailed' => false, // We only need the summary data
-                ]);
-
-            if (!$response->successful()) {
-                Log::error('Failed to submit file for analysis', [
+            // Call the microservice with the storage path
+            $result = $this->client->extractFeatures($storagePath, [
+                'detailed' => false, // We only need summary data
+                'callback_url' => route('api.audio.analysis.callback', $upload->id),
+                'metadata' => [
                     'upload_id' => $upload->id,
-                    'status' => $response->status(),
-                    'response' => $response->body()
-                ]);
-                return null;
-            }
+                    'user_id' => $upload->user_id,
+                    'original_filename' => $upload->filename,
+                ]
+            ]);
 
-            $data = $response->json();
-            $taskId = $data['task_id'] ?? null;
+            $taskId = $result['task_id'] ?? null;
 
             if (!$taskId) {
-                Log::error('No task ID returned from analysis API', ['upload_id' => $upload->id, 'response' => $data]);
+                Log::error('No task ID returned from analysis API', ['upload_id' => $upload->id, 'response' => $result]);
                 return null;
             }
 
             // Create the analysis task record
             $analysisTask = $upload->analysisTask()->create([
                 'task_id' => $taskId,
-                'status' => $data['status'] ?? 'pending',
+                'status' => $result['status'] ?? 'pending',
                 'progress' => 0,
                 'submitted_at' => now(),
             ]);
@@ -69,7 +59,8 @@ class AudioAnalysisService
             Log::info('Audio analysis task submitted', [
                 'upload_id' => $upload->id,
                 'task_id' => $taskId,
-                'analysis_task_id' => $analysisTask->id
+                'analysis_task_id' => $analysisTask->id,
+                'storage_path' => $storagePath
             ]);
 
             return $analysisTask;
@@ -89,22 +80,10 @@ class AudioAnalysisService
     public function checkTaskStatus(UploadAnalysisTask $task): bool
     {
         try {
-            $response = Http::timeout(10)
-                ->get($this->baseUrl . "/task-status/{$task->task_id}", [
-                    'include_result' => false
-                ]);
-
-            if (!$response->successful()) {
-                Log::error('Failed to check task status', [
-                    'task_id' => $task->task_id,
-                    'status' => $response->status()
-                ]);
-                return false;
-            }
-
-            $data = $response->json();
-            $status = $data['status'] ?? 'unknown';
-            $progress = $data['progress'] ?? $task->progress;
+            $result = $this->client->getTaskStatus($task->task_id);
+            
+            $status = $result['status'] ?? 'unknown';
+            $progress = $result['progress'] ?? $task->progress;
 
             // Update task status
             $task->update([
@@ -117,7 +96,7 @@ class AudioAnalysisService
                 $this->fetchAnalysisResults($task);
                 $task->markCompleted();
             } elseif ($status === 'failed') {
-                $errorMessage = $data['error'] ?? 'Analysis failed';
+                $errorMessage = $result['error'] ?? 'Analysis failed';
                 $task->markFailed($errorMessage);
             }
 
@@ -138,27 +117,17 @@ class AudioAnalysisService
     private function fetchAnalysisResults(UploadAnalysisTask $task): bool
     {
         try {
-            $response = Http::timeout(10)
-                ->get($this->baseUrl . "/task-summary/{$task->task_id}");
-
-            if (!$response->successful()) {
-                Log::error('Failed to fetch analysis results', [
-                    'task_id' => $task->task_id,
-                    'status' => $response->status()
-                ]);
-                return false;
-            }
-
-            $data = $response->json();
-            $musicalAnalysis = $data['musical_analysis'] ?? [];
-            $metadata = $data['metadata'] ?? [];
+            $data = $this->client->getTaskSummary($task->task_id);
+            
+            // The new API returns analysis_summary directly
+            $musicalAnalysis = $data['analysis_summary'] ?? [];
 
             if (empty($musicalAnalysis)) {
                 Log::warning('No musical analysis data in response', ['task_id' => $task->task_id]);
                 return false;
             }
 
-            // Create the analysis record
+            // Create the analysis record with the new data structure
             $task->upload->analysis()->create([
                 'musical_key' => $musicalAnalysis['key'] ?? null,
                 'key_confidence' => $musicalAnalysis['key_confidence'] ?? null,
@@ -168,7 +137,7 @@ class AudioAnalysisService
                 'dynamic_range_db' => $musicalAnalysis['dynamic_range_db'] ?? null,
                 'brightness' => $musicalAnalysis['brightness'] ?? null,
                 'timbral_complexity' => $musicalAnalysis['timbral_complexity'] ?? null,
-                'analysis_duration' => $metadata['processing_time'] ?? null,
+                'analysis_duration' => $data['processing_time'] ?? null,
                 'chunk_count' => $data['chunk_count'] ?? null,
                 'key_changes' => $data['key_changes'] ?? 1,
             ]);
@@ -196,12 +165,36 @@ class AudioAnalysisService
      */
     public function isServiceAvailable(): bool
     {
+        return $this->client->isServiceAvailable();
+    }
+
+    /**
+     * Get service status including storage information.
+     */
+    public function getServiceStatus(): array
+    {
         try {
-            $response = Http::timeout(5)->get($this->baseUrl . '/health');
-            return $response->successful() && $response->json('status') === 'healthy';
+            $storageStatus = $this->client->getStorageStatus();
+            
+            return [
+                'enabled' => config('services.audio_analysis.enabled', false),
+                'available' => $this->client->isServiceAvailable(),
+                'storage_type' => $storageStatus['storage_type'] ?? 'unknown',
+                'storage_available' => $storageStatus['available'] ?? false,
+                'storage_info' => $storageStatus,
+                'base_url' => config('services.audio_analysis.base_url'),
+            ];
         } catch (\Exception $e) {
-            Log::warning('Audio analysis service unavailable', ['error' => $e->getMessage()]);
-            return false;
+            Log::warning('Failed to get storage status', ['error' => $e->getMessage()]);
+            
+            return [
+                'enabled' => config('services.audio_analysis.enabled', false),
+                'available' => false,
+                'storage_type' => 'unknown',
+                'storage_available' => false,
+                'storage_info' => [],
+                'base_url' => config('services.audio_analysis.base_url'),
+            ];
         }
     }
 
@@ -211,31 +204,31 @@ class AudioAnalysisService
     public function findSimilarUploads(Upload $upload, int $limit = 10): \Illuminate\Database\Eloquent\Collection
     {
         $analysis = $upload->analysis;
-        
+
         if (!$analysis) {
             return collect();
         }
 
         return Upload::whereHas('analysis', function ($query) use ($analysis) {
             $query->where('upload_id', '!=', $analysis->upload_id);
-            
+
             // Same key if available and reliable
             if ($analysis->hasReliableKey()) {
                 $query->where('musical_key', $analysis->musical_key);
             }
-            
+
             // Similar BPM (±10 BPM)
             if ($analysis->bpm) {
                 $query->whereBetween('bpm', [$analysis->bpm - 10, $analysis->bpm + 10]);
             }
-            
+
             // Similar brightness (±20%)
             if ($analysis->brightness) {
                 $minBrightness = $analysis->brightness * 0.8;
                 $maxBrightness = $analysis->brightness * 1.2;
                 $query->whereBetween('brightness', [$minBrightness, $maxBrightness]);
             }
-            
+
             // Require some confidence in key detection
             $query->where('key_confidence', '>', 0.7);
         })
@@ -243,5 +236,37 @@ class AudioAnalysisService
         ->orderByRaw('ABS(? - (SELECT bpm FROM upload_analyses WHERE upload_id = uploads.id))', [$analysis->bpm ?? 120])
         ->limit($limit)
         ->get();
+    }
+
+    /**
+     * Get file information from the microservice.
+     */
+    public function getFileInfo(string $storagePath): array
+    {
+        try {
+            return $this->client->getFileInfo($storagePath);
+        } catch (\Exception $e) {
+            Log::error('Failed to get file info', [
+                'storage_path' => $storagePath,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * List files in storage via the microservice.
+     */
+    public function listFiles(string $prefix = '', int $maxKeys = 100): array
+    {
+        try {
+            return $this->client->listFiles($prefix, $maxKeys);
+        } catch (\Exception $e) {
+            Log::error('Failed to list files', [
+                'prefix' => $prefix,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 }

@@ -12,20 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('uploads', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('genre')->nullable();
-            $table->string('filename');
-            $table->string('path'); // Original file path
-            $table->string('stream_path')->nullable(); // Web-friendly version for playback
-            $table->string('mime_type');
-            $table->bigInteger('size'); // File size in bytes
-            $table->string('status')->default('pending'); // pending, processing, ready, failed
-            $table->integer('duration_seconds')->nullable();
-            $table->timestamps();
+        Schema::table('uploads', function (Blueprint $table) {
+            $table->string('r2_upload_path')->nullable()->after('stream_path');
+            $table->json('r2_stems_paths')->nullable()->after('r2_upload_path');
+            $table->string('r2_analysis_path')->nullable()->after('r2_stems_paths');
+            $table->timestamp('r2_uploaded_at')->nullable()->after('r2_analysis_path');
+            $table->boolean('uses_r2_storage')->default(false)->after('r2_uploaded_at');
         });
     }
 
@@ -34,10 +26,18 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Clear all upload storage before dropping the table
+        // Clean up any remaining upload files before dropping columns
         $this->clearUploadStorage();
         
-        Schema::dropIfExists('uploads');
+        Schema::table('uploads', function (Blueprint $table) {
+            $table->dropColumn([
+                'r2_upload_path',
+                'r2_stems_paths',
+                'r2_analysis_path',
+                'r2_uploaded_at',
+                'uses_r2_storage'
+            ]);
+        });
     }
     
     /**

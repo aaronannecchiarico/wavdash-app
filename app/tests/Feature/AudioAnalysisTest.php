@@ -123,18 +123,23 @@ class AudioAnalysisTest extends TestCase
 
     public function test_audio_analysis_service_availability_check(): void
     {
-        $service = new AudioAnalysisService();
-        
-        // This will return false unless the actual service is running
+        // Mock the Http facade to prevent actual HTTP calls
+        \Illuminate\Support\Facades\Http::fake([
+            '*' => \Illuminate\Support\Facades\Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        $service = $this->app->make(AudioAnalysisService::class);
+
+        // This will now use the mocked response
         $isAvailable = $service->isServiceAvailable();
         $this->assertIsBool($isAvailable);
+        $this->assertTrue($isAvailable);
     }
 
     public function test_similar_uploads_finding(): void
     {
         $user = User::factory()->create();
-        
-        // Create a base upload with analysis
+
         $baseUpload = Upload::factory()->create(['user_id' => $user->id]);
         UploadAnalysis::create([
             'upload_id' => $baseUpload->id,
@@ -144,7 +149,6 @@ class AudioAnalysisTest extends TestCase
             'brightness' => 1500.0,
         ]);
 
-        // Create similar uploads
         $similarUpload1 = Upload::factory()->create(['user_id' => $user->id]);
         UploadAnalysis::create([
             'upload_id' => $similarUpload1->id,
@@ -163,7 +167,6 @@ class AudioAnalysisTest extends TestCase
             'brightness' => 1600.0, // Within ±20%
         ]);
 
-        // Create dissimilar upload
         $dissimilarUpload = Upload::factory()->create(['user_id' => $user->id]);
         UploadAnalysis::create([
             'upload_id' => $dissimilarUpload->id,
@@ -173,7 +176,7 @@ class AudioAnalysisTest extends TestCase
             'brightness' => 2500.0, // Outside ±20% range
         ]);
 
-        $service = new AudioAnalysisService();
+        $service = $this->app->make(AudioAnalysisService::class);
         $similar = $service->findSimilarUploads($baseUpload, 10);
 
         // Should find the 2 similar uploads but not the dissimilar one

@@ -38,6 +38,7 @@ return [
     'audio_analysis' => [
         'base_url' => env('AUDIO_ANALYSIS_BASE_URL', 'http://localhost:8001'),
         'enabled' => env('AUDIO_ANALYSIS_ENABLED', true),
+        'r2_integration_enabled' => env('AUDIO_ANALYSIS_R2_ENABLED', true),
     ],
 
 ];

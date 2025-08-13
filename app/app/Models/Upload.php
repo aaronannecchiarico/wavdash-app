@@ -29,6 +29,11 @@ class Upload extends Model
         'size',
         'status',
         'duration_seconds',
+        'r2_upload_path',
+        'r2_stems_paths',
+        'r2_analysis_path',
+        'r2_uploaded_at',
+        'uses_r2_storage',
     ];
 
     /**
@@ -42,6 +47,9 @@ class Upload extends Model
             'id' => 'integer',
             'user_id' => 'integer',
             'duration_seconds' => 'integer',
+            'r2_stems_paths' => 'array',
+            'r2_uploaded_at' => 'datetime',
+            'uses_r2_storage' => 'boolean',
         ];
     }
 
@@ -91,5 +99,41 @@ class Upload extends Model
     public function isAnalysisInProgress(): bool
     {
         return $this->analysisTask && $this->analysisTask->isProcessing();
+    }
+
+    /**
+     * Check if this upload uses R2 storage.
+     */
+    public function usesR2Storage(): bool
+    {
+        return $this->uses_r2_storage && !empty($this->r2_upload_path);
+    }
+
+    /**
+     * Get the appropriate file path based on storage type.
+     */
+    public function getFilePath(): string
+    {
+        return $this->usesR2Storage() ? $this->r2_upload_path : $this->path;
+    }
+
+    /**
+     * Get the appropriate stream path based on storage type.
+     */
+    public function getStreamPath(): ?string
+    {
+        if ($this->usesR2Storage() && config('filesystems.disks.r2.url')) {
+            return config('filesystems.disks.r2.url') . '/' . $this->r2_upload_path;
+        }
+        
+        return $this->stream_path;
+    }
+
+    /**
+     * Check if this upload has R2 stems.
+     */
+    public function hasR2Stems(): bool
+    {
+        return $this->usesR2Storage() && !empty($this->r2_stems_paths);
     }
 }

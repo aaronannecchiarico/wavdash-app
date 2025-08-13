@@ -43,6 +43,7 @@ class UploadAnalysisController extends Controller
             return redirect()->back()->with('error', 'Analysis already completed for this upload.');
         }
 
+        // Check service availability
         if (!$this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
@@ -147,13 +148,8 @@ class UploadAnalysisController extends Controller
      */
     public function status(): JsonResponse
     {
-        $isEnabled = config('services.audio_analysis.enabled', false);
-        $isAvailable = $isEnabled ? $this->analysisService->isServiceAvailable() : false;
-
-        return response()->json([
-            'enabled' => $isEnabled,
-            'available' => $isAvailable,
-            'base_url' => config('services.audio_analysis.base_url'),
-        ]);
+        $status = $this->analysisService->getServiceStatus();
+        
+        return response()->json($status);
     }
 }
