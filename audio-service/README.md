@@ -115,9 +115,17 @@ Once running, you can access:
 ```
 GET /health
 ```
-Returns service health status, Redis connectivity, and device information.
+Returns service health status, Redis connectivity, device information, and storage configuration.
 
-### Audio Processing (Async)
+### Storage Configuration
+```
+GET /storage/status
+```
+Check current storage configuration (local or R2) and availability.
+
+### File-Based Audio Processing (Direct Upload)
+
+#### Audio Feature Extraction (Async)
 ```
 POST /extract-features
 Content-Type: multipart/form-data
@@ -126,9 +134,9 @@ Parameters:
 - audio_file: Audio file (WAV, MP3, FLAC, M4A, OGG)
 - async_processing: Boolean (default: true)
 ```
-Submits audio for feature extraction. Returns task ID for tracking.
+Upload and process audio file directly. Returns task ID for tracking.
 
-### Audio Processing (Sync)
+#### Audio Feature Extraction (Sync)
 ```
 POST /extract-features-sync
 Content-Type: multipart/form-data
@@ -137,33 +145,9 @@ Parameters:
 - audio_file: Audio file
 - extract_detailed: Boolean (default: false)
 ```
-Immediate feature extraction for small files (< 60 seconds recommended).
+Immediate processing for small files (< 60 seconds recommended).
 
-### Task Status (Detailed)
-```
-GET /task-status/{task_id}?include_result=false
-```
-Returns task status with optional full results. Default is summary only.
-
-### Task Summary (Laravel-Optimized)
-```
-GET /task-summary/{task_id}
-```
-**Recommended for Laravel integration.** Returns lightweight musical analysis data without large arrays.
-
-### Task Results (Full Data)
-```
-GET /task-result/{task_id}
-```
-Returns complete feature extraction data. **Warning: May be very large.**
-
-### Task Management
-```
-DELETE /task/{task_id}
-```
-Remove corrupted or stuck tasks from Redis backend.
-
-### Stem Separation
+#### Stem Separation (Async)
 ```
 POST /separate-stems
 Content-Type: multipart/form-data
@@ -173,12 +157,133 @@ Parameters:
 - model_name: Demucs model (default: "htdemucs")
 - async_processing: Boolean (default: true)
 ```
+Upload and separate audio into stems (vocals, drums, bass, other).
 
-**Note**: On Apple Silicon Macs, stem separation automatically uses CPU processing in Celery workers to prevent MPS multiprocessing crashes. Audio is automatically converted from mono to stereo as required by Demucs models. This ensures stability while providing high-quality results.
+### Storage-Based Audio Processing (Recommended)
+
+**For Laravel integration with existing file storage:**
+
+#### Storage Feature Extraction
+```
+POST /storage/extract-features
+Content-Type: application/json
+
+{
+  "storage_path": "uploads/user_id/2025/08/13/filename.mp3",
+  "extract_detailed": false,
+  "callback_url": "https://your-app.com/api/audio/analysis/callback/123",
+  "metadata": {
+    "user_id": "1",
+    "upload_id": "123",
+    "original_filename": "song.mp3"
+  }
+}
+```
+Process audio files already in storage. **Recommended for production.**
+
+#### Storage Stem Separation
+```
+POST /storage/separate-stems
+Content-Type: application/json
+
+{
+  "storage_path": "uploads/user_id/2025/08/13/filename.mp3",
+  "model_name": "htdemucs",
+  "callback_url": "https://your-app.com/api/audio/analysis/callback/123",
+  "metadata": {
+    "user_id": "1",
+    "upload_id": "123"
+  }
+}
+```
+
+#### Storage File Operations
+```
+GET /storage/file-info/{path}     # Get file information
+GET /storage/list-files?prefix=   # List files with optional prefix
+DELETE /storage/file/{path}       # Delete file from storage
+```
+
+#### Batch Processing
+```
+POST /storage/batch-process
+Content-Type: application/json
+
+{
+  "storage_paths": ["uploads/1/file1.mp3", "uploads/1/file2.mp3"],
+  "processing_type": "features",  // or "stems"
+  "callback_url": "https://your-app.com/api/batch-callback",
+  "batch_metadata": {"batch_id": "batch_123"}
+}
+```
+
+### Task Management
+
+#### Task Status (Detailed)
+```
+GET /task-status/{task_id}?include_result=false
+```
+Returns task status with optional full results. Default is summary only.
+
+#### Task Summary (Laravel-Optimized)
+```
+GET /task-summary/{task_id}
+```
+**Recommended for Laravel integration.** Returns lightweight musical analysis data without large arrays.
+
+#### Task Results (Full Data)
+```
+GET /task-result/{task_id}
+```
+Returns complete feature extraction data. **Warning: May be very large.**
+
+#### Task Deletion
+```
+DELETE /task/{task_id}
+```
+Remove corrupted or stuck tasks from Redis backend. **Task status will show as "deleted" after removal.**
+
+### Important Notes
+
+- **Storage paths**: All processed files respect user-based folder structure: `processed/user_id/2025/08/13/filename_features.json`
+- **Apple Silicon compatibility**: Stem separation automatically uses CPU processing to prevent MPS multiprocessing crashes
+- **Audio format handling**: Mono audio is automatically converted to stereo for Demucs models
+- **Task tracking**: Deleted tasks properly return "deleted" status instead of "pending"
 
 ## Example Usage
 
-### Python Client
+### Storage-Based Processing (Recommended)
+
+```python
+import requests
+
+# Process file already in storage
+response = requests.post(
+    'http://localhost:8000/storage/extract-features',
+    json={
+        "storage_path": "uploads/1/2025/08/13/audio-uuid.mp3",
+        "extract_detailed": False,
+        "callback_url": "https://yourapp.com/api/callback/123",
+        "metadata": {
+            "user_id": "1",
+            "upload_id": "123",
+            "original_filename": "song.mp3"
+        }
+    }
+)
+
+task_id = response.json()['task_id']
+
+# Check task status
+status_response = requests.get(f'http://localhost:8000/task-summary/{task_id}')
+analysis = status_response.json()
+
+print(f"Key: {analysis['musical_analysis']['key']}")
+print(f"BPM: {analysis['musical_analysis']['bpm']}")
+print(f"Processed file: {analysis['storage_analysis_path']}")
+```
+
+### Direct File Upload
 
 ```python
 import requests
@@ -197,21 +302,28 @@ status_response = requests.get(f'http://localhost:8000/task-status/{task_id}')
 print(status_response.json())
 ```
 
-### cURL
+### cURL Examples
 
 ```bash
-# Extract features (async)
-curl -X POST "http://localhost:8001/extract-features" \
+# Storage-based processing (recommended)
+curl -X POST "http://localhost:8000/storage/extract-features" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "storage_path": "uploads/1/2025/08/13/audio.mp3",
+    "callback_url": "https://yourapp.com/callback/123",
+    "metadata": {"user_id": "1", "upload_id": "123"}
+  }'
+
+# Direct file upload
+curl -X POST "http://localhost:8000/extract-features" \
   -H "Content-Type: multipart/form-data" \
   -F "audio_file=@audio.wav"
 
 # Get lightweight summary (perfect for Laravel)
-curl "http://localhost:8001/task-summary/YOUR_TASK_ID"
+curl "http://localhost:8000/task-summary/YOUR_TASK_ID"
 
-# Extract features (sync, for small files)
-curl -X POST "http://localhost:8001/extract-features-sync" \
-  -H "Content-Type: multipart/form-data" \
-  -F "audio_file=@audio.wav"
+# Check storage status
+curl "http://localhost:8000/storage/status"
 ```
 
 ## Musical Analysis Results
@@ -490,6 +602,16 @@ docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 | `DEMUCS_DEVICE` | `cpu` | Device for AI models |
 | `MAX_FILE_SIZE` | `104857600` | Max upload size (bytes) |
 | `TASK_TIME_LIMIT` | `1800` | Task timeout (seconds) |
+| **Storage Configuration** | | |
+| `STORAGE_TYPE` | `local` | Storage type (`local` or `r2`) |
+| `LOCAL_STORAGE_PATH` | `./storage` | Local storage base path |
+| `LOCAL_STORAGE_PUBLIC_URL` | | Public URL for local files |
+| **R2 Cloud Storage** | | |
+| `R2_ACCESS_KEY_ID` | | R2 access key |
+| `R2_SECRET_ACCESS_KEY` | | R2 secret key |
+| `R2_BUCKET` | | R2 bucket name |
+| `R2_ENDPOINT` | | R2 endpoint URL |
+| `R2_PUBLIC_URL` | | R2 public URL |
 
 ## Monitoring
 

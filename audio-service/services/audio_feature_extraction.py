@@ -281,9 +281,9 @@ class AudioFeatureExtractor:
             return {'key': 'unknown', 'confidence': 0.0, 'error': str(e)}
     
     def extract_bpm(self, y: np.ndarray, sr: int) -> Dict[str, Any]:
-        """Calculate BPM using beat tracking"""
+        """Calculate BPM using beat tracking with enhanced fallback"""
         try:
-            # Extract tempo and beats
+            # First try standard method
             tempo, beats = librosa.beat.beat_track(y=y, sr=sr, hop_length=self.config.hop_length)
             
             # Calculate beat intervals
@@ -302,8 +302,22 @@ class AudioFeatureExtractor:
                 interval_std = 0.0
                 confidence = 0.0
             
+            # If confidence is low or tempo seems wrong, use enhanced method
+            if confidence < 0.6 or tempo < 30 or tempo > 300:
+                logger.debug(f"Low confidence BPM ({confidence:.2f}) or suspicious tempo ({tempo:.1f}), using enhanced method")
+                enhanced_result = self.extract_bpm_enhanced(y, sr)
+                if 'error' not in enhanced_result and enhanced_result.get('confidence', 0) > confidence:
+                    # Use enhanced result but maintain backward compatibility
+                    return {
+                        'bpm': enhanced_result['bpm'],
+                        'beat_count': enhanced_result['beat_count'],
+                        'avg_beat_interval': enhanced_result['avg_beat_interval'],
+                        'beat_regularity': enhanced_result['beat_regularity'],
+                        'beat_times': enhanced_result['beat_times']
+                    }
+            
             return {
-                'bpm': float(tempo),
+                'bpm': float(tempo) if np.isscalar(tempo) else float(tempo[0]) if len(tempo) > 0 else 0.0,
                 'beat_count': len(beats),
                 'avg_beat_interval': float(avg_interval),
                 'beat_regularity': float(confidence),
@@ -311,8 +325,262 @@ class AudioFeatureExtractor:
             }
             
         except Exception as e:
-            logger.warning(f"BPM extraction failed: {e}")
+            logger.warning(f"BPM extraction failed, trying enhanced method: {e}")
+            # Fallback to enhanced method
+            try:
+                enhanced_result = self.extract_bpm_enhanced(y, sr)
+                if 'error' not in enhanced_result:
+                    return {
+                        'bpm': enhanced_result['bpm'],
+                        'beat_count': enhanced_result['beat_count'],
+                        'avg_beat_interval': enhanced_result.get('avg_beat_interval', 0.0),
+                        'beat_regularity': enhanced_result.get('beat_regularity', 0.0),
+                        'beat_times': enhanced_result.get('beat_times', [])
+                    }
+            except Exception as e2:
+                logger.warning(f"Enhanced BPM extraction also failed: {e2}")
+            
             return {'bpm': 0.0, 'beat_count': 0, 'error': str(e)}
+    
+    def _detect_tempo_doubling_halving(self, tempos: List[float]) -> List[float]:
+        """Detect and correct tempo doubling/halving issues"""
+        if not tempos:
+            return []
+        
+        corrected_tempos = []
+        
+        for tempo in tempos:
+            if tempo <= 0:
+                continue
+                
+            # Generate candidates for tempo doubling/halving correction
+            candidates = [tempo, tempo * 2, tempo / 2]
+            
+            # For very fast or slow tempos, add more extreme corrections
+            if tempo < 60:
+                candidates.extend([tempo * 4])
+            elif tempo > 240:
+                candidates.extend([tempo / 4])
+            
+            # Keep only reasonable BPM values (30-300)
+            valid_candidates = [t for t in candidates if 30 <= t <= 300]
+            
+            if valid_candidates:
+                # Prefer tempos in the common range (60-200)
+                preferred = [t for t in valid_candidates if 60 <= t <= 200]
+                if preferred:
+                    # Add just the original tempo, not all preferred variants
+                    corrected_tempos.append(tempo)
+                else:
+                    corrected_tempos.append(valid_candidates[0])
+            else:
+                if 30 <= tempo <= 300:  # Keep reasonable tempos as-is
+                    corrected_tempos.append(tempo)
+        
+        return corrected_tempos
+    
+    def _ensemble_tempo_selection(self, tempos: List[float], weights: List[float] = None) -> float:
+        """Select final tempo from multiple estimates using ensemble method"""
+        if not tempos or all(t == 0 for t in tempos):
+            return 0.0
+        
+        # Filter out zero/invalid tempos
+        valid_tempos = [t for t in tempos if t > 0]
+        if not valid_tempos:
+            return 0.0
+        
+        if weights is None:
+            weights = [1.0] * len(valid_tempos)
+        else:
+            # Only use weights for valid tempos
+            weights = [w for t, w in zip(tempos, weights) if t > 0]
+        
+        # Apply tempo doubling/halving correction
+        corrected_tempos = self._detect_tempo_doubling_halving(valid_tempos)
+        
+        # Weighted average with outlier rejection
+        if len(corrected_tempos) >= 3:
+            # Remove outliers (values > 2 standard deviations from mean)
+            mean_tempo = np.mean(corrected_tempos)
+            std_tempo = np.std(corrected_tempos)
+            
+            if std_tempo > 0:
+                filtered_tempos = [t for t in corrected_tempos 
+                                 if abs(t - mean_tempo) <= 2 * std_tempo]
+                if filtered_tempos:
+                    corrected_tempos = filtered_tempos
+        
+        # Weighted average
+        total_weight = sum(weights[:len(corrected_tempos)])
+        if total_weight > 0:
+            weighted_tempo = sum(t * w for t, w in zip(corrected_tempos, weights[:len(corrected_tempos)]))
+            return weighted_tempo / total_weight
+        else:
+            return np.mean(corrected_tempos)
+    
+    def _calculate_tempo_confidence(self, tempos: List[float], final_tempo: float) -> float:
+        """Calculate confidence score for tempo estimation"""
+        if not tempos or final_tempo == 0:
+            return 0.0
+        
+        valid_tempos = [t for t in tempos if t > 0]
+        if not valid_tempos:
+            return 0.0
+        
+        # Calculate how well the algorithms agree
+        # Apply tempo doubling/halving correction for comparison
+        corrected_tempos = self._detect_tempo_doubling_halving(valid_tempos)
+        
+        # Check agreement within ±5% tolerance
+        tolerance = final_tempo * 0.05
+        agreeing_tempos = [t for t in corrected_tempos 
+                          if abs(t - final_tempo) <= tolerance]
+        
+        agreement_ratio = len(agreeing_tempos) / len(corrected_tempos)
+        
+        # Boost confidence for tempos in common ranges
+        range_boost = 1.0
+        if 80 <= final_tempo <= 160:  # Common pop/rock range
+            range_boost = 1.1
+        elif 60 <= final_tempo <= 200:  # Extended common range
+            range_boost = 1.05
+        
+        confidence = min(1.0, agreement_ratio * range_boost)
+        return float(confidence)
+    
+    def extract_bpm_enhanced(self, y: np.ndarray, sr: int) -> Dict[str, Any]:
+        """Enhanced BPM detection using multiple algorithms"""
+        try:
+            tempos = []
+            confidences = []
+            beats_list = []
+            
+            # Method 1: Standard beat tracking
+            try:
+                tempo1, beats1 = librosa.beat.beat_track(y=y, sr=sr, hop_length=self.config.hop_length)
+                # Handle both scalar and array returns from librosa
+                tempo1 = float(tempo1) if np.isscalar(tempo1) else float(tempo1[0]) if len(tempo1) > 0 else 0.0
+                tempos.append(tempo1)
+                beats_list.append(beats1)
+                confidences.append(0.8)  # Base confidence for standard method
+            except Exception as e:
+                logger.debug(f"Standard beat tracking failed: {e}")
+                tempos.append(0.0)
+                confidences.append(0.0)
+            
+            # Method 2: Harmonic-percussive separation + percussive BPM
+            try:
+                y_harmonic, y_percussive = librosa.effects.hpss(y)
+                tempo2, beats2 = librosa.beat.beat_track(
+                    y=y_percussive, sr=sr, hop_length=self.config.hop_length
+                )
+                # Handle both scalar and array returns from librosa
+                tempo2 = float(tempo2) if np.isscalar(tempo2) else float(tempo2[0]) if len(tempo2) > 0 else 0.0
+                tempos.append(tempo2)
+                beats_list.append(beats2)
+                confidences.append(0.9)  # Higher confidence for percussive-only
+            except Exception as e:
+                logger.debug(f"Harmonic-percussive separation BPM failed: {e}")
+                tempos.append(0.0)
+                confidences.append(0.0)
+            
+            # Method 3: Onset-based tempo estimation
+            try:
+                onset_envelope = librosa.onset.onset_strength(y=y, sr=sr)
+                # Use newer librosa API
+                try:
+                    tempo3_result = librosa.feature.rhythm.tempo(onset_envelope=onset_envelope)
+                except AttributeError:
+                    # Fallback to older API
+                    tempo3_result = librosa.beat.tempo(onset_envelope=onset_envelope)
+                tempo3 = float(tempo3_result[0]) if len(tempo3_result) > 0 else 0.0
+                tempos.append(tempo3)
+                confidences.append(0.7)  # Moderate confidence
+            except Exception as e:
+                logger.debug(f"Onset-based tempo estimation failed: {e}")
+                tempos.append(0.0)
+                confidences.append(0.0)
+            
+            # Method 4: Tempogram-based analysis
+            try:
+                tempogram = librosa.feature.tempogram(y=y, sr=sr, hop_length=self.config.hop_length)
+                try:
+                    tempo4_result = librosa.feature.rhythm.tempo(tempogram=tempogram)
+                except AttributeError:
+                    # Fallback to older API
+                    tempo4_result = librosa.beat.tempo(tempogram=tempogram)
+                tempo4 = float(tempo4_result[0]) if len(tempo4_result) > 0 else 0.0
+                tempos.append(tempo4)
+                confidences.append(0.6)  # Lower confidence, more experimental
+            except Exception as e:
+                logger.debug(f"Tempogram-based tempo estimation failed: {e}")
+                tempos.append(0.0)
+                confidences.append(0.0)
+            
+            # Ensemble decision
+            final_bpm = self._ensemble_tempo_selection(tempos, confidences)
+            overall_confidence = self._calculate_tempo_confidence(tempos, final_bpm)
+            
+            # Use the best beat tracking result for additional metrics
+            best_beats = None
+            if beats_list:
+                # Find beats from method with tempo closest to final BPM
+                best_method_idx = 0
+                min_diff = float('inf')
+                for i, tempo in enumerate(tempos[:len(beats_list)]):
+                    if tempo > 0:
+                        diff = abs(tempo - final_bpm)
+                        if diff < min_diff:
+                            min_diff = diff
+                            best_method_idx = i
+                
+                if best_method_idx < len(beats_list):
+                    best_beats = beats_list[best_method_idx]
+            
+            # Calculate additional metrics
+            if best_beats is not None and len(best_beats) > 1:
+                beat_times = librosa.frames_to_time(best_beats, sr=sr, hop_length=self.config.hop_length)
+                intervals = np.diff(beat_times)
+                avg_interval = np.mean(intervals)
+                interval_std = np.std(intervals)
+                beat_regularity = max(0.0, 1.0 - (interval_std / avg_interval)) if avg_interval > 0 else 0.0
+                beat_count = len(best_beats)
+                beat_times_list = [float(t) for t in beat_times[:20]]
+            else:
+                avg_interval = 60.0 / final_bpm if final_bpm > 0 else 0.0
+                interval_std = 0.0
+                beat_regularity = overall_confidence
+                beat_count = 0
+                beat_times_list = []
+            
+            # Find alternative tempos
+            alternative_tempos = []
+            for tempo in tempos:
+                if tempo > 0 and abs(tempo - final_bpm) > final_bpm * 0.1:  # More than 10% different
+                    alternative_tempos.append(tempo)
+            
+            # Remove duplicates and limit
+            alternative_tempos = list(set([round(t, 1) for t in alternative_tempos]))[:3]
+            
+            return {
+                'bpm': float(final_bpm),
+                'confidence': float(overall_confidence),
+                'beat_count': int(beat_count),
+                'avg_beat_interval': float(avg_interval),
+                'beat_regularity': float(beat_regularity),
+                'beat_times': beat_times_list,
+                'method_results': {
+                    'standard': tempos[0] if len(tempos) > 0 else 0.0,
+                    'percussive': tempos[1] if len(tempos) > 1 else 0.0,
+                    'onset_based': tempos[2] if len(tempos) > 2 else 0.0,
+                    'tempogram': tempos[3] if len(tempos) > 3 else 0.0
+                },
+                'alternative_tempos': alternative_tempos
+            }
+            
+        except Exception as e:
+            logger.warning(f"Enhanced BPM extraction failed: {e}")
+            return {'bpm': 0.0, 'beat_count': 0, 'confidence': 0.0, 'error': str(e)}
     
     def extract_spectral_features(self, y: np.ndarray, sr: int) -> Dict[str, Any]:
         """Extract spectral features (centroid, rolloff, bandwidth)"""
@@ -626,6 +894,27 @@ class AudioFeatureExtractor:
                 'most_likely_key': most_common_key[0],
                 'confidence': most_common_key[1] / len(keys),
                 'key_changes': len(set(keys))
+            }
+        
+        # Aggregate energy features
+        overall_loudness = [chunk['energy']['overall_loudness_db'] for chunk in chunk_features 
+                          if 'energy' in chunk and 'overall_loudness_db' in chunk['energy']]
+        if overall_loudness:
+            aggregated['energy'] = {
+                'mean_loudness_db': float(np.mean(overall_loudness)),
+                'std_loudness_db': float(np.std(overall_loudness)),
+                'loudness_range_db': [float(np.min(overall_loudness)), float(np.max(overall_loudness))]
+            }
+        
+        # Aggregate spectral features (brightness)
+        brightness_values = [chunk['spectral']['spectral_centroid']['mean'] for chunk in chunk_features 
+                           if 'spectral' in chunk and 'spectral_centroid' in chunk['spectral'] 
+                           and 'mean' in chunk['spectral']['spectral_centroid']]
+        if brightness_values:
+            aggregated['spectral'] = {
+                'mean_brightness': float(np.mean(brightness_values)),
+                'std_brightness': float(np.std(brightness_values)),
+                'brightness_range': [float(np.min(brightness_values)), float(np.max(brightness_values))]
             }
         
         return aggregated

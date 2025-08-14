@@ -52,17 +52,31 @@ class Settings:
     
     # File Storage
     TEMP_DIR: str = config("TEMP_DIR", default="/tmp/audio_processing")
-    OUTPUT_DIR: str = config("OUTPUT_DIR", default="outputs")
+    # Note: OUTPUT_DIR removed - processed files now go to configured storage (local/R2)
     
     # Task Configuration
     TASK_TIME_LIMIT: int = config("TASK_TIME_LIMIT", default=1800, cast=int)  # 30 minutes
     TASK_SOFT_TIME_LIMIT: int = config("TASK_SOFT_TIME_LIMIT", default=1500, cast=int)  # 25 minutes
     
+    # Storage Configuration
+    STORAGE_TYPE: str = config("STORAGE_TYPE", default="local")  # local, r2
+    
+    # Local Storage Configuration  
+    # Should point to Laravel's storage/app directory for shared access
+    LOCAL_STORAGE_PATH: str = config("LOCAL_STORAGE_PATH", default="./storage")
+    LOCAL_STORAGE_PUBLIC_URL: str = config("LOCAL_STORAGE_PUBLIC_URL", default="")
+    
+    # Cloudflare R2 Storage Configuration
+    R2_ACCESS_KEY_ID: str = config("R2_ACCESS_KEY_ID", default="")
+    R2_SECRET_ACCESS_KEY: str = config("R2_SECRET_ACCESS_KEY", default="")
+    R2_BUCKET: str = config("R2_BUCKET", default="")
+    R2_ENDPOINT: str = config("R2_ENDPOINT", default="")
+    R2_PUBLIC_URL: str = config("R2_PUBLIC_URL", default="")
+    
     def __post_init__(self):
         # Create necessary directories
         os.makedirs(os.path.dirname(self.LOG_FILE), exist_ok=True)
         os.makedirs(self.TEMP_DIR, exist_ok=True)
-        os.makedirs(self.OUTPUT_DIR, exist_ok=True)
         
         # Configure logging
         logging.basicConfig(

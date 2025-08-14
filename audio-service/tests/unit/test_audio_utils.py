@@ -35,7 +35,10 @@ class TestAudioUtils:
         """Test loading mono audio from bytes"""
         audio_bytes = AudioFixtures.audio_to_bytes(TEST_AUDIO_MONO_1S, 22050)
         
-        y, sr = load_audio_from_bytes(audio_bytes, sr=22050, mono=True)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)  # Suppress audioread Python 3.13 warnings
+            y, sr = load_audio_from_bytes(audio_bytes, sr=22050, mono=True)
         
         assert isinstance(y, np.ndarray)
         assert len(y.shape) == 1  # Mono
@@ -46,7 +49,10 @@ class TestAudioUtils:
         """Test loading stereo audio from bytes"""
         audio_bytes = AudioFixtures.audio_to_bytes(TEST_AUDIO_STEREO_1S, 22050)
         
-        y, sr = load_audio_from_bytes(audio_bytes, sr=22050, mono=False)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)  # Suppress audioread Python 3.13 warnings
+            y, sr = load_audio_from_bytes(audio_bytes, sr=22050, mono=False)
         
         assert isinstance(y, np.ndarray)
         assert len(y.shape) == 2  # Stereo
@@ -58,8 +64,12 @@ class TestAudioUtils:
         """Test loading audio with invalid data"""
         invalid_bytes = b"not audio data"
         
-        with pytest.raises(ValueError, match="Could not load audio from bytes"):
-            load_audio_from_bytes(invalid_bytes)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)  # Suppress PySoundFile/librosa warnings
+            warnings.simplefilter("ignore", FutureWarning)  # Suppress librosa deprecation warnings
+            with pytest.raises(ValueError, match="Could not load audio from bytes"):
+                load_audio_from_bytes(invalid_bytes)
     
     def test_save_audio_file(self):
         """Test saving audio to file"""
@@ -73,7 +83,10 @@ class TestAudioUtils:
             assert os.path.exists(output_path)
             
             # Verify file can be loaded back
-            y, sr = load_audio_from_bytes(open(output_path, 'rb').read())
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)  # Suppress audioread Python 3.13 warnings
+                y, sr = load_audio_from_bytes(open(output_path, 'rb').read())
             assert len(y) > 0
             
         finally:

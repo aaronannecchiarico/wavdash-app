@@ -1,19 +1,52 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 import uvicorn
 import logging
+import redis
 from contextlib import asynccontextmanager
 
 from config import settings
 from models.audio_models import AudioProcessingRequest, AudioProcessingResponse
+from models.storage_models import (
+    StorageProcessingRequest, StorageProcessingResponse,
+    StorageStemSeparationRequest, StorageStemSeparationResponse,
+    StorageFileInfo, StorageBatchProcessingRequest
+)
 from tasks.audio_processing import process_audio_features, separate_audio_stems
+from tasks.storage_processing import (
+    process_audio_features_from_storage, 
+    separate_audio_stems_from_storage,
+    batch_process_from_storage
+)
+from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
 from celery_app import celery_app
 
 
+# Redis connection for tracking deleted tasks
+redis_client = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global redis_client
     logging.info("Starting audio processing microservice")
+    
+    # Initialize Redis connection for deleted task tracking
+    try:
+        redis_client = redis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
+            password=settings.REDIS_PASSWORD if settings.REDIS_PASSWORD else None,
+            decode_responses=True
+        )
+        redis_client.ping()  # Test connection
+        logging.info("Redis connection established for deleted task tracking")
+    except Exception as e:
+        logging.error(f"Failed to connect to Redis for deleted task tracking: {e}")
+        redis_client = None
+    
     yield
     logging.info("Shutting down audio processing microservice")
 
@@ -34,6 +67,30 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle request validation errors with detailed logging"""
+    request_body = None
+    try:
+        request_body = await request.body()
+        if request_body:
+            request_body = request_body.decode('utf-8')
+    except Exception:
+        request_body = "Unable to read request body"
+    
+    logging.error(f"422 Validation Error on {request.method} {request.url}")
+    logging.error(f"Request body: {request_body}")
+    logging.error(f"Validation errors: {exc.errors()}")
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "body": request_body if request_body != "Unable to read request body" else None
+        }
+    )
+
+
 @app.get("/")
 async def root():
     return {"message": "Audio Processing Microservice", "version": "1.0.0"}
@@ -47,11 +104,17 @@ async def health_check():
     memory_usage = get_memory_usage()
     redis_status = celery_app.control.ping()
     
+    # Check storage configuration
+    storage_enabled = is_storage_enabled()
+    storage_type = get_storage_type().value if storage_enabled else "unavailable"
+    
     return {
         "status": "healthy", 
         "redis_connected": redis_status,
         "device_info": device_info,
-        "memory_usage": memory_usage
+        "memory_usage": memory_usage,
+        "storage_enabled": storage_enabled,
+        "storage_type": storage_type
     }
 
 
@@ -122,12 +185,27 @@ async def separate_stems(
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 
+def is_task_deleted(task_id: str) -> bool:
+    """Check if a task has been marked as deleted"""
+    if redis_client is None:
+        return False
+    try:
+        return redis_client.exists(f"deleted_task:{task_id}") == 1
+    except Exception as e:
+        logging.error(f"Error checking deleted task status for {task_id}: {e}")
+        return False
+
+
 @app.get("/task-status/{task_id}")
 async def get_task_status(task_id: str, include_result: bool = False):
     """
     Get task status. Use include_result=true to get full results (may be large).
     """
     try:
+        # Check if task has been deleted
+        if is_task_deleted(task_id):
+            return {"task_id": task_id, "status": "deleted", "message": "Task has been deleted"}
+        
         task = celery_app.AsyncResult(task_id)
         
         # Safely get task state
@@ -138,6 +216,9 @@ async def get_task_status(task_id: str, include_result: bool = False):
             return {"task_id": task_id, "status": "error", "error": "Task state corrupted or invalid"}
         
         if state == 'PENDING':
+            # Double-check if task was deleted but state check missed it
+            if is_task_deleted(task_id):
+                return {"task_id": task_id, "status": "deleted", "message": "Task has been deleted"}
             return {"task_id": task_id, "status": "pending", "message": "Task is waiting to be processed"}
         elif state == 'PROGRESS':
             try:
@@ -217,6 +298,10 @@ async def get_task_summary(task_id: str):
     Returns only essential metrics without large feature arrays.
     """
     try:
+        # Check if task has been deleted
+        if is_task_deleted(task_id):
+            return {"task_id": task_id, "status": "deleted", "message": "Task has been deleted"}
+        
         task = celery_app.AsyncResult(task_id)
         
         # Safely get task state
@@ -325,6 +410,16 @@ async def delete_task(task_id: str):
     try:
         task = celery_app.AsyncResult(task_id)
         task.forget()  # Remove from backend
+        
+        # Mark task as deleted in our tracking system
+        if redis_client is not None:
+            try:
+                # Store deleted task ID with expiration (24 hours)
+                redis_client.setex(f"deleted_task:{task_id}", 86400, "1")
+                logging.info(f"Marked task {task_id} as deleted in tracking system")
+            except Exception as e:
+                logging.error(f"Error marking task {task_id} as deleted: {e}")
+        
         return {"task_id": task_id, "status": "deleted", "message": "Task removed from backend"}
     except Exception as e:
         logging.error(f"Error deleting task {task_id}: {e}")
@@ -379,6 +474,294 @@ async def extract_features_sync(
     except Exception as e:
         logging.error(f"Sync feature extraction failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+
+
+# Storage-based endpoints
+@app.get("/storage/status")
+async def storage_status():
+    """Check storage configuration and status"""
+    try:
+        if not is_storage_enabled():
+            return {
+                "enabled": False,
+                "message": "Storage is not properly configured"
+            }
+        
+        storage_type = get_storage_type()
+        storage = get_storage_service()
+        
+        return {
+            "enabled": True,
+            "storage_type": storage_type.value,
+            "message": f"{storage_type.value.title()} storage is enabled and ready"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Storage error: {str(e)}")
+
+
+@app.post("/storage/extract-features", response_model=StorageProcessingResponse)
+async def extract_features_from_storage(request: StorageProcessingRequest, background_tasks: BackgroundTasks):
+    """
+    Extract audio features from file in configured storage (async)
+    """
+    logging.info(f"Received storage feature extraction request: {request}")
+    
+    if not is_storage_enabled():
+        logging.error("Storage is not properly configured")
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        # Validate request fields
+        if not request.storage_path:
+            logging.error("Missing required field: storage_path")
+            raise HTTPException(status_code=422, detail="storage_path is required")
+        
+        logging.info(f"Processing request for storage path: {request.storage_path}")
+        
+        storage = get_storage_service()
+        
+        # Check if file exists in storage
+        if not storage.file_exists(request.storage_path):
+            logging.error(f"File not found in storage: {request.storage_path}")
+            raise HTTPException(status_code=404, detail=f"File not found in storage: {request.storage_path}")
+        
+        # Generate task ID
+        import uuid
+        task_id = str(uuid.uuid4())
+        
+        logging.info(f"Generated task ID: {task_id} for storage path: {request.storage_path}")
+        
+        # Queue async processing
+        celery_task = process_audio_features_from_storage.delay(
+            task_id=task_id,
+            storage_path=request.storage_path,
+            extract_detailed=request.extract_detailed,
+            callback_url=request.callback_url,
+            metadata=request.metadata
+        )
+        
+        storage_type = get_storage_type()
+        logging.info(f"Queued storage feature extraction: {request.storage_path} (task: {task_id}, storage: {storage_type.value})")
+        
+        return StorageProcessingResponse(
+            task_id=task_id,
+            status="processing",
+            message=f"Audio feature extraction started from {storage_type.value} storage",
+            storage_analysis_path=None,
+            storage_processed_path=None,
+            storage_type=storage_type.value
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions without wrapping
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error processing storage feature extraction: {e}")
+        logging.error(f"Request data: {request}")
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+
+
+@app.post("/storage/separate-stems", response_model=StorageStemSeparationResponse)
+async def separate_stems_from_storage(request: StorageStemSeparationRequest, background_tasks: BackgroundTasks):
+    """
+    Separate audio stems from file in configured storage (async)
+    """
+    if not is_storage_enabled():
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        storage = get_storage_service()
+        
+        # Check if file exists in storage
+        if not storage.file_exists(request.storage_path):
+            raise HTTPException(status_code=404, detail=f"File not found in storage: {request.storage_path}")
+        
+        # Generate task ID
+        import uuid
+        task_id = str(uuid.uuid4())
+        
+        # Queue async processing
+        celery_task = separate_audio_stems_from_storage.delay(
+            task_id=task_id,
+            storage_path=request.storage_path,
+            model_name=request.model_name,
+            callback_url=request.callback_url,
+            metadata=request.metadata
+        )
+        
+        storage_type = get_storage_type()
+        logging.info(f"Queued storage stem separation: {request.storage_path} (task: {task_id}, storage: {storage_type.value})")
+        
+        return StorageStemSeparationResponse(
+            task_id=task_id,
+            status="processing",
+            message=f"Audio stem separation started from {storage_type.value} storage",
+            model_used=request.model_name,
+            storage_stems_paths=None,
+            public_urls=None,
+            storage_type=storage_type.value
+        )
+        
+    except Exception as e:
+        logging.error(f"Error processing storage stem separation: {e}")
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+
+
+@app.get("/storage/file-info/{storage_path:path}", response_model=StorageFileInfo)
+async def get_storage_file_info(storage_path: str):
+    """
+    Get information about a file in configured storage
+    """
+    if not is_storage_enabled():
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        storage = get_storage_service()
+        
+        file_info = storage.get_file_info(storage_path)
+        if not file_info:
+            raise HTTPException(status_code=404, detail=f"File not found in storage: {storage_path}")
+        
+        public_url = storage.get_public_url(storage_path)
+        storage_type = get_storage_type()
+        
+        # Convert timestamp for consistency
+        import datetime
+        if 'last_modified' in file_info:
+            if isinstance(file_info['last_modified'], float):
+                # Convert Unix timestamp to ISO format
+                file_info['last_modified'] = datetime.datetime.fromtimestamp(file_info['last_modified']).isoformat()
+        
+        return StorageFileInfo(
+            storage_path=storage_path,
+            size=file_info['size'],
+            last_modified=file_info['last_modified'],
+            content_type=file_info['content_type'],
+            metadata=file_info['metadata'],
+            public_url=public_url,
+            storage_type=storage_type.value
+        )
+        
+    except Exception as e:
+        logging.error(f"Error getting storage file info: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.get("/storage/list-files")
+async def list_storage_files(prefix: str = "", max_keys: int = 100):
+    """
+    List files in configured storage with optional prefix filter
+    """
+    if not is_storage_enabled():
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        storage = get_storage_service()
+        storage_type = get_storage_type()
+        
+        files = storage.list_files(prefix=prefix, max_keys=min(max_keys, 1000))
+        
+        # Add public URLs if available
+        for file_info in files:
+            public_url = storage.get_public_url(file_info['key'])
+            if public_url:
+                file_info['public_url'] = public_url
+        
+        return {
+            "files": files,
+            "count": len(files),
+            "prefix": prefix,
+            "truncated": len(files) == max_keys,
+            "storage_type": storage_type.value
+        }
+        
+    except Exception as e:
+        logging.error(f"Error listing storage files: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.delete("/storage/file/{storage_path:path}")
+async def delete_storage_file(storage_path: str):
+    """
+    Delete a file from configured storage
+    """
+    if not is_storage_enabled():
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        storage = get_storage_service()
+        storage_type = get_storage_type()
+        
+        if not storage.file_exists(storage_path):
+            raise HTTPException(status_code=404, detail=f"File not found in storage: {storage_path}")
+        
+        if storage.delete_file(storage_path):
+            return {
+                "message": f"File deleted successfully from {storage_type.value} storage: {storage_path}",
+                "status": "deleted",
+                "storage_type": storage_type.value
+            }
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to delete file from {storage_type.value} storage")
+        
+    except Exception as e:
+        logging.error(f"Error deleting storage file: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@app.post("/storage/batch-process")
+async def batch_process_storage(request: StorageBatchProcessingRequest, background_tasks: BackgroundTasks):
+    """
+    Process multiple files from configured storage in batch
+    """
+    if not is_storage_enabled():
+        raise HTTPException(status_code=503, detail="Storage is not properly configured")
+    
+    try:
+        storage = get_storage_service()
+        storage_type = get_storage_type()
+        
+        # Verify all files exist
+        missing_files = []
+        for storage_path in request.storage_paths:
+            if not storage.file_exists(storage_path):
+                missing_files.append(storage_path)
+        
+        if missing_files:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Files not found in {storage_type.value} storage: {', '.join(missing_files)}"
+            )
+        
+        # Generate batch task ID
+        import uuid
+        batch_id = str(uuid.uuid4())
+        
+        # Queue batch processing task
+        celery_task = batch_process_from_storage.delay(
+            storage_paths=request.storage_paths,
+            processing_type=request.processing_type,
+            model_name=request.model_name,
+            callback_url=request.callback_url,
+            batch_metadata={**request.batch_metadata, "batch_id": batch_id, "storage_type": storage_type.value}
+        )
+        
+        logging.info(f"Queued batch storage processing: {len(request.storage_paths)} files (batch: {batch_id}, storage: {storage_type.value})")
+        
+        return {
+            "batch_id": batch_id,
+            "task_id": celery_task.id,
+            "status": "processing",
+            "message": f"Batch processing started for {len(request.storage_paths)} files from {storage_type.value} storage",
+            "processing_type": request.processing_type,
+            "file_count": len(request.storage_paths),
+            "storage_type": storage_type.value
+        }
+        
+    except Exception as e:
+        logging.error(f"Error in batch storage processing: {e}")
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
 
 
 if __name__ == "__main__":

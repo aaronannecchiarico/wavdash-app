@@ -1,0 +1,20 @@
+# Ground Truth BPM Values for Test Audio Files
+# Format: filename,expected_bpm,description
+
+slow_ballad_60bpm_simple.wav,60,Simple rhythmic pattern
+slow_ballad_60bpm_complex.wav,60,Complex rhythmic pattern
+moderate_slow_80bpm_simple.wav,80,Simple rhythmic pattern
+moderate_slow_80bpm_complex.wav,80,Complex rhythmic pattern
+moderate_100bpm_simple.wav,100,Simple rhythmic pattern
+moderate_100bpm_complex.wav,100,Complex rhythmic pattern
+standard_pop_120bpm_simple.wav,120,Simple rhythmic pattern
+standard_pop_120bpm_complex.wav,120,Complex rhythmic pattern
+upbeat_dance_140bpm_simple.wav,140,Simple rhythmic pattern
+upbeat_dance_140bpm_complex.wav,140,Complex rhythmic pattern
+fast_electronic_160bpm_simple.wav,160,Simple rhythmic pattern
+fast_electronic_160bpm_complex.wav,160,Complex rhythmic pattern
+very_fast_180bpm_simple.wav,180,Simple rhythmic pattern
+very_fast_180bpm_complex.wav,180,Complex rhythmic pattern
+short_120bpm.wav,120,Short duration (2 seconds)
+tempo_doubling_120bpm.wav,120,Potential tempo doubling confusion
+triplet_feel_90bpm.wav,90,Compound time feel
