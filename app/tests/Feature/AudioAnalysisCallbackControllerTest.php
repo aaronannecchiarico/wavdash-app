@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Events\AnalysisCompleted;
 use App\Models\Upload;
 use App\Models\UploadAnalysisTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class AudioAnalysisCallbackControllerTest extends TestCase
@@ -34,6 +36,8 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
     public function test_handles_completed_features_callback(): void
     {
+        Event::fake();
+
         $callbackData = [
             'task_id' => 'test-task-123',
             'status' => 'completed',
@@ -72,6 +76,12 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
         // Verify analysis was created
         $this->upload->refresh();
+
+        // Check that AnalysisCompleted event was broadcasted
+        Event::assertDispatched(AnalysisCompleted::class, function ($event) {
+            return $event->upload->id === $this->upload->id &&
+                   $event->analysisTask->id === $this->analysisTask->id;
+        });
         $analysis = $this->upload->analysis;
         $this->assertNotNull($analysis);
         $this->assertEquals('C major', $analysis->musical_key);
@@ -120,6 +130,8 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
     public function test_handles_failed_callback(): void
     {
+        Event::fake();
+
         $callbackData = [
             'task_id' => 'test-task-123',
             'status' => 'failed',
@@ -143,6 +155,13 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
         // Verify no analysis was created
         $this->upload->refresh();
+
+        // Check that AnalysisCompleted event was broadcasted even for failed tasks
+        Event::assertDispatched(AnalysisCompleted::class, function ($event) {
+            return $event->upload->id === $this->upload->id &&
+                   $event->analysisTask->id === $this->analysisTask->id &&
+                   $event->analysisTask->status === 'failed';
+        });
         $this->assertNull($this->upload->analysis);
     }
 
@@ -229,5 +248,102 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         $this->analysisTask->refresh();
         $this->assertEquals('failed', $this->analysisTask->status);
         $this->assertStringContainsString('No musical analysis data received', $this->analysisTask->error_message);
+    }
+
+    public function test_handles_null_analysis_summary_with_file(): void
+    {
+        Event::fake();
+
+        // This simulates the actual callback data from the microservice
+        $callbackData = [
+            'task_id' => 'test-task-123',
+            'status' => 'completed',
+            'processing_type' => 'features',
+            'storage_paths' => [
+                'analysis' => 'processed/2025/08/13/test_features.json',
+                'original' => 'uploads/1/2025/08/13/test.mp3'
+            ],
+            'analysis_summary' => null,
+            'error_message' => null,
+            'processing_time' => 1.2,
+            'storage_type' => 'local'
+        ];
+
+        $response = $this->postJson(
+            route('api.audio.analysis.callback', $this->upload->id),
+            $callbackData
+        );
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+            'message' => 'Callback processed successfully'
+        ]);
+
+        // Verify task was updated
+        $this->analysisTask->refresh();
+        $this->assertEquals('completed', $this->analysisTask->status);
+        $this->assertEquals(100, $this->analysisTask->progress);
+
+        // Verify minimal analysis was created
+        $this->upload->refresh();
+        $analysis = $this->upload->analysis;
+        $this->assertNotNull($analysis);
+        $this->assertEquals(1.2, $analysis->analysis_duration);
+
+        // Check that AnalysisCompleted event was broadcasted
+        Event::assertDispatched(AnalysisCompleted::class, function ($event) {
+            return $event->upload->id === $this->upload->id &&
+                   $event->analysisTask->id === $this->analysisTask->id;
+        });
+    }
+
+    public function test_completed_analysis_task_can_be_deleted_properly(): void
+    {
+        Event::fake();
+        
+        // Simulate a completed analysis task with analysis data
+        $this->analysisTask->update([
+            'status' => 'completed',
+            'progress' => 100,
+            'completed_at' => now()
+        ]);
+        
+        $this->upload->analysis()->create([
+            'musical_key' => 'C major',
+            'bpm' => 120,
+            'key_confidence' => 0.85,
+            'loudness_db' => -12.5,
+            'brightness' => 2500.0,
+            'timbral_complexity' => 0.8,
+            'analysis_duration' => 3.2,
+            'chunk_count' => 5,
+            'key_changes' => 1,
+        ]);
+        
+        // Verify initial state
+        $this->assertTrue($this->analysisTask->isCompleted());
+        $this->assertFalse($this->analysisTask->isProcessing());
+        $this->assertNotNull($this->upload->analysis);
+        
+        // Test the deletion endpoint
+        $response = $this->actingAs($this->user)
+            ->delete(route('uploads.analysis.destroy', $this->upload));
+        
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Analysis data deleted successfully.');
+        
+        // Verify both analysis and task are deleted
+        $this->upload->refresh();
+        $this->assertNull($this->upload->analysis);
+        $this->assertNull($this->upload->analysisTask);
+        
+        // Verify database records are actually deleted
+        $this->assertDatabaseMissing('upload_analyses', [
+            'upload_id' => $this->upload->id
+        ]);
+        $this->assertDatabaseMissing('upload_analysis_tasks', [
+            'id' => $this->analysisTask->id
+        ]);
     }
 }

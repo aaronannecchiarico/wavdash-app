@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
@@ -123,33 +122,25 @@ export default function Analysis({ upload, analysis_service }: Props) {
                             Analysis in Progress
                         </CardTitle>
                         <CardDescription>
-                            Your audio is being analyzed. This usually takes a few minutes.
+                            Your audio is being analyzed. You'll receive a notification when it's complete.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span>Progress</span>
-                                <span>{uploadData.analysis_task.progress}%</span>
+                        <div className="flex items-center justify-center py-8">
+                            <div className="flex flex-col items-center space-y-4">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                <div className="text-center">
+                                    <p className="text-sm font-medium">Processing audio...</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Started {new Date(uploadData.analysis_task.submitted_at).toLocaleString()}
+                                    </p>
+                                </div>
                             </div>
-                            <Progress value={uploadData.analysis_task.progress} />
                         </div>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span>Status: {uploadData.analysis_task.status}</span>
-                            <Badge variant="secondary">
-                                {uploadData.analysis_task.status}
-                            </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            Started {new Date(uploadData.analysis_task.submitted_at).toLocaleString()}
-                        </p>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => window.location.reload()}>
-                                Refresh Status
-                            </Button>
+                        <div className="flex justify-center">
                             <Button variant="outline" onClick={handleDeleteTask} disabled={processing}>
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Cancel Task
+                                Cancel Analysis
                             </Button>
                         </div>
                     </CardContent>

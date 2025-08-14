@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UploadResource;
-use App\Jobs\CheckAnalysisTaskStatus;
 use App\Models\Upload;
 use App\Services\AudioAnalysisService;
 use Illuminate\Http\JsonResponse;
@@ -54,8 +53,6 @@ class UploadAnalysisController extends Controller
             return redirect()->back()->with('error', 'Failed to submit upload for analysis.');
         }
 
-        CheckAnalysisTaskStatus::dispatch($analysisTask)->delay(now()->addSeconds(10));
-
         Log::info('Audio analysis manually triggered', [
             'upload_id' => $upload->id,
             'task_id' => $analysisTask->task_id,
@@ -100,12 +97,19 @@ class UploadAnalysisController extends Controller
             Log::info('Analysis results deleted', ['upload_id' => $upload->id]);
         }
 
-        if ($upload->analysisTask && !$upload->analysisTask->isProcessing()) {
+        if ($upload->analysisTask) {
+            if ($upload->analysisTask->isProcessing()) {
+                return redirect()->back()->with('error', 'Cannot delete analysis while it is still processing.');
+            }
+            
+            // Delete the task if it's completed, failed, or in any non-processing state
             $upload->analysisTask->delete();
             $deleted = true;
-            Log::info('Analysis task deleted', ['upload_id' => $upload->id]);
-        } elseif ($upload->analysisTask && $upload->analysisTask->isProcessing()) {
-            return redirect()->back()->with('error', 'Cannot delete analysis while it is still processing.');
+            Log::info('Analysis task deleted', [
+                'upload_id' => $upload->id,
+                'task_status' => $upload->analysisTask->status,
+                'task_id' => $upload->analysisTask->task_id
+            ]);
         }
 
         if (!$deleted) {

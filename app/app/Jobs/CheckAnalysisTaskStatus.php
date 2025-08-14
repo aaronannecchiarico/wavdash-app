@@ -65,7 +65,7 @@ class CheckAnalysisTaskStatus implements ShouldQueue
             Log::warning('Failed to check analysis task status', [
                 'task_id' => $this->analysisTask->task_id
             ]);
-            
+
             // Retry later if we couldn't check the status
             $this->release(30);
             return;
@@ -80,7 +80,7 @@ class CheckAnalysisTaskStatus implements ShouldQueue
                 'task_id' => $this->analysisTask->task_id,
                 'progress' => $this->analysisTask->progress
             ]);
-            
+
             // Schedule next check in 30 seconds
             self::dispatch($this->analysisTask)->delay(now()->addSeconds(30));
         } elseif ($this->analysisTask->isCompleted()) {
@@ -106,7 +106,6 @@ class CheckAnalysisTaskStatus implements ShouldQueue
             'error' => $exception->getMessage()
         ]);
 
-        // Mark the task as failed if the job fails completely
         $this->analysisTask->markFailed('Job failed: ' . $exception->getMessage());
     }
 }
