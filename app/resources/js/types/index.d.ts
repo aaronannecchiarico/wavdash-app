@@ -101,6 +101,31 @@ export interface UploadAnalysis {
     };
 }
 
+export interface UploadStemTask {
+    id: number;
+    task_id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'deleted';
+    progress: number;
+    submitted_at: string;
+    completed_at: string | null;
+    error_message: string | null;
+}
+
+export interface UploadStem {
+    id: number;
+    stem_type: string;
+    file_path: string;
+    storage_type: string;
+    file_size?: number;
+    duration?: number;
+    metadata?: any;
+    created_at: string;
+    updated_at: string;
+    formatted_file_size?: string;
+    formatted_duration?: string;
+    stem_type_name?: string;
+}
+
 export interface Upload {
     id: number;
     title: string;
@@ -122,4 +147,9 @@ export interface Upload {
     analysis?: UploadAnalysis | null;
     has_analysis?: boolean;
     is_analysis_in_progress?: boolean;
+    // Stem separation properties
+    stem_task?: UploadStemTask | null;
+    stems?: UploadStem[];
+    has_stems?: boolean;
+    is_stem_separation_in_progress?: boolean;
 }

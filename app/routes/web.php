@@ -32,8 +32,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/similar', [\App\Http\Controllers\UploadAnalysisController::class, 'similar'])->name('similar');
     });
 
+    // Upload Stem Separation Routes (Web/Inertia)
+    Route::prefix('uploads/{upload}/stems')->name('uploads.stems.')->group(function () {
+        Route::post('/', [\App\Http\Controllers\UploadStemController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\UploadStemController::class, 'show'])->name('show');
+        Route::delete('/', [\App\Http\Controllers\UploadStemController::class, 'destroy'])->name('destroy');
+        Route::delete('/task', [\App\Http\Controllers\UploadStemController::class, 'deleteTask'])->name('delete-task');
+        Route::get('/{stemType}/download', [\App\Http\Controllers\UploadStemController::class, 'downloadStem'])->name('download');
+    });
+
     // Analysis service status (API)
     Route::get('api/analysis/status', [\App\Http\Controllers\UploadAnalysisController::class, 'status'])->name('analysis.status');
+    
+    // Stem separation service status (API)
+    Route::get('api/stems/status', [\App\Http\Controllers\UploadStemController::class, 'status'])->name('stems.status');
 });
 
 require __DIR__.'/settings.php';

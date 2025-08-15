@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\AnalysisCompleted;
+use App\Events\StemSeparationCompleted;
 use App\Http\Controllers\Controller;
 use App\Models\Upload;
 use App\Models\UploadAnalysisTask;
+use App\Models\UploadStemTask;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -48,23 +50,34 @@ class AudioAnalysisCallbackController extends Controller
         }
         
         try {
-            // Find the analysis task
-            $analysisTask = $upload->analysisTask;
-            if (!$analysisTask) {
-                Log::error('No analysis task found for callback', [
+            // Find the appropriate task based on processing type
+            $task = null;
+            $eventClass = null;
+
+            if ($data['processing_type'] === 'features') {
+                $task = $upload->analysisTask;
+                $eventClass = AnalysisCompleted::class;
+            } elseif ($data['processing_type'] === 'stems') {
+                $task = $upload->stemTask;
+                $eventClass = StemSeparationCompleted::class;
+            }
+
+            if (!$task) {
+                Log::error('No task found for callback', [
                     'upload_id' => $upload->id,
                     'task_id' => $data['task_id'] ?? 'unknown',
+                    'processing_type' => $data['processing_type'],
                     'upload_user_id' => $upload->user_id,
                     'upload_status' => $upload->status
                 ]);
-                return response()->json(['error' => 'Analysis task not found'], 404);
+                return response()->json(['error' => 'Task not found'], 404);
             }
 
-            Log::info('Analysis task found for callback', [
+            Log::info('Task found for callback', [
                 'upload_id' => $upload->id,
                 'task_id' => $data['task_id'],
-                'current_task_status' => $analysisTask->status,
-                'expected_task_id' => $analysisTask->task_id,
+                'current_task_status' => $task->status,
+                'expected_task_id' => $task->task_id,
                 'callback_status' => $data['status'],
                 'processing_type' => $data['processing_type'],
                 'storage_type' => $data['storage_type'],
@@ -72,41 +85,47 @@ class AudioAnalysisCallbackController extends Controller
             ]);
 
             // Verify the task ID matches
-            if ($analysisTask->task_id !== $data['task_id']) {
+            if ($task->task_id !== $data['task_id']) {
                 Log::error('Task ID mismatch in callback', [
                     'upload_id' => $upload->id,
-                    'expected_task_id' => $analysisTask->task_id,
+                    'expected_task_id' => $task->task_id,
                     'received_task_id' => $data['task_id'],
-                    'analysis_task_id' => $analysisTask->id,
-                    'analysis_task_status' => $analysisTask->status
+                    'task_id' => $task->id,
+                    'task_status' => $task->status,
+                    'processing_type' => $data['processing_type']
                 ]);
                 return response()->json(['error' => 'Task ID mismatch'], 400);
             }
 
             if ($data['status'] === 'completed') {
-                $this->handleCompletedAnalysis($upload, $analysisTask, $data);
+                if ($data['processing_type'] === 'features') {
+                    $this->handleCompletedAnalysis($upload, $task, $data);
+                } elseif ($data['processing_type'] === 'stems') {
+                    $this->handleCompletedStemSeparation($upload, $task, $data);
+                }
             } elseif ($data['status'] === 'failed') {
-                $this->handleFailedAnalysis($analysisTask, $data);
+                $this->handleFailedTask($task, $data);
             }
             
             // Verify the task status with microservice to ensure consistency
-            $this->verifyTaskStatusWithMicroservice($analysisTask, $data['status']);
+            $this->verifyTaskStatusWithMicroservice($task, $data['status']);
 
-            // Broadcast the analysis completion event for real-time UI updates
-            Log::info('Broadcasting analysis completion event', [
+            // Broadcast the appropriate completion event for real-time UI updates
+            Log::info('Broadcasting task completion event', [
                 'upload_id' => $upload->id,
-                'task_id' => $analysisTask->task_id,
-                'status' => $analysisTask->status,
-                'user_id' => $upload->user_id
+                'task_id' => $task->task_id,
+                'status' => $task->status,
+                'user_id' => $upload->user_id,
+                'processing_type' => $data['processing_type']
             ]);
             
-            broadcast(new AnalysisCompleted($upload, $analysisTask));
+            broadcast(new $eventClass($upload, $task));
 
-            Log::info('Analysis callback processed successfully', [
+            Log::info('Callback processed successfully', [
                 'upload_id' => $upload->id,
                 'task_id' => $data['task_id'],
-                'final_status' => $analysisTask->status,
-                'has_analysis_data' => $upload->analysis !== null
+                'final_status' => $task->status,
+                'processing_type' => $data['processing_type']
             ]);
 
             return response()->json([
@@ -115,9 +134,10 @@ class AudioAnalysisCallbackController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error processing analysis callback', [
+            Log::error('Error processing callback', [
                 'upload_id' => $upload->id,
                 'task_id' => $data['task_id'] ?? 'unknown',
+                'processing_type' => $data['processing_type'] ?? 'unknown',
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -283,9 +303,9 @@ class AudioAnalysisCallbackController extends Controller
     }
 
     /**
-     * Handle stems separation completion.
+     * Handle stem separation completion.
      */
-    private function handleStemsCompletion(Upload $upload, UploadAnalysisTask $task, array $data): void
+    private function handleCompletedStemSeparation(Upload $upload, UploadStemTask $task, array $data): void
     {
         $storagePaths = $data['storage_paths'] ?? [];
         
@@ -295,12 +315,36 @@ class AudioAnalysisCallbackController extends Controller
         }, ARRAY_FILTER_USE_KEY);
 
         if (!empty($stemPaths)) {
-            // Store stems paths in the upload record for future access
+            // Create UploadStem records for each separated stem
+            foreach ($stemPaths as $stemType => $filePath) {
+                // Adjust file path based on storage type
+                $adjustedFilePath = $filePath;
+                if (($data['storage_type'] ?? 'r2') === 'local') {
+                    // For local storage, prepend 'private/' if not already present
+                    if (!str_starts_with($filePath, 'private/')) {
+                        $adjustedFilePath = 'private/' . $filePath;
+                    }
+                }
+                
+                $upload->stems()->create([
+                    'stem_type' => $stemType,
+                    'file_path' => $adjustedFilePath,
+                    'storage_type' => $data['storage_type'] ?? 'r2',
+                    'file_size' => null, // Will be populated later if needed
+                    'duration' => $upload->duration_seconds ?? null,
+                    'metadata' => [
+                        'processing_time' => $data['processing_time'] ?? null,
+                        'task_id' => $task->task_id,
+                    ]
+                ]);
+            }
+
+            // Also store stems paths in the upload record for backward compatibility
             $upload->update([
                 'r2_stems_paths' => $stemPaths,
             ]);
             
-            Log::info('Stems separation completed', [
+            Log::info('Stem separation completed', [
                 'upload_id' => $upload->id,
                 'task_id' => $task->task_id,
                 'stems_count' => count($stemPaths),
@@ -312,18 +356,27 @@ class AudioAnalysisCallbackController extends Controller
                 'task_id' => $task->task_id
             ]);
         }
+
+        // Mark the stem task as completed
+        $task->markCompleted();
+        
+        Log::info('Stem separation task marked as completed', [
+            'upload_id' => $upload->id,
+            'task_id' => $task->task_id,
+            'final_task_status' => $task->status
+        ]);
     }
 
     /**
-     * Handle failed analysis.
+     * Handle failed task (analysis or stem separation).
      */
-    private function handleFailedAnalysis(UploadAnalysisTask $task, array $data): void
+    private function handleFailedTask($task, array $data): void
     {
         $errorMessage = $data['error_message'] ?? 'Processing failed';
         
         $task->markFailed($errorMessage);
 
-        Log::warning('Analysis task failed', [
+        Log::warning('Task failed', [
             'task_id' => $task->task_id,
             'upload_id' => $task->upload_id,
             'error' => $errorMessage,
@@ -334,7 +387,7 @@ class AudioAnalysisCallbackController extends Controller
     /**
      * Verify task status with microservice to ensure consistency.
      */
-    private function verifyTaskStatusWithMicroservice(UploadAnalysisTask $task, string $expectedStatus): void
+    private function verifyTaskStatusWithMicroservice($task, string $expectedStatus): void
     {
         try {
             $microserviceClient = app(\App\Services\AudioMicroserviceClient::class);
@@ -346,7 +399,8 @@ class AudioAnalysisCallbackController extends Controller
                 'local_status' => $task->status,
                 'expected_status' => $expectedStatus,
                 'microservice_status' => $taskStatus['status'] ?? 'unknown',
-                'microservice_response' => $taskStatus
+                'microservice_response' => $taskStatus,
+                'task_type' => get_class($task)
             ]);
             
             // Check if microservice status matches what we received in callback
@@ -356,14 +410,16 @@ class AudioAnalysisCallbackController extends Controller
                     'upload_id' => $task->upload_id,
                     'callback_status' => $expectedStatus,
                     'microservice_status' => $taskStatus['status'],
-                    'local_task_status' => $task->status
+                    'local_task_status' => $task->status,
+                    'task_type' => get_class($task)
                 ]);
                 
                 // If microservice says it's completed but we received something else, update accordingly
                 if ($taskStatus['status'] === 'completed' && $expectedStatus !== 'completed') {
                     Log::info('Correcting task status to completed based on microservice verification', [
                         'task_id' => $task->task_id,
-                        'upload_id' => $task->upload_id
+                        'upload_id' => $task->upload_id,
+                        'task_type' => get_class($task)
                     ]);
                     $task->markCompleted();
                 }
@@ -374,7 +430,8 @@ class AudioAnalysisCallbackController extends Controller
                 'task_id' => $task->task_id,
                 'upload_id' => $task->upload_id,
                 'error' => $e->getMessage(),
-                'expected_status' => $expectedStatus
+                'expected_status' => $expectedStatus,
+                'task_type' => get_class($task)
             ]);
             // Don't fail the callback processing if verification fails
         }

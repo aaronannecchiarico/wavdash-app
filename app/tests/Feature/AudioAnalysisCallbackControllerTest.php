@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Events\AnalysisCompleted;
 use App\Models\Upload;
 use App\Models\UploadAnalysisTask;
+use App\Models\UploadStemTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -95,8 +96,15 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
     public function test_handles_completed_stems_callback(): void
     {
+        // Create a stem task for this test instead of analysis task
+        $stemTask = UploadStemTask::factory()->create([
+            'upload_id' => $this->upload->id,
+            'task_id' => 'test-stem-task-123',
+            'status' => 'processing',
+        ]);
+
         $callbackData = [
-            'task_id' => 'test-task-123',
+            'task_id' => 'test-stem-task-123',
             'status' => 'completed',
             'processing_type' => 'stems',
             'storage_paths' => [
@@ -119,13 +127,18 @@ class AudioAnalysisCallbackControllerTest extends TestCase
 
         // Verify stems were stored
         $this->upload->refresh();
-        $stemPaths = $this->upload->r2_stems_paths;
-        $this->assertNotNull($stemPaths);
-        $this->assertArrayHasKey('vocals', $stemPaths);
-        $this->assertArrayHasKey('drums', $stemPaths);
-        $this->assertArrayHasKey('bass', $stemPaths);
-        $this->assertArrayHasKey('other', $stemPaths);
-        $this->assertArrayNotHasKey('original', $stemPaths); // Original should be filtered out
+        $stems = $this->upload->stems;
+        
+        $this->assertCount(4, $stems);
+        $stemTypes = $stems->pluck('stem_type')->toArray();
+        $this->assertContains('vocals', $stemTypes);
+        $this->assertContains('drums', $stemTypes);
+        $this->assertContains('bass', $stemTypes);
+        $this->assertContains('other', $stemTypes);
+        
+        // Verify stem task was marked as completed
+        $stemTask->refresh();
+        $this->assertEquals('completed', $stemTask->status);
     }
 
     public function test_handles_failed_callback(): void
@@ -204,7 +217,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         );
 
         $response->assertStatus(404);
-        $response->assertJson(['error' => 'Analysis task not found']);
+        $response->assertJson(['error' => 'Task not found']);
     }
 
     public function test_returns_400_on_task_id_mismatch(): void

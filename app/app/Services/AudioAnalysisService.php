@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Upload;
 use App\Models\UploadAnalysisTask;
+use App\Models\UploadStemTask;
 use Illuminate\Support\Facades\Log;
 
 class AudioAnalysisService
@@ -332,6 +333,178 @@ class AudioAnalysisService
 
         } catch (\Exception $e) {
             Log::error('Exception while deleting analysis task', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Still mark the task as deleted locally even if microservice call fails
+            // This prevents the UI from getting stuck
+            $task->update([
+                'status' => 'deleted',
+                'error_message' => 'Task deletion failed: ' . $e->getMessage(),
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Submit an audio file for stem separation using the new storage-based API.
+     */
+    public function submitForStemSeparation(Upload $upload): ?UploadStemTask
+    {
+        try {
+            // Check if there's already a processing task
+            if ($upload->stemTask && $upload->stemTask->isProcessing()) {
+                Log::info('Stem separation already in progress for upload', [
+                    'upload_id' => $upload->id,
+                    'task_id' => $upload->stemTask->task_id,
+                    'status' => $upload->stemTask->status
+                ]);
+                return null;
+            }
+
+            // Clean up any existing deleted or failed tasks before starting a new one
+            if ($upload->stemTask && ($upload->stemTask->isDeleted() || $upload->stemTask->hasFailed())) {
+                Log::info('Removing existing deleted/failed stem task before starting new separation', [
+                    'upload_id' => $upload->id,
+                    'old_task_status' => $upload->stemTask->status,
+                    'old_task_id' => $upload->stemTask->task_id
+                ]);
+                
+                $upload->stemTask->delete();
+                $upload->unsetRelation('stemTask'); // Clear the relationship cache
+            }
+
+            // Determine storage path based on how the upload was stored
+            $storagePath = $upload->getFilePath();
+            
+            Log::info('Submitting upload for stem separation', [
+                'upload_id' => $upload->id,
+                'storage_path' => $storagePath,
+                'uses_r2' => $upload->usesR2Storage()
+            ]);
+
+            // Call the microservice for stem separation
+            $result = $this->client->separateStems($storagePath, [
+                'callback_url' => route('api.audio.analysis.callback', $upload->id),
+                'metadata' => [
+                    'upload_id' => (string) $upload->id,
+                    'user_id' => (string) $upload->user_id,
+                    'original_filename' => $upload->filename,
+                ]
+            ]);
+
+            $taskId = $result['task_id'] ?? null;
+
+            if (!$taskId) {
+                Log::error('No task ID returned from stem separation API', ['upload_id' => $upload->id, 'response' => $result]);
+                return null;
+            }
+
+            // Create the stem task record
+            $stemTask = $upload->stemTask()->create([
+                'task_id' => $taskId,
+                'status' => $result['status'] ?? 'pending',
+                'progress' => 0,
+                'submitted_at' => now(),
+            ]);
+
+            Log::info('Stem separation task submitted', [
+                'upload_id' => $upload->id,
+                'task_id' => $taskId,
+                'stem_task_id' => $stemTask->id,
+                'storage_path' => $storagePath
+            ]);
+
+            return $stemTask;
+
+        } catch (\Exception $e) {
+            Log::error('Exception while submitting audio for stem separation', [
+                'upload_id' => $upload->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Check the status of a stem separation task.
+     */
+    public function checkStemTaskStatus(UploadStemTask $task): bool
+    {
+        try {
+            $result = $this->client->getTaskStatus($task->task_id);
+            
+            $status = $result['status'] ?? 'unknown';
+            $progress = $result['progress'] ?? $task->progress;
+
+            // Update task status
+            $task->update([
+                'status' => $status,
+                'progress' => $progress,
+            ]);
+
+            // If completed, task completion is handled by the callback
+            if ($status === 'completed') {
+                $task->markCompleted();
+            } elseif ($status === 'failed') {
+                $errorMessage = $result['error'] ?? 'Stem separation failed';
+                $task->markFailed($errorMessage);
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Exception while checking stem task status', [
+                'task_id' => $task->task_id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Delete a stem separation task from the microservice.
+     */
+    public function deleteStemTask(UploadStemTask $task): bool
+    {
+        try {
+            Log::info('Deleting stem separation task', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'current_status' => $task->status
+            ]);
+
+            // Call the microservice to delete the task
+            $result = $this->client->deleteTask($task->task_id);
+
+            // Update the task status to deleted
+            $task->update([
+                'status' => 'deleted',
+                'error_message' => 'Task deleted by user',
+            ]);
+
+            // Remove any existing stem data since we're starting fresh
+            if ($task->upload->stems()->exists()) {
+                $task->upload->stems()->delete();
+                Log::info('Removed existing stem data for deleted task', [
+                    'upload_id' => $task->upload_id,
+                    'task_id' => $task->task_id
+                ]);
+            }
+
+            Log::info('Stem separation task deleted successfully', [
+                'upload_id' => $task->upload_id,
+                'task_id' => $task->task_id,
+                'microservice_response' => $result
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Exception while deleting stem separation task', [
                 'upload_id' => $task->upload_id,
                 'task_id' => $task->task_id,
                 'error' => $e->getMessage()

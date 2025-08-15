@@ -86,6 +86,22 @@ class Upload extends Model
     }
 
     /**
+     * Get the stem task for this upload.
+     */
+    public function stemTask(): HasOne
+    {
+        return $this->hasOne(UploadStemTask::class);
+    }
+
+    /**
+     * Get the stems for this upload.
+     */
+    public function stems(): HasMany
+    {
+        return $this->hasMany(UploadStem::class);
+    }
+
+    /**
      * Check if this upload has analysis results.
      */
     public function hasAnalysis(): bool
@@ -99,6 +115,22 @@ class Upload extends Model
     public function isAnalysisInProgress(): bool
     {
         return $this->analysisTask && $this->analysisTask->isProcessing();
+    }
+
+    /**
+     * Check if this upload has stems.
+     */
+    public function hasStems(): bool
+    {
+        return $this->stems()->exists();
+    }
+
+    /**
+     * Check if stem separation is in progress.
+     */
+    public function isStemSeparationInProgress(): bool
+    {
+        return $this->stemTask && $this->stemTask->isProcessing();
     }
 
     /**
