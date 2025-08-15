@@ -1,15 +1,14 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { SoundcloudWaveform } from '@/components/soundcloud-waveform';
+import { AudioPlayer } from '@/components/audio-player';
 import AppLayout from '@/layouts/app-layout';
 import { formatFileSize } from '@/lib/formatters';
 import { getStatusColor } from '@/lib/upload-helpers';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistance } from 'date-fns';
-import { Loader2, PauseIcon, PencilIcon, PlayIcon, Trash2Icon as TrashIcon } from 'lucide-react';
-import { useState } from 'react';
-import type WaveSurfer from 'wavesurfer.js';
+import { BarChart3, PencilIcon, Scissors, Trash2Icon as TrashIcon } from 'lucide-react';
 import { Upload } from '@/types';
 
 interface Props {
@@ -18,15 +17,6 @@ interface Props {
 
 export default function Show({ upload }: Props) {
     const uploadData = 'data' in upload && upload.data ? (upload.data as Upload) : upload;
-    const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const handlePlayPause = () => {
-        if (wavesurfer) {
-            wavesurfer.playPause();
-        }
-    };
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Music Library', href: route('uploads.index') },
         { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
@@ -85,64 +75,71 @@ export default function Show({ upload }: Props) {
                         </div>
 
                         {uploadData.status === 'ready' && uploadData.stream_url && (
-                            <div>
-                                <h3 className="mb-2 text-sm font-medium text-foreground/80 dark:text-foreground/90">Preview</h3>
-
-                                <div className="mb-4">
-                                    <div className="flex items-center space-x-4">
-                                        <Button
-                                            onClick={handlePlayPause}
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-10 w-10 rounded-full"
-                                            disabled={isLoading}
-                                        >
-                                            {isLoading ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" />
-                                            ) : isPlaying ? (
-                                                <PauseIcon className="h-5 w-5" />
-                                            ) : (
-                                                <PlayIcon className="h-5 w-5" />
-                                            )}
-                                        </Button>
-
-                                        <div className="w-full">
-                                            <SoundcloudWaveform
-                                                url={uploadData.stream_url}
-                                                onReady={(ws) => {
-                                                    setWavesurfer(ws);
-                                                    setIsLoading(false);
-                                                }}
-                                                onPlay={() => setIsPlaying(true)}
-                                                onPause={() => setIsPlaying(false)}
-                                                onFinish={() => setIsPlaying(false)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <AudioPlayer
+                                url={uploadData.stream_url}
+                                title="Preview"
+                                className="mb-4"
+                            />
                         )}
                     </CardContent>
 
-                    <CardFooter className="flex justify-between">
-                        <Link href={route('uploads.edit', uploadData.id)}>
-                            <Button variant="outline">
-                                <PencilIcon className="mr-2 h-4 w-4" />
-                                Edit
-                            </Button>
-                        </Link>
+                    <CardFooter className="flex flex-wrap gap-2 justify-between">
+                        <div className="flex flex-wrap gap-2">
+                            <Link href={route('uploads.analysis.show', uploadData.id)}>
+                                <Button variant="outline" className="flex items-center">
+                                    <BarChart3 className="mr-2 h-4 w-4" />
+                                    Analysis
+                                    {uploadData.has_analysis && (
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                            Done
+                                        </Badge>
+                                    )}
+                                    {uploadData.is_analysis_in_progress && (
+                                        <Badge variant="outline" className="ml-2 text-xs">
+                                            Processing
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </Link>
 
-                        <Link
-                            href={route('uploads.destroy', uploadData.id)}
-                            method="delete"
-                            as="button"
-                            type="button"
-                        >
-                            <Button variant="destructive">
-                                <TrashIcon className="mr-2 h-4 w-4" />
-                                Delete
-                            </Button>
-                        </Link>
+                            <Link href={route('uploads.stems.show', uploadData.id)}>
+                                <Button variant="outline" className="flex items-center">
+                                    <Scissors className="mr-2 h-4 w-4" />
+                                    Stem Separation
+                                    {uploadData.has_stems && (
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                            Done
+                                        </Badge>
+                                    )}
+                                    {uploadData.is_stem_separation_in_progress && (
+                                        <Badge variant="outline" className="ml-2 text-xs">
+                                            Processing
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Link href={route('uploads.edit', uploadData.id)}>
+                                <Button variant="outline">
+                                    <PencilIcon className="mr-2 h-4 w-4" />
+                                    Edit
+                                </Button>
+                            </Link>
+
+                            <Link
+                                href={route('uploads.destroy', uploadData.id)}
+                                method="delete"
+                                as="button"
+                                type="button"
+                            >
+                                <Button variant="destructive">
+                                    <TrashIcon className="mr-2 h-4 w-4" />
+                                    Delete
+                                </Button>
+                            </Link>
+                        </div>
                     </CardFooter>
                 </Card>
             </div>

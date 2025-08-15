@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { MultiTrackStemPlayer } from '@/components/multi-track-stem-player';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Download, Music, Scissors, Trash2, Zap } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -248,55 +249,97 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             </Button>
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {stems.map((stem) => (
-                                <Card key={stem.id} className="border-2">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-2xl">{getStemIcon(stem.stem_type)}</span>
-                                                <div>
-                                                    <h4 className="font-semibold">
-                                                        {stem.stem_type_name || stem.stem_type.charAt(0).toUpperCase() + stem.stem_type.slice(1)}
-                                                    </h4>
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {stem.storage_type.toUpperCase()}
-                                                    </Badge>
+                    <CardContent className="space-y-6">
+                        {/* Multi-track Stem Player */}
+                        <MultiTrackStemPlayer 
+                            stems={stems} 
+                            uploadId={uploadData.id} 
+                            analysis={uploadData.analysis || undefined}
+                        />
+                        
+                        {/* Stem Downloads */}
+                        <Card className="bg-slate-50 dark:bg-gray-900 border-slate-200 dark:border-gray-700">
+                            <CardHeader className="pb-4">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                                        <Download className="h-5 w-5" />
+                                        Download Stems
+                                    </CardTitle>
+                                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
+                                        <span>Total: {stems.length} files</span>
+                                        <Badge variant="outline" className="bg-slate-100 dark:bg-gray-800 border-slate-300 dark:border-gray-600">
+                                            {stems[0]?.storage_type?.toUpperCase() || 'LOCAL'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {stems.map((stem) => {
+                                    const getStemColor = (stemType: string) => {
+                                        switch (stemType) {
+                                            case 'vocals': return 'bg-blue-500/20 dark:bg-blue-500/20 border-blue-200 dark:border-blue-800';
+                                            case 'drums': return 'bg-red-500/20 dark:bg-red-500/20 border-red-200 dark:border-red-800';
+                                            case 'bass': return 'bg-yellow-500/20 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-800';
+                                            case 'other': return 'bg-green-500/20 dark:bg-green-500/20 border-green-200 dark:border-green-800';
+                                            default: return 'bg-purple-500/20 dark:bg-purple-500/20 border-purple-200 dark:border-purple-800';
+                                        }
+                                    };
+                                    
+                                    return (
+                                        <div 
+                                            key={stem.id} 
+                                            className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all hover:shadow-sm ${getStemColor(stem.stem_type)}`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                {/* Icon and Name */}
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xl">{getStemIcon(stem.stem_type)}</span>
+                                                    <div>
+                                                        <h4 className="font-semibold text-slate-900 dark:text-white">
+                                                            {stem.stem_type_name || stem.stem_type.charAt(0).toUpperCase() + stem.stem_type.slice(1)}
+                                                        </h4>
+                                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
+                                                            {stem.formatted_file_size && (
+                                                                <span>{stem.formatted_file_size}</span>
+                                                            )}
+                                                            {stem.formatted_file_size && stem.formatted_duration && (
+                                                                <span>•</span>
+                                                            )}
+                                                            {stem.formatted_duration && (
+                                                                <span>{stem.formatted_duration}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            
+                                            {/* Download Button */}
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleDownloadStem(stem.stem_type)}
                                                 disabled={processing}
+                                                className="bg-slate-900 hover:bg-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700 text-white border-0 shadow-sm"
                                             >
                                                 <Download className="h-4 w-4 mr-2" />
                                                 Download
                                             </Button>
                                         </div>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="text-sm text-muted-foreground space-y-1">
-                                            {stem.formatted_file_size && (
-                                                <p>Size: {stem.formatted_file_size}</p>
-                                            )}
-                                            {stem.formatted_duration && (
-                                                <p>Duration: {stem.formatted_duration}</p>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
 
                         {/* Additional Info */}
-                        <div className="mt-6 pt-6 border-t">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-gray-400">
                                 <div>
-                                    <span className="font-medium">Total Stems:</span> {stems.length}
+                                    <span className="font-medium text-slate-900 dark:text-white">Total Stems:</span> {stems.length}
                                 </div>
                                 <div>
-                                    <span className="font-medium">Storage:</span> {stems[0]?.storage_type?.toUpperCase() || 'Unknown'}
+                                    <span className="font-medium text-slate-900 dark:text-white">Storage:</span> {stems[0]?.storage_type?.toUpperCase() || 'Unknown'}
+                                </div>
+                                <div>
+                                    <span className="font-medium text-slate-900 dark:text-white">Completed:</span> {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}
                                 </div>
                             </div>
                         </div>

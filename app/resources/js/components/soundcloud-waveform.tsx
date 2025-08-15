@@ -9,6 +9,9 @@ interface SoundcloudWaveformProps {
     onPlay?: () => void;
     onPause?: () => void;
     onFinish?: () => void;
+    onSeek?: (time: number) => void;
+    height?: number;
+    compact?: boolean;
 }
 
 export function SoundcloudWaveform({
@@ -17,6 +20,9 @@ export function SoundcloudWaveform({
     onPlay,
     onPause,
     onFinish,
+    onSeek,
+    height = 75,
+    compact = false,
 }: SoundcloudWaveformProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const hoverRef = useRef<HTMLDivElement>(null);
@@ -95,8 +101,28 @@ export function SoundcloudWaveform({
         barGap: 1,
         barRadius: 1,
         url: url,
-        height: 75,
+        height: height,
     });
+
+    // Track previous currentTime to detect seeks
+    const prevCurrentTimeRef = useRef<number>(0);
+    
+    // Detect seeks by monitoring currentTime changes
+    useEffect(() => {
+        if (currentTime !== undefined && currentTime !== prevCurrentTimeRef.current) {
+            const timeDifference = Math.abs(currentTime - prevCurrentTimeRef.current);
+            
+            // If the time jumps significantly (more than 1 second) and we're not playing,
+            // or if it's a large jump while playing (indicating a seek rather than normal playback)
+            if (timeDifference > 1 || (!isPlaying && timeDifference > 0.1)) {
+                if (onSeek) {
+                    onSeek(currentTime);
+                }
+            }
+            
+            prevCurrentTimeRef.current = currentTime;
+        }
+    }, [currentTime, isPlaying, onSeek]);
 
     useEffect(() => {
         if (wavesurfer) {
@@ -124,12 +150,18 @@ export function SoundcloudWaveform({
             wavesurfer.on('finish', () => {
                 if (onFinish) onFinish();
             }),
+            wavesurfer.on('interaction', () => {
+                if (onSeek && !isPlaying) {
+                    const currentTime = wavesurfer.getCurrentTime();
+                    onSeek(currentTime);
+                }
+            }),
         ];
 
         return () => {
             subscriptions.forEach((unsub) => unsub());
         };
-    }, [wavesurfer, onReady, onPlay, onPause, onFinish]);
+    }, [wavesurfer, onReady, onPlay, onPause, onFinish, onSeek]);
 
     // Handle hover effect
     useEffect(() => {
@@ -171,10 +203,12 @@ export function SoundcloudWaveform({
                 />
             </div>
 
-            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                <span>{formatDuration(isFinite(currentTime) ? currentTime : 0)}</span>
-                <span>{formatDuration(isFinite(duration) ? duration : 0)}</span>
-            </div>
+            {!compact && (
+                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                    <span>{formatDuration(isFinite(currentTime) ? currentTime : 0)}</span>
+                    <span>{formatDuration(isFinite(duration) ? duration : 0)}</span>
+                </div>
+            )}
         </div>
     );
 }

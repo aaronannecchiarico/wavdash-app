@@ -70,7 +70,7 @@ class UploadStemController extends Controller
     {
         $this->authorize('view', $upload);
 
-        $upload->load(['stemTask', 'stems']);
+        $upload->load(['stemTask', 'stems', 'analysis']);
 
         $analysisServiceStatus = [
             'enabled' => config('services.audio_analysis.enabled', false),
@@ -186,7 +186,18 @@ class UploadStemController extends Controller
         }
 
         // If stored locally, serve the file from private storage
-        return response()->download(storage_path('app/private/' . $stem->file_path));
+        $filePath = $stem->file_path;
+        
+        // Handle both old and new file path formats
+        if (str_starts_with($filePath, 'private/')) {
+            // New format: file_path already includes 'private/'
+            $fullPath = storage_path('app/' . $filePath);
+        } else {
+            // Old format: file_path needs 'private/' prepended
+            $fullPath = storage_path('app/private/' . $filePath);
+        }
+        
+        return response()->download($fullPath);
     }
 
     /**
