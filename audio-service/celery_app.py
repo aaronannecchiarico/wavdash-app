@@ -20,6 +20,7 @@ celery_app = Celery(
     include=[
         "tasks.audio_processing",
         "tasks.storage_processing",
+        "tasks.tempo_processing",
     ]
 )
 
@@ -42,6 +43,8 @@ celery_app.conf.update(
         'tasks.storage_processing.process_audio_features_from_storage': {'queue': 'audio_features'},
         'tasks.storage_processing.separate_audio_stems_from_storage': {'queue': 'stem_separation'},
         'tasks.storage_processing.batch_process_from_storage': {'queue': 'audio_features'},
+        'tasks.tempo_processing.process_tempo_from_storage': {'queue': 'tempo_processing'},
+        'tasks.tempo_processing.process_tempo_direct': {'queue': 'tempo_processing'},
     },
     task_annotations={
         'tasks.audio_processing.process_audio_features': {'rate_limit': '10/m'},
@@ -49,6 +52,8 @@ celery_app.conf.update(
         'tasks.storage_processing.process_audio_features_from_storage': {'rate_limit': '10/m'},
         'tasks.storage_processing.separate_audio_stems_from_storage': {'rate_limit': '5/m'},
         'tasks.storage_processing.batch_process_from_storage': {'rate_limit': '3/m'},
+        'tasks.tempo_processing.process_tempo_from_storage': {'rate_limit': '3/m'},
+        'tasks.tempo_processing.process_tempo_direct': {'rate_limit': '3/m'},
     }
 )
 

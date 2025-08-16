@@ -26,7 +26,7 @@ def main():
             "worker",
             "--loglevel=info",
             "--concurrency=2",
-            "--queues=audio_features,stem_separation",
+            "--queues=audio_features,stem_separation,tempo_processing",
             "--max-tasks-per-child=100",
             "--prefetch-multiplier=1"
         ]

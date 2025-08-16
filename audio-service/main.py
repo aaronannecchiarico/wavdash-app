@@ -22,6 +22,7 @@ from tasks.storage_processing import (
 )
 from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
 from celery_app import celery_app
+from routes.tempo_processing import router as tempo_router
 
 
 # Redis connection for tracking deleted tasks
@@ -65,6 +66,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include tempo processing routes
+app.include_router(tempo_router)
 
 
 @app.exception_handler(RequestValidationError)

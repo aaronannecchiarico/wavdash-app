@@ -331,3 +331,6 @@ docker-compose.local.yml
 .fseventsd/
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
+
+.claude
+.serena
