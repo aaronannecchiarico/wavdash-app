@@ -15,7 +15,8 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from fastapi.testclient import TestClient
-from main import app, redis_client, is_task_deleted
+from main import app
+from routes.tasks import get_redis_client, is_task_deleted
 from celery_app import celery_app
 
 
@@ -29,7 +30,7 @@ def client():
 def mock_redis():
     """Mock Redis client"""
     mock_redis = MagicMock()
-    with patch('main.redis_client', mock_redis):
+    with patch('routes.tasks.redis_client', mock_redis):
         yield mock_redis
 
 
@@ -53,7 +54,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 0  # Task not deleted
         
         # Test
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -71,7 +72,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 0  # Task not deleted
         
         # Test
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -90,7 +91,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 0  # Task not deleted
         
         # Test
-        response = client.get(f"/task-status/{task_id}?include_result=true")
+        response = client.get(f"/task/status/{task_id}?include_result=true")
         
         # Assert
         assert response.status_code == 200
@@ -108,7 +109,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 0  # Task not deleted
         
         # Test
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -125,7 +126,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 1  # Task is marked as deleted
         
         # Test
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -142,7 +143,7 @@ class TestTaskAPI:
         mock_redis.exists.return_value = 1  # Task is marked as deleted
         
         # Test
-        response = client.get(f"/task-summary/{task_id}")
+        response = client.get(f"/task/summary/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -213,22 +214,22 @@ class TestTaskAPI:
         
         # Test task not deleted
         mock_redis.exists.return_value = 0
-        with patch('main.redis_client', mock_redis):
+        with patch('routes.tasks.redis_client', mock_redis):
             assert not is_task_deleted(task_id)
         
         # Test task deleted
         mock_redis.exists.return_value = 1
-        with patch('main.redis_client', mock_redis):
+        with patch('routes.tasks.redis_client', mock_redis):
             assert is_task_deleted(task_id)
         
         # Test Redis error
         mock_redis.exists.side_effect = Exception("Redis error")
-        with patch('main.redis_client', mock_redis):
+        with patch('routes.tasks.redis_client', mock_redis):
             assert not is_task_deleted(task_id)  # Should return False on error
     
     def test_is_task_deleted_no_redis(self):
         """Test is_task_deleted when Redis is not available"""
-        with patch('main.redis_client', None):
+        with patch('routes.tasks.redis_client', None):
             assert not is_task_deleted("test-task-123")
     
     def test_pending_task_double_check_deleted(self, client, mock_celery_task, mock_redis):
@@ -240,7 +241,7 @@ class TestTaskAPI:
         mock_redis.exists.side_effect = [0, 1]
         
         # Test
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         
         # Assert
         assert response.status_code == 200
@@ -259,7 +260,7 @@ def test_integration_delete_then_get_status():
     task_id = "integration-test-123"
     
     with patch('main.celery_app.AsyncResult') as mock_async_result, \
-         patch('main.redis_client') as mock_redis:
+         patch('routes.tasks.redis_client') as mock_redis:
         
         mock_task = MagicMock()
         mock_async_result.return_value = mock_task
@@ -269,7 +270,7 @@ def test_integration_delete_then_get_status():
         
         # Initially task is pending
         mock_task.state = 'PENDING'
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         assert response.json()["status"] == "pending"
         
         # Delete the task
@@ -280,7 +281,7 @@ def test_integration_delete_then_get_status():
         mock_redis.exists.return_value = 1
         
         # Check status again - should now show as deleted
-        response = client.get(f"/task-status/{task_id}")
+        response = client.get(f"/task/status/{task_id}")
         data = response.json()
         assert data["status"] == "deleted"
         assert data["message"] == "Task has been deleted"

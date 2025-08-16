@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 redis_client = redis.Redis(
     host='localhost',
     port=6379,
-    db=1,  # Use separate database for rate limiting
+    db=2,  # Use separate database for rate limiting
     decode_responses=True
 )
 

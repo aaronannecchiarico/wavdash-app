@@ -1,6 +1,6 @@
 """
 Unified Storage Service
-Handles both local file system and R2 cloud storage based on configuration
+Handles local file system storage
 """
 
 import os
@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 class StorageType(Enum):
     LOCAL = "local"
-    R2 = "r2"
 
 
 class StorageError(Exception):
@@ -308,39 +307,7 @@ class LocalStorageService(StorageService):
         return content_type or 'application/octet-stream'
 
 
-class R2StorageService(StorageService):
-    """R2 cloud storage implementation (wrapper around existing R2StorageService)"""
-    
-    def __init__(self):
-        from services.r2_storage import R2StorageService as _R2StorageService
-        self._r2_service = _R2StorageService()
-    
-    def file_exists(self, path: str) -> bool:
-        return self._r2_service.file_exists(path)
-    
-    def upload_file(self, local_path: str, remote_path: str, metadata: Optional[Dict[str, str]] = None) -> bool:
-        return self._r2_service.upload_file(local_path, remote_path, metadata)
-    
-    def download_file(self, remote_path: str, local_path: str) -> bool:
-        return self._r2_service.download_file(remote_path, local_path)
-    
-    def delete_file(self, path: str) -> bool:
-        return self._r2_service.delete_file(path)
-    
-    def list_files(self, prefix: str = "", max_keys: int = 1000) -> List[Dict[str, any]]:
-        return self._r2_service.list_files(prefix, max_keys)
-    
-    def get_file_info(self, path: str) -> Optional[Dict[str, any]]:
-        return self._r2_service.get_file_info(path)
-    
-    def get_public_url(self, path: str) -> Optional[str]:
-        return self._r2_service.get_public_url(path)
-    
-    def upload_analysis_result(self, analysis_data: dict, base_path: str, analysis_type: str = "features", user_id: Optional[str] = None) -> Optional[str]:
-        return self._r2_service.upload_analysis_result(analysis_data, base_path, analysis_type, user_id)
-    
-    def upload_stems(self, stems_dict: Dict[str, str], base_path: str, metadata: Optional[Dict[str, str]] = None, user_id: Optional[str] = None) -> Dict[str, str]:
-        return self._r2_service.upload_stems(stems_dict, base_path, metadata, user_id)
+
 
 
 # Global storage instance
@@ -352,21 +319,8 @@ def get_storage_service() -> StorageService:
     global _storage_instance
     
     if _storage_instance is None:
-        storage_type = os.getenv('STORAGE_TYPE', 'local').lower()
-        
-        if storage_type == 'r2':
-            # Check if R2 is properly configured
-            from services.r2_storage import is_r2_enabled
-            if not is_r2_enabled():
-                logger.warning("R2 storage requested but not properly configured, falling back to local storage")
-                storage_type = 'local'
-        
-        if storage_type == 'r2':
-            logger.info("Initializing R2 cloud storage")
-            _storage_instance = R2StorageService()
-        else:
-            logger.info("Initializing local file storage")
-            _storage_instance = LocalStorageService()
+        logger.info("Initializing local file storage")
+        _storage_instance = LocalStorageService()
     
     return _storage_instance
 
@@ -383,11 +337,4 @@ def is_storage_enabled() -> bool:
 
 def get_storage_type() -> StorageType:
     """Get the current storage type"""
-    storage_type = os.getenv('STORAGE_TYPE', 'local').lower()
-    
-    if storage_type == 'r2':
-        from services.r2_storage import is_r2_enabled
-        if is_r2_enabled():
-            return StorageType.R2
-    
     return StorageType.LOCAL

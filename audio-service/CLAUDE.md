@@ -53,9 +53,9 @@ python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 
 **FastAPI Application (`main.py`)**
 - RESTful API with automatic OpenAPI documentation
-- Dual processing modes: direct file upload vs storage-based processing
-- Redis-based deleted task tracking
+- Modular router organization (health, audio, storage, tasks, tempo)
 - Comprehensive request validation and error handling
+- Clean separation of concerns with dedicated route modules
 
 **Celery Task Queue (`celery_app.py`)**
 - Distributed task processing with Redis broker
@@ -64,9 +64,9 @@ python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 - Apple Silicon MPS compatibility handling
 
 **Storage Abstraction (`services/storage_service.py`)**
-- Unified interface for local filesystem and Cloudflare R2
+- Local filesystem storage implementation
 - User-based folder structure: `uploads/{user_id}/YYYY/MM/DD/` and `processed/{user_id}/YYYY/MM/DD/`
-- Automatic storage type detection and configuration
+- Automatic directory creation and file management
 
 ### Task Processing Architecture
 
@@ -78,7 +78,7 @@ python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 - Process files already in storage (recommended for Laravel integration)
 - Callback-based completion notifications
 - Analysis summary generation for multi-chunk processing
-- User-based path handling for both local and R2 storage
+- User-based path handling for local storage
 
 **Feature Extraction (`services/audio_feature_extraction.py`)**
 - Chunked processing for large files (>60s automatically split)
@@ -91,7 +91,13 @@ python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 **Request/Response Models (`models/`)**
 - `audio_models.py`: Direct upload processing models
 - `storage_models.py`: Storage-based processing models (Laravel integration)
-- `r2_models.py`: Cloud storage specific models
+
+**Route Organization (`routes/`)**
+- `health.py`: Health checks and system status endpoints
+- `audio_processing.py`: Direct file upload processing routes
+- `storage.py`: Storage-based processing routes
+- `tasks.py`: Task status and lifecycle management routes
+- `tempo_processing.py`: Advanced tempo analysis features
 
 ### Key Processing Flow
 
@@ -126,7 +132,7 @@ stems/{user_id}/2025/08/13/filename/vocals.wav
 - **Unit Tests** (`tests/unit/`): Isolated component testing, no external dependencies
 - **Feature Tests** (`tests/feature/`): Integration testing, requires Redis + Celery
 - **Test Fixtures** (`tests/fixtures/`): BPM accuracy test audio with ground truth
-- **Comprehensive mocking**: R2 storage tests mock both boto3 and environment variables
+- **Comprehensive mocking**: Storage tests mock environment variables and external dependencies
 
 ### Laravel Integration Patterns
 - Callback-based async processing with `StorageCallbackData` model
@@ -138,18 +144,10 @@ stems/{user_id}/2025/08/13/filename/vocals.wav
 
 **Required for Development:**
 ```bash
-STORAGE_TYPE=local  # or 'r2'
+STORAGE_TYPE=local
 LOCAL_STORAGE_PATH=./storage  # Must match Laravel path for local storage
 REDIS_HOST=localhost
 REDIS_PORT=6379
-```
-
-**For R2 Cloud Storage:**
-```bash
-R2_ACCESS_KEY_ID=your_key
-R2_SECRET_ACCESS_KEY=your_secret  
-R2_BUCKET=your_bucket
-R2_ENDPOINT=https://your-account.r2.cloudflarestorage.com
 ```
 
 ## Performance Considerations
@@ -162,7 +160,7 @@ R2_ENDPOINT=https://your-account.r2.cloudflarestorage.com
 ## Testing Patterns
 
 When writing tests for storage functionality:
-- Mock environment variables for R2 tests: `patch.dict('os.environ', {...})`
+- Mock environment variables: `patch.dict('os.environ', {...})`
 - Mock datetime for timestamp control: `patch('datetime.datetime')`
-- Use `MagicMock` for external service dependencies (boto3, Redis)
+- Use `MagicMock` for external service dependencies (Redis)
 - Test both user_id and no-user_id scenarios for storage paths
