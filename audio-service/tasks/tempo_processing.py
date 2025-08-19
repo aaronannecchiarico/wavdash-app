@@ -24,6 +24,9 @@ from models.tempo_models import TempoCallbackData, TempoPresetEnum
 
 logger = logging.getLogger(__name__)
 
+# Performance cache imports
+from services.performance_cache import get_performance_cache, get_performance_monitor, audio_hash
+
 # Phase 2: Enhanced audio processing imports
 try:
     from pedalboard import Pedalboard, Reverb, PitchShift, HighShelfFilter, LowShelfFilter, Compressor, Chorus
@@ -477,6 +480,133 @@ def check_system_compatibility() -> Dict[str, Any]:
     
     return compatibility
 
+def generate_tempo_filename(original_filename: str, preset: str, tempo_factor: float, pitch_shift_semitones: float = 0) -> str:
+    """
+    Generate descriptive filename for tempo processed audio following user-friendly conventions
+    
+    Args:
+        original_filename: Original audio filename
+        preset: Tempo preset used (e.g., "nightcore", "sped_up", "custom")
+        tempo_factor: Factor applied (e.g., 1.25 for 25% faster)
+        pitch_shift_semitones: Pitch shift in semitones
+    
+    Returns:
+        Descriptive filename like "my-song_tempo_nightcore-140.wav"
+    """
+    base_name = Path(original_filename).stem  # Remove extension
+    
+    # Create descriptive suffix based on preset and parameters
+    if preset == "sped_up":
+        suffix = f"sped-up-{round(tempo_factor * 100)}"
+    elif preset == "slowed_reverb":
+        suffix = f"slowed-reverb-{round(tempo_factor * 100)}"
+    elif preset == "nightcore":
+        suffix = f"nightcore-{round(tempo_factor * 100)}"
+    elif preset == "chopped_screwed":
+        suffix = f"chopped-screwed-{round(tempo_factor * 100)}"
+    elif preset == "time_stretched":
+        suffix = f"time-stretched-{round(tempo_factor * 100)}"
+    else:
+        # Custom preset
+        suffix = f"custom-{round(tempo_factor * 100)}"
+    
+    # Add pitch shift if non-zero
+    if pitch_shift_semitones != 0:
+        suffix += f"-pitch{int(pitch_shift_semitones):+d}"
+    
+    return f"{base_name}_tempo_{suffix}.wav"
+
+
+def build_tempo_file_path(user_id: str, upload_date, filename: str) -> str:
+    """
+    Build consistent file path following Laravel conventions
+    
+    Args:
+        user_id: User ID for folder structure
+        upload_date: Date object for year/month/day structure
+        filename: Generated filename
+    
+    Returns:
+        Path like "processed/{user_id}/2025/08/17/{filename}"
+    """
+    year = upload_date.strftime("%Y")
+    month = upload_date.strftime("%m") 
+    day = upload_date.strftime("%d")
+    
+    return f"processed/{user_id}/{year}/{month}/{day}/{filename}"
+
+
+def calculate_processing_quality_score(
+    processing_warnings: list, 
+    processing_time: float, 
+    audio_duration: float,
+    cache_hit: bool = False
+) -> float:
+    """
+    Calculate a quality score for tempo processing (0.0-1.0)
+    
+    Args:
+        processing_warnings: List of warnings encountered
+        processing_time: Time taken to process
+        audio_duration: Original audio duration
+        cache_hit: Whether result was cached
+    
+    Returns:
+        Quality score from 0.0 (poor) to 1.0 (excellent)
+    """
+    score = 1.0
+    
+    # Reduce score for warnings
+    warning_penalty = len(processing_warnings) * 0.1
+    score -= min(warning_penalty, 0.3)  # Max 30% penalty for warnings
+    
+    # Reduce score for very slow processing (unless cached)
+    if not cache_hit:
+        processing_ratio = processing_time / audio_duration
+        if processing_ratio > 2.0:  # Taking more than 2x the audio duration
+            time_penalty = min((processing_ratio - 2.0) * 0.1, 0.2)  # Max 20% penalty
+            score -= time_penalty
+    
+    # Ensure score stays within bounds
+    return max(0.0, min(1.0, score))
+
+
+def get_processing_warnings(
+    tempo_factor: float, 
+    pitch_shift_semitones: float, 
+    audio_duration: float,
+    preset_config: dict = None
+) -> list:
+    """
+    Generate processing warnings based on parameters and audio characteristics
+    
+    Returns:
+        List of warning messages for potentially problematic settings
+    """
+    warnings = []
+    
+    # Extreme tempo warnings
+    if tempo_factor < 0.5:
+        warnings.append("Very slow tempo may cause audio artifacts")
+    elif tempo_factor > 2.0:
+        warnings.append("Very fast tempo may cause audio artifacts")
+    
+    # Extreme pitch warnings  
+    if abs(pitch_shift_semitones) > 8:
+        warnings.append("Large pitch shifts may cause unnatural sound")
+    
+    # Duration warnings
+    if audio_duration > 600:  # 10 minutes
+        warnings.append("Long audio files may take significant processing time")
+    elif audio_duration < 10:  # Very short
+        warnings.append("Very short audio may not benefit from tempo processing")
+    
+    # Combined effects warnings
+    if tempo_factor > 1.5 and abs(pitch_shift_semitones) > 4:
+        warnings.append("Combining high tempo and pitch changes may degrade quality")
+    
+    return warnings
+
 
 def apply_tempo_processing(audio_data, sample_rate, tempo_factor, pitch_shift_semitones, preserve_pitch, add_reverb, preset_config=None, stem_type="full_mix"):
     """
@@ -485,8 +615,6 @@ def apply_tempo_processing(audio_data, sample_rate, tempo_factor, pitch_shift_se
     Phase 3: Optimized implementation with performance caching and monitoring
     Falls back to librosa if pedalboard is not available
     """
-    from services.performance_cache import get_performance_monitor, audio_hash, get_performance_cache
-    
     monitor = get_performance_monitor()
     start_time = time.time()
     
@@ -631,11 +759,13 @@ def process_tempo_from_storage(
 ) -> Dict[str, Any]:
     """
     Process tempo modifications from storage (local or R2) with callback support
+    Enhanced with improved file naming and complete callback data structure
     """
     start_time = time.time()
     temp_input_path = None
     temp_output_path = None
     storage = None
+    cache_hit = False
     
     try:
         current_task.update_state(
@@ -696,25 +826,78 @@ def process_tempo_from_storage(
             meta={'progress': 40, 'status': f'Applying tempo processing (preset: {preset})', 'task_id': task_id}
         )
         
-        # Extract original BPM for analysis
-        original_bpm = librosa.beat.tempo(y=audio_data, sr=sample_rate)[0]
-        logger.info(f"Original BPM: {original_bpm:.2f}")
+        # Initialize cache for performance optimization
+        cache = get_performance_cache()
         
-        # Generate smart preset suggestions based on audio characteristics
+        # Generate audio hash for caching
+        audio_file_hash = audio_hash(audio_data)
+        logger.debug(f"Audio hash generated: {audio_file_hash[:8]}...")
+        
+        # Try to get cached BPM analysis first
+        cached_bpm_data = cache.get_cached_bpm_analysis(audio_file_hash)
+        if cached_bpm_data:
+            original_bpm = cached_bpm_data.get('bpm', 120.0)
+            logger.info(f"Using cached BPM: {original_bpm:.2f}")
+        else:
+            # Extract original BPM for analysis
+            current_task.update_state(
+                state='PROGRESS',
+                meta={'progress': 45, 'status': 'Analyzing BPM (not cached)', 'task_id': task_id}
+            )
+            original_bpm = librosa.beat.tempo(y=audio_data, sr=sample_rate)[0]
+            logger.info(f"Computed BPM: {original_bpm:.2f}")
+            
+            # Cache the BPM analysis for future use
+            bpm_analysis_data = {
+                'bpm': float(original_bpm),
+                'sample_rate': sample_rate,
+                'duration': len(audio_data) / sample_rate,
+                'analysis_timestamp': time.time()
+            }
+            cache.cache_bpm_analysis(audio_file_hash, bpm_analysis_data)
+            logger.debug(f"Cached BPM analysis for future use")
+        
+        # Generate smart preset suggestions and warnings based on audio characteristics
         duration = len(audio_data) / sample_rate
         smart_suggestions = get_smart_preset_suggestions(original_bpm, duration)
+        processing_warnings = get_processing_warnings(tempo_factor, pitch_shift_semitones, duration, preset_config)
         
-        # Enhanced validation with warnings
-        processing_warnings = validate_tempo_processing_params(tempo_factor, pitch_shift_semitones, duration)
         if processing_warnings:
             logger.warning(f"Processing warnings: {processing_warnings}")
         
-        # Apply tempo processing with preset configuration
-        processed_audio = apply_tempo_processing(
-            audio_data, sample_rate, tempo_factor, 
-            pitch_shift_semitones, preserve_pitch, add_reverb,
-            preset_config
-        )
+        # Generate cache key for processed audio
+        processing_params = {
+            "tempo_factor": tempo_factor,
+            "pitch_shift_semitones": pitch_shift_semitones,
+            "preserve_pitch": preserve_pitch,
+            "preset": preset,
+            "add_reverb": add_reverb,
+            "stem_type": "full_mix" if not use_stems else "stems"
+        }
+        audio_cache_key = cache.generate_audio_cache_key(audio_file_hash, processing_params)
+        
+        # Try to get cached processed audio
+        cached_audio_data = cache.get_cached_processed_audio(audio_cache_key)
+        if cached_audio_data:
+            processed_audio = cached_audio_data['audio_data']
+            sample_rate = cached_audio_data['sample_rate']
+            cache_hit = True
+            logger.info(f"Using cached processed audio")
+        else:
+            # Apply tempo processing with preset configuration
+            current_task.update_state(
+                state='PROGRESS',
+                meta={'progress': 50, 'status': 'Processing audio (not cached)', 'task_id': task_id}
+            )
+            processed_audio = apply_tempo_processing(
+                audio_data, sample_rate, tempo_factor, 
+                pitch_shift_semitones, preserve_pitch, add_reverb,
+                preset_config
+            )
+            
+            # Cache the processed audio for future use
+            cache.cache_processed_audio(audio_cache_key, processed_audio, sample_rate, processing_params)
+            logger.debug(f"Cached processed audio for future use")
         
         # Calculate final BPM
         if tempo_factor != 1.0 and not preserve_pitch:
@@ -739,25 +922,29 @@ def process_tempo_from_storage(
             meta={'progress': 85, 'status': 'Uploading processed audio to storage', 'task_id': task_id}
         )
         
-        # Generate output path
-        base_name = Path(storage_path).stem
-        output_dir = Path(storage_path).parent.parent.parent / "processed" / Path(storage_path).parent.name
-        
-        # Extract user_id from metadata if available
+        # Extract original filename and user info for improved naming
+        original_filename = Path(storage_path).name
         user_id = None
         if metadata and 'user_id' in metadata:
             user_id = str(metadata['user_id'])
         
-        preset_suffix = preset if preset != "custom" else f"tempo_{tempo_factor:.2f}"
-        output_filename = f"{base_name}_tempo_{preset_suffix}.wav"
+        # Generate descriptive filename using improved naming convention
+        output_filename = generate_tempo_filename(
+            original_filename=original_filename,
+            preset=preset,
+            tempo_factor=tempo_factor,
+            pitch_shift_semitones=pitch_shift_semitones
+        )
         
+        # Build consistent file path following Laravel conventions
         if user_id:
-            # Use user-based path structure
             from datetime import datetime
-            now = datetime.now()
-            output_path = f"processed/{user_id}/{now.year:04d}/{now.month:02d}/{now.day:02d}/{output_filename}"
+            upload_date = datetime.now()
+            output_path = build_tempo_file_path(user_id, upload_date, output_filename)
         else:
-            output_path = str(output_dir / output_filename)
+            # Fallback for cases without user_id
+            base_dir = Path(storage_path).parent.parent.parent / "processed" / Path(storage_path).parent.name
+            output_path = str(base_dir / output_filename)
         
         # Upload processed audio to storage
         if not storage.upload_file(temp_output_path, output_path):
@@ -768,32 +955,58 @@ def process_tempo_from_storage(
         # Generate public URL if available
         public_url = storage.get_public_url(output_path)
         
-        # Create processing summary
+        # Calculate quality score for the processing
+        quality_score = calculate_processing_quality_score(
+            processing_warnings, processing_time, duration, cache_hit
+        )
+        
+        # Create comprehensive processing summary with all required fields
         tempo_processing = {
             "preset": preset,
             "tempo_factor": tempo_factor,
             "pitch_shift_semitones": pitch_shift_semitones,
             "preserve_pitch": preserve_pitch,
+            "processing_method": "stems_separate" if use_stems else "direct",
+            "effects_applied": [],
             "final_bpm": final_bpm,
-            "processing_method": "full_mix",
-            "effects_applied": []
+            "quality_score": quality_score,
+            "processing_warnings": processing_warnings
         }
         
+        # Populate effects_applied based on actual processing
         if tempo_factor != 1.0:
             tempo_processing["effects_applied"].append("tempo_change")
         if pitch_shift_semitones != 0.0:
             tempo_processing["effects_applied"].append("pitch_shift")
         if add_reverb:
             tempo_processing["effects_applied"].append("reverb")
+        if preset_config and "brightness_boost" in preset_config.get("effects", []):
+            tempo_processing["effects_applied"].append("brightness_boost")
+        if preset_config and "compression" in preset_config.get("effects", []):
+            tempo_processing["effects_applied"].append("compression")
+        
+        # Enhanced original analysis with more details
+        original_analysis = {
+            'bpm': float(original_bpm),
+            'duration': float(duration),
+            'sample_rate': int(sample_rate),
+            'audio_hash': audio_file_hash[:16]  # Include hash for debugging
+        }
+        
+        # Include key detection if available from cache or quick analysis
+        try:
+            chroma_stft = librosa.feature.chroma_stft(y=audio_data, sr=sample_rate)
+            key_profile = np.mean(chroma_stft, axis=1)
+            key_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            estimated_key = key_names[np.argmax(key_profile)]
+            original_analysis['key'] = estimated_key
+        except Exception:
+            original_analysis['key'] = 'Unknown'
         
         result = {
             'task_id': task_id,
             'status': 'completed',
-            'original_analysis': {
-                'bpm': original_bpm,
-                'duration': len(audio_data) / sample_rate,
-                'sample_rate': sample_rate
-            },
+            'original_analysis': original_analysis,
             'tempo_processing': tempo_processing,
             'smart_suggestions': smart_suggestions,
             'processing_warnings': processing_warnings,
@@ -813,7 +1026,7 @@ def process_tempo_from_storage(
             meta={'progress': 100, 'status': 'Completed', 'task_id': task_id}
         )
         
-        # Send callback if provided
+        # Send enhanced callback with complete metadata
         if callback_url:
             try:
                 callback_data = TempoCallbackData(
@@ -837,7 +1050,7 @@ def process_tempo_from_storage(
                     timeout=30
                 )
                 
-                logger.info(f"Callback sent for tempo task {task_id}: {response.status_code}")
+                logger.info(f"Enhanced callback sent for tempo task {task_id}: {response.status_code}")
                 
             except Exception as callback_error:
                 logger.error(f"Failed to send callback for tempo task {task_id}: {callback_error}")
@@ -866,7 +1079,7 @@ def process_tempo_from_storage(
             }
         )
         
-        # Send failure callback if provided
+        # Send failure callback with enhanced error information
         if callback_url:
             try:
                 callback_data = TempoCallbackData(

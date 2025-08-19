@@ -13,6 +13,7 @@ from routes.audio_processing import router as audio_router
 from routes.storage import router as storage_router
 from routes.tasks import router as tasks_router
 from routes.health import router as health_router
+from routes.migration import router as migration_router
 
 
 
@@ -44,6 +45,7 @@ app.include_router(audio_router)
 app.include_router(storage_router)
 app.include_router(tasks_router)
 app.include_router(tempo_router)
+app.include_router(migration_router)
 
 
 @app.exception_handler(RequestValidationError)

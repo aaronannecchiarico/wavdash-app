@@ -12,6 +12,10 @@ python install.py
 # Activate virtual environment
 source beatforge-audio-extraction-service-local/bin/activate
 
+# For fresh deployments: Run migration and seeding
+python migrate_fresh.py  # Clears Redis, cache, initializes storage
+python seed_data.py      # Seeds system with default data
+
 # Start development environment (requires 2 terminals)
 # Terminal 1: Start Celery worker
 python start_worker.py
@@ -38,14 +42,40 @@ python -m pytest tests/unit/test_analysis_summary.py -v
 python -m pytest tests/unit/test_storage_structure.py::TestLocalStorageStructure::test_upload_analysis_result_with_user_id -v
 ```
 
-### Linting and Validation
+### Migration and Maintenance
 ```bash
+# Fresh deployment migration (clears all data)
+python migrate_fresh.py
+
+# Seed system with default data
+python seed_data.py
+
 # Validate setup and dependencies
 python validate_setup.py
 
 # Check configuration and device detection
 python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 ```
+
+### Remote Migration API (Development Only)
+For Laravel integration, migration endpoints are available via REST API when `DEBUG=true`:
+
+```bash
+# Check migration system status
+curl -X GET http://localhost:8001/migration/status
+
+# Run complete fresh migration (migration + seeding)
+curl -X POST http://localhost:8001/migration/fresh
+
+# Run migration only (without seeding)
+curl -X POST http://localhost:8001/migration/migrate-only
+
+# Run seeding only (without migration)
+curl -X POST http://localhost:8001/migration/seed-only
+```
+
+**Security**: Migration endpoints are automatically blocked in production (`DEBUG=false`).
+**Documentation**: See `MIGRATION_API_GUIDE.md` for complete Laravel integration guide.
 
 ## Architecture Overview
 
@@ -98,6 +128,7 @@ python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
 - `storage.py`: Storage-based processing routes
 - `tasks.py`: Task status and lifecycle management routes
 - `tempo_processing.py`: Advanced tempo analysis features
+- `migration.py`: Migration and maintenance endpoints (development only)
 
 ### Key Processing Flow
 
@@ -139,6 +170,9 @@ stems/{user_id}/2025/08/13/filename/vocals.wav
 - Musical analysis summary includes: BPM, key, key_confidence, loudness_db, brightness, duration
 - User-based folder structure matches Laravel storage conventions
 - Storage path configuration must align between Laravel and microservice
+- **NEW**: Enhanced tempo processing with `TempoCallbackData` model
+- **NEW**: Descriptive file naming for tempo processing (e.g., `song_tempo_nightcore-140-pitch+4.wav`)
+- **NEW**: Complete tempo_processing metadata in callbacks with quality scores and warnings
 
 ## Environment Variables
 

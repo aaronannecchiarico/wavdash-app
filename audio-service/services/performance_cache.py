@@ -37,6 +37,10 @@ class PerformanceCache:
         for cache_subdir in [self.audio_cache_dir, self.bpm_cache_dir, self.preset_cache_dir]:
             cache_subdir.mkdir(exist_ok=True)
         
+        # Cache performance tracking
+        self.cache_hits = {"audio": 0, "bpm": 0, "preset": 0}
+        self.cache_misses = {"audio": 0, "bpm": 0, "preset": 0}
+        
         logger.info(f"Performance cache initialized at {self.cache_dir}")
     
     def _generate_cache_key(self, data: Union[str, bytes, Dict], prefix: str = "") -> str:
@@ -123,9 +127,10 @@ class PerformanceCache:
         """Retrieve cached BPM analysis if available and valid"""
         try:
             cache_key = self._generate_cache_key(audio_hash, "bpm")
-            cache_file = self._get_cache_file_path(cache_key, "bmp")
+            cache_file = self._get_cache_file_path(cache_key, "bpm")
             
             if not self._is_cache_valid(cache_file, max_age_hours):
+                self.cache_misses["bpm"] += 1
                 return None
             
             with open(cache_file, "rb") as f:
@@ -133,10 +138,15 @@ class PerformanceCache:
             
             # Verify the cached data matches the audio hash
             if cache_data.get("audio_hash") == audio_hash:
+                self.cache_hits["bpm"] += 1
                 logger.debug(f"BPM cache hit: {cache_key}")
-                return cache_data["bmp_data"]
+                return cache_data["bpm_data"]
+            else:
+                self.cache_misses["bpm"] += 1
+                return None
             
         except Exception as e:
+            self.cache_misses["bpm"] += 1
             logger.debug(f"BPM cache miss: {e}")
         
         return None
@@ -169,15 +179,18 @@ class PerformanceCache:
             cache_file = self._get_cache_file_path(cache_key, "audio")
             
             if not self._is_cache_valid(cache_file, max_age_hours):
+                self.cache_misses["audio"] += 1
                 return None
             
             with open(cache_file, "rb") as f:
                 cache_data = pickle.load(f)
             
+            self.cache_hits["audio"] += 1
             logger.debug(f"Audio cache hit: {cache_key}")
             return cache_data
             
         except Exception as e:
+            self.cache_misses["audio"] += 1
             logger.debug(f"Audio cache miss: {e}")
         
         return None
@@ -200,18 +213,38 @@ class PerformanceCache:
         """Get cache statistics for monitoring"""
         try:
             audio_files = list(self.audio_cache_dir.glob("*.cache"))
-            bpm_files = list(self.bmp_cache_dir.glob("*.cache"))
+            bpm_files = list(self.bpm_cache_dir.glob("*.cache"))
             preset_files = list(self.preset_cache_dir.glob("*.cache"))
             
             total_size = sum(f.stat().st_size for f in self.cache_dir.rglob("*.cache"))
             
+            # Calculate hit rates
+            def calculate_hit_rate(cache_type: str) -> float:
+                hits = self.cache_hits[cache_type]
+                misses = self.cache_misses[cache_type]
+                total = hits + misses
+                return (hits / total * 100) if total > 0 else 0.0
+            
             return {
-                "total_files": len(audio_files) + len(bmp_files) + len(preset_files),
+                "total_files": len(audio_files) + len(bpm_files) + len(preset_files),
                 "audio_cache_files": len(audio_files),
-                "bmp_cache_files": len(bpm_files),
+                "bpm_cache_files": len(bpm_files),
                 "preset_cache_files": len(preset_files),
                 "total_size_mb": total_size / (1024 * 1024),
-                "cache_directory": str(self.cache_dir)
+                "cache_directory": str(self.cache_dir),
+                "performance": {
+                    "overall_hit_rate": calculate_hit_rate("audio") if self.cache_hits["audio"] + self.cache_misses["audio"] > 0 else calculate_hit_rate("bpm"),
+                    "audio_hit_rate": calculate_hit_rate("audio"),
+                    "bpm_hit_rate": calculate_hit_rate("bpm"),
+                    "preset_hit_rate": calculate_hit_rate("preset"),
+                    "total_requests": {
+                        "audio": self.cache_hits["audio"] + self.cache_misses["audio"],
+                        "bpm": self.cache_hits["bpm"] + self.cache_misses["bpm"],
+                        "preset": self.cache_hits["preset"] + self.cache_misses["preset"]
+                    },
+                    "cache_hits": self.cache_hits.copy(),
+                    "cache_misses": self.cache_misses.copy()
+                }
             }
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")

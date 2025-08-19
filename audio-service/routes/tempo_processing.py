@@ -114,7 +114,7 @@ async def process_tempo_sync(
 
 
 @router.post("/storage/process", response_model=TempoProcessingResponse)
-async def process_tempo_from_storage(request: StorageTempoProcessingRequest):
+async def process_tempo_from_storage_route(request: StorageTempoProcessingRequest):
     """
     Process audio file with tempo/pitch modifications (storage-based)
     
@@ -140,7 +140,7 @@ async def process_tempo_from_storage(request: StorageTempoProcessingRequest):
         # Generate unique task ID
         task_id = str(uuid.uuid4())
         
-        # Submit to Celery
+        # Submit to Celery - use the imported task function
         task = process_tempo_from_storage.delay(
             task_id=task_id,
             **request.model_dump()

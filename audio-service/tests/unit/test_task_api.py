@@ -229,7 +229,7 @@ class TestTaskAPI:
     
     def test_is_task_deleted_no_redis(self):
         """Test is_task_deleted when Redis is not available"""
-        with patch('routes.tasks.redis_client', None):
+        with patch('routes.tasks.get_redis_client', return_value=None):
             assert not is_task_deleted("test-task-123")
     
     def test_pending_task_double_check_deleted(self, client, mock_celery_task, mock_redis):
