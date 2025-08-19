@@ -126,6 +126,40 @@ export interface UploadStem {
     stem_type_name?: string;
 }
 
+export interface UploadTempoTask {
+    id: number;
+    task_id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'deleted';
+    progress: number;
+    processing_options?: any;
+    submitted_at: string;
+    completed_at: string | null;
+    error_message: string | null;
+}
+
+export interface UploadTempo {
+    id: number;
+    preset: string;
+    tempo_factor: number;
+    pitch_shift_semitones?: number;
+    preserve_pitch: boolean;
+    add_reverb: boolean;
+    use_stems: boolean;
+    file_path: string;
+    storage_type: string;
+    file_size?: number;
+    duration?: number;
+    final_bpm?: number;
+    processing_metadata?: any;
+    created_at: string;
+    updated_at: string;
+    preset_name?: string;
+    formatted_file_size?: string;
+    formatted_duration?: string;
+    tempo_description?: string;
+    pitch_description?: string;
+}
+
 export interface Upload {
     id: number;
     title: string;
@@ -152,4 +186,9 @@ export interface Upload {
     stems?: UploadStem[];
     has_stems?: boolean;
     is_stem_separation_in_progress?: boolean;
+    // Tempo processing properties
+    tempo_task?: UploadTempoTask | null;
+    tempos?: UploadTempo[];
+    has_tempos?: boolean;
+    is_tempo_processing_in_progress?: boolean;
 }

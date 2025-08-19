@@ -8,7 +8,7 @@ import { getStatusColor } from '@/lib/upload-helpers';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistance } from 'date-fns';
-import { BarChart3, PencilIcon, Scissors, Trash2Icon as TrashIcon } from 'lucide-react';
+import { BarChart3, Gauge, PencilIcon, Scissors, Trash2Icon as TrashIcon } from 'lucide-react';
 import { Upload } from '@/types';
 
 interface Props {
@@ -112,6 +112,23 @@ export default function Show({ upload }: Props) {
                                         </Badge>
                                     )}
                                     {uploadData.is_stem_separation_in_progress && (
+                                        <Badge variant="outline" className="ml-2 text-xs">
+                                            Processing
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </Link>
+
+                            <Link href={route('uploads.tempo.show', uploadData.id)}>
+                                <Button variant="outline" className="flex items-center">
+                                    <Gauge className="mr-2 h-4 w-4" />
+                                    Tempo Effects
+                                    {uploadData.has_tempos && (
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                            Done
+                                        </Badge>
+                                    )}
+                                    {uploadData.is_tempo_processing_in_progress && (
                                         <Badge variant="outline" className="ml-2 text-xs">
                                             Processing
                                         </Badge>

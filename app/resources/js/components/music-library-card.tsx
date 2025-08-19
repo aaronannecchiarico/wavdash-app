@@ -7,7 +7,7 @@ import { formatFileSize, formatDuration, formatDate } from '@/lib/formatters';
 import { getAudioFormat, getStatusColor } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { BarChart3, Calendar, Clock, Download, MoreVertical, Music, Pencil, Scissors, Trash2, User, Volume2 } from 'lucide-react';
+import { BarChart3, Calendar, Clock, Download, Gauge, MoreVertical, Music, Pencil, Scissors, Trash2, User, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 
 
@@ -76,6 +76,22 @@ export const MusicCard = ({
                                             </Badge>
                                         )}
                                         {upload.is_stem_separation_in_progress && (
+                                            <Badge variant="outline" className="ml-auto text-xs">
+                                                Processing
+                                            </Badge>
+                                        )}
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Link href={route('uploads.tempo.show', { upload: upload.id })} className="flex w-full items-center">
+                                        <Gauge className="mr-2 h-4 w-4" />
+                                        Tempo Effects
+                                        {upload.has_tempos && (
+                                            <Badge variant="secondary" className="ml-auto text-xs">
+                                                Done
+                                            </Badge>
+                                        )}
+                                        {upload.is_tempo_processing_in_progress && (
                                             <Badge variant="outline" className="ml-auto text-xs">
                                                 Processing
                                             </Badge>

@@ -20,11 +20,12 @@ class UploadResource extends JsonResource
             'status' => $this->status,
             'duration' => $this->duration_seconds,
             'stream_url' => $this->when($this->stream_path && $this->status === 'ready',
-                function() {
+                function () {
                     // For R2 storage, getStreamPath returns the full URL
                     if ($this->usesR2Storage()) {
                         return $this->getStreamPath();
                     }
+
                     // For local storage, use Storage::url() to get proper public URL
                     return Storage::url($this->stream_path);
                 }),
@@ -52,8 +53,18 @@ class UploadResource extends JsonResource
                 'completed_at' => $this->stemTask?->completed_at,
                 'error_message' => $this->stemTask?->error_message,
             ]),
-            'stems' => $this->when($this->relationLoaded('stems'), function() {
-                return $this->stems->map(function($stem) {
+            'tempo_task' => $this->when($this->relationLoaded('tempoTask') && $this->tempoTask, [
+                'id' => $this->tempoTask?->id,
+                'task_id' => $this->tempoTask?->task_id,
+                'status' => $this->tempoTask?->status,
+                'progress' => $this->tempoTask?->progress,
+                'submitted_at' => $this->tempoTask?->submitted_at,
+                'completed_at' => $this->tempoTask?->completed_at,
+                'error_message' => $this->tempoTask?->error_message,
+                'processing_options' => $this->tempoTask?->processing_options,
+            ]),
+            'stems' => $this->when($this->relationLoaded('stems'), function () {
+                return $this->stems->map(function ($stem) {
                     return [
                         'id' => $stem->id,
                         'stem_type' => $stem->stem_type,
@@ -66,6 +77,31 @@ class UploadResource extends JsonResource
                         'formatted_duration' => $stem->getFormattedDuration(),
                         'metadata' => $stem->metadata,
                         'created_at' => $stem->created_at,
+                    ];
+                });
+            }),
+            'tempos' => $this->when($this->relationLoaded('tempos'), function () {
+                return $this->tempos->map(function ($tempo) {
+                    return [
+                        'id' => $tempo->id,
+                        'preset' => $tempo->preset,
+                        'preset_name' => $tempo->getPresetName(),
+                        'tempo_factor' => $tempo->tempo_factor,
+                        'pitch_shift_semitones' => $tempo->pitch_shift_semitones,
+                        'preserve_pitch' => $tempo->preserve_pitch,
+                        'add_reverb' => $tempo->add_reverb,
+                        'use_stems' => $tempo->use_stems,
+                        'file_path' => $tempo->file_path,
+                        'storage_type' => $tempo->storage_type,
+                        'file_size' => $tempo->file_size,
+                        'formatted_file_size' => $tempo->getFormattedFileSize(),
+                        'duration' => $tempo->duration,
+                        'formatted_duration' => $tempo->getFormattedDuration(),
+                        'final_bpm' => $tempo->final_bpm,
+                        'tempo_description' => $tempo->getTempoDescription(),
+                        'pitch_description' => $tempo->getPitchDescription(),
+                        'processing_metadata' => $tempo->processing_metadata,
+                        'created_at' => $tempo->created_at,
                     ];
                 });
             }),
@@ -103,6 +139,11 @@ class UploadResource extends JsonResource
             'is_stem_separation_in_progress' => $this->when(
                 $this->relationLoaded('stemTask'),
                 $this->stemTask?->isProcessing() ?? false
+            ),
+            'has_tempos' => $this->relationLoaded('tempos') && $this->tempos->count() > 0,
+            'is_tempo_processing_in_progress' => $this->when(
+                $this->relationLoaded('tempoTask'),
+                $this->tempoTask?->isProcessing() ?? false
             ),
         ];
     }

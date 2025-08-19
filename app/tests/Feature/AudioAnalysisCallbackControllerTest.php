@@ -16,7 +16,9 @@ class AudioAnalysisCallbackControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Upload $upload;
+
     private UploadAnalysisTask $analysisTask;
 
     protected function setUp(): void
@@ -45,7 +47,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'processing_type' => 'features',
             'storage_paths' => [
                 'analysis' => 'processed/2024/08/12/uuid_features.json',
-                'original' => 'uploads/2024/08/12/uuid-filename.wav'
+                'original' => 'uploads/2024/08/12/uuid-filename.wav',
             ],
             'analysis_summary' => [
                 'bpm' => 120.5,
@@ -53,10 +55,10 @@ class AudioAnalysisCallbackControllerTest extends TestCase
                 'key_confidence' => 0.82,
                 'loudness_db' => -12.3,
                 'brightness' => 2000.0,
-                'timbral_complexity' => 0.75
+                'timbral_complexity' => 0.75,
             ],
             'processing_time' => 3.45,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -67,7 +69,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'success',
-            'message' => 'Callback processed successfully'
+            'message' => 'Callback processed successfully',
         ]);
 
         // Verify task was updated
@@ -112,10 +114,10 @@ class AudioAnalysisCallbackControllerTest extends TestCase
                 'drums' => 'stems/2024/08/12/uuid/drums.wav',
                 'bass' => 'stems/2024/08/12/uuid/bass.wav',
                 'other' => 'stems/2024/08/12/uuid/other.wav',
-                'original' => 'uploads/2024/08/12/uuid-song.wav'
+                'original' => 'uploads/2024/08/12/uuid-song.wav',
             ],
             'processing_time' => 45.67,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -128,14 +130,14 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         // Verify stems were stored
         $this->upload->refresh();
         $stems = $this->upload->stems;
-        
+
         $this->assertCount(4, $stems);
         $stemTypes = $stems->pluck('stem_type')->toArray();
         $this->assertContains('vocals', $stemTypes);
         $this->assertContains('drums', $stemTypes);
         $this->assertContains('bass', $stemTypes);
         $this->assertContains('other', $stemTypes);
-        
+
         // Verify stem task was marked as completed
         $stemTask->refresh();
         $this->assertEquals('completed', $stemTask->status);
@@ -151,7 +153,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'processing_type' => 'features',
             'error_message' => 'Invalid audio format',
             'processing_time' => 1.23,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -185,7 +187,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'status' => 'invalid-status', // Invalid status
             'processing_type' => 'features',
             'processing_time' => 3.45,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -208,7 +210,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'status' => 'completed',
             'processing_type' => 'features',
             'processing_time' => 3.45,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -217,17 +219,17 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         );
 
         $response->assertStatus(404);
-        $response->assertJson(['error' => 'Task not found']);
+        $response->assertJson(['error' => 'No matching task found']);
     }
 
-    public function test_returns_400_on_task_id_mismatch(): void
+    public function test_returns_404_when_task_id_not_found(): void
     {
         $callbackData = [
-            'task_id' => 'wrong-task-id', // Doesn't match the task's task_id
+            'task_id' => 'wrong-task-id', // Doesn't match any task's task_id
             'status' => 'completed',
             'processing_type' => 'features',
             'processing_time' => 3.45,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -235,8 +237,8 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             $callbackData
         );
 
-        $response->assertStatus(400);
-        $response->assertJson(['error' => 'Task ID mismatch']);
+        $response->assertStatus(404);
+        $response->assertJson(['error' => 'No matching task found']);
     }
 
     public function test_handles_missing_analysis_data_gracefully(): void
@@ -247,7 +249,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'processing_type' => 'features',
             // Missing analysis_summary
             'processing_time' => 3.45,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -274,12 +276,12 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'processing_type' => 'features',
             'storage_paths' => [
                 'analysis' => 'processed/2025/08/13/test_features.json',
-                'original' => 'uploads/1/2025/08/13/test.mp3'
+                'original' => 'uploads/1/2025/08/13/test.mp3',
             ],
             'analysis_summary' => null,
             'error_message' => null,
             'processing_time' => 1.2,
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ];
 
         $response = $this->postJson(
@@ -290,7 +292,7 @@ class AudioAnalysisCallbackControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'status' => 'success',
-            'message' => 'Callback processed successfully'
+            'message' => 'Callback processed successfully',
         ]);
 
         // Verify task was updated
@@ -314,14 +316,14 @@ class AudioAnalysisCallbackControllerTest extends TestCase
     public function test_completed_analysis_task_can_be_deleted_properly(): void
     {
         Event::fake();
-        
+
         // Simulate a completed analysis task with analysis data
         $this->analysisTask->update([
             'status' => 'completed',
             'progress' => 100,
-            'completed_at' => now()
+            'completed_at' => now(),
         ]);
-        
+
         $this->upload->analysis()->create([
             'musical_key' => 'C major',
             'bpm' => 120,
@@ -333,30 +335,30 @@ class AudioAnalysisCallbackControllerTest extends TestCase
             'chunk_count' => 5,
             'key_changes' => 1,
         ]);
-        
+
         // Verify initial state
         $this->assertTrue($this->analysisTask->isCompleted());
         $this->assertFalse($this->analysisTask->isProcessing());
         $this->assertNotNull($this->upload->analysis);
-        
+
         // Test the deletion endpoint
         $response = $this->actingAs($this->user)
             ->delete(route('uploads.analysis.destroy', $this->upload));
-        
+
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Analysis data deleted successfully.');
-        
+
         // Verify both analysis and task are deleted
         $this->upload->refresh();
         $this->assertNull($this->upload->analysis);
         $this->assertNull($this->upload->analysisTask);
-        
+
         // Verify database records are actually deleted
         $this->assertDatabaseMissing('upload_analyses', [
-            'upload_id' => $this->upload->id
+            'upload_id' => $this->upload->id,
         ]);
         $this->assertDatabaseMissing('upload_analysis_tasks', [
-            'id' => $this->analysisTask->id
+            'id' => $this->analysisTask->id,
         ]);
     }
 }

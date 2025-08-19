@@ -102,6 +102,22 @@ class Upload extends Model
     }
 
     /**
+     * Get the tempo task for this upload.
+     */
+    public function tempoTask(): HasOne
+    {
+        return $this->hasOne(UploadTempoTask::class);
+    }
+
+    /**
+     * Get the tempo variations for this upload.
+     */
+    public function tempos(): HasMany
+    {
+        return $this->hasMany(UploadTempo::class);
+    }
+
+    /**
      * Check if this upload has analysis results.
      */
     public function hasAnalysis(): bool
@@ -134,11 +150,27 @@ class Upload extends Model
     }
 
     /**
+     * Check if this upload has tempo variations.
+     */
+    public function hasTempos(): bool
+    {
+        return $this->tempos()->exists();
+    }
+
+    /**
+     * Check if tempo processing is in progress.
+     */
+    public function isTempoProcessingInProgress(): bool
+    {
+        return $this->tempoTask && $this->tempoTask->isProcessing();
+    }
+
+    /**
      * Check if this upload uses R2 storage.
      */
     public function usesR2Storage(): bool
     {
-        return $this->uses_r2_storage && !empty($this->r2_upload_path);
+        return $this->uses_r2_storage && ! empty($this->r2_upload_path);
     }
 
     /**
@@ -155,9 +187,9 @@ class Upload extends Model
     public function getStreamPath(): ?string
     {
         if ($this->usesR2Storage() && config('filesystems.disks.r2.url')) {
-            return config('filesystems.disks.r2.url') . '/' . $this->r2_upload_path;
+            return config('filesystems.disks.r2.url').'/'.$this->r2_upload_path;
         }
-        
+
         return $this->stream_path;
     }
 
@@ -166,6 +198,6 @@ class Upload extends Model
      */
     public function hasR2Stems(): bool
     {
-        return $this->usesR2Storage() && !empty($this->r2_stems_paths);
+        return $this->usesR2Storage() && ! empty($this->r2_stems_paths);
     }
 }

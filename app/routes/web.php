@@ -20,7 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('uploads', \App\Http\Controllers\UploadController::class)
         ->parameters([
-            'uploads' => 'upload'
+            'uploads' => 'upload',
         ]);
 
     // Upload Analysis Routes (Web/Inertia)
@@ -41,11 +41,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{stemType}/download', [\App\Http\Controllers\UploadStemController::class, 'downloadStem'])->name('download');
     });
 
+    // Upload Tempo Processing Routes (Web/Inertia)
+    Route::prefix('uploads/{upload}/tempo')->name('uploads.tempo.')->group(function () {
+        Route::post('/', [\App\Http\Controllers\UploadTempoController::class, 'store'])->name('store');
+        Route::get('/', [\App\Http\Controllers\UploadTempoController::class, 'show'])->name('show');
+        Route::delete('/', [\App\Http\Controllers\UploadTempoController::class, 'destroy'])->name('destroy');
+        Route::delete('/task', [\App\Http\Controllers\UploadTempoController::class, 'deleteTask'])->name('delete-task');
+        Route::get('/{tempo}/download', [\App\Http\Controllers\UploadTempoController::class, 'downloadTempo'])->name('download');
+    });
+
     // Analysis service status (API)
     Route::get('api/analysis/status', [\App\Http\Controllers\UploadAnalysisController::class, 'status'])->name('analysis.status');
-    
+
     // Stem separation service status (API)
     Route::get('api/stems/status', [\App\Http\Controllers\UploadStemController::class, 'status'])->name('stems.status');
+
+    // Tempo processing API endpoints
+    Route::get('api/tempo/presets', [\App\Http\Controllers\UploadTempoController::class, 'presets'])->name('tempo.presets');
+    Route::get('api/uploads/{upload}/tempo/suggestions', [\App\Http\Controllers\UploadTempoController::class, 'suggestions'])->name('tempo.suggestions');
 });
 
 require __DIR__.'/settings.php';
