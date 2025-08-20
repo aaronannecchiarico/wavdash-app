@@ -20,13 +20,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Database
 - **Migrations**: `php artisan migrate`
 - **Fresh migration**: `php artisan migrate:fresh --seed` (drops all tables, re-runs migrations, and seeds data)
+- **Complete fresh migration**: `php artisan migrate:fresh-with-microservice --seed` (includes microservice cleanup and storage clearing)
 - **Seeders**: `php artisan db:seed`
 - **Clear uploads**: `php artisan uploads:clear` (clears all upload files from storage)
 
+### Audio Microservice Integration
+- **Check microservice status**: `php artisan audio:migrate --type=fresh --force` (check if migration endpoints are available)
+- **Clean microservice only**: `php artisan audio:migrate --type=fresh --force --silent` (clean Redis cache, task data, storage)
+- **Complete system reset**: `php artisan migrate:fresh-with-microservice --seed` (Laravel + microservice + storage clearing)
+- **Migration types**: `fresh` (complete reset), `migrate-only` (clear cache only), `seed-only` (reseed data only)
+
 ### Storage Management
 - **Clear upload storage**: `php artisan uploads:clear --force` (removes all upload files without confirmation)
+- **Complete storage clear**: Included in `migrate:fresh-with-microservice` (clears uploads, processed, stems, and stream files)
 - Upload files are organized by user and date: `uploads/{user_id}/{Y/m/d}/filename`
 - Stream files follow same structure: `uploads/stream/{user_id}/{Y/m/d}/filename.ogg`
+- Storage directories cleared: `private/uploads`, `private/processed`, `private/stems`, `public/uploads/stream`
 
 ## Architecture Overview
 
