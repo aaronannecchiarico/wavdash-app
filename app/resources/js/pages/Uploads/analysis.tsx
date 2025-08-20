@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
+import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { BarChart3, Music, Trash2, Users, Zap } from 'lucide-react';
@@ -33,21 +34,20 @@ export default function Analysis({ upload, analysis_service }: Props) {
     }, [flash]);
 
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Music Library',
-            href: route('uploads.index'),
-        },
-        {
-            title: uploadData.title,
-            href: route('uploads.show', { upload: uploadData.id }),
-        },
-        {
-            title: 'Analysis',
-            href: route('uploads.analysis.show', { upload: uploadData.id }),
-            description: 'Audio analysis and insights',
-        },
-    ];
+    const breadcrumbs: BreadcrumbItem[] = (() => {
+        const baseBreadcrumbs = generateDynamicBreadcrumbs(
+            'Analysis',
+            route('uploads.analysis.show', { upload: uploadData.id }),
+            'Audio analysis and insights'
+        );
+        
+        // Insert the track title between parent and current page
+        return [
+            baseBreadcrumbs[0], // Parent (Dashboard or Music Library)
+            { title: uploadData.title, href: route('uploads.show', { upload: uploadData.id }) },
+            baseBreadcrumbs[1], // Current page (Analysis)
+        ];
+    })();
 
     const handleStartAnalysis = () => {
         post(route('uploads.analysis.store', { upload: uploadData.id }));

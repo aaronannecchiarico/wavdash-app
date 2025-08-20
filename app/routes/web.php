@@ -9,8 +9,18 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        $recentUploads = auth()->user()->uploads()
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('dashboard', [
+            'recentUploads' => $recentUploads,
+        ]);
     })->name('dashboard');
+
+    // API endpoint for upload selection dialogs
+    Route::get('api/uploads', [\App\Http\Controllers\UploadController::class, 'apiIndex'])->name('api.uploads.index');
 
     Route::resource('contests', \App\Http\Controllers\ContestController::class)
         ->only(['index'])

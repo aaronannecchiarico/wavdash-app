@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { MultiTrackStemPlayer } from '@/components/multi-track-stem-player';
 import AppLayout from '@/layouts/app-layout';
+import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Download, Music, Scissors, Trash2, Zap } from 'lucide-react';
@@ -45,21 +46,20 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
         }
     }, [flash]);
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: 'Music Library',
-            href: route('uploads.index'),
-        },
-        {
-            title: uploadData.title,
-            href: route('uploads.show', { upload: uploadData.id }),
-        },
-        {
-            title: 'Stem Separation',
-            href: route('uploads.stems.show', { upload: uploadData.id }),
-            description: 'Separate audio into individual stems',
-        },
-    ];
+    const breadcrumbs: BreadcrumbItem[] = (() => {
+        const baseBreadcrumbs = generateDynamicBreadcrumbs(
+            'Stem Separation',
+            route('uploads.stems.show', { upload: uploadData.id }),
+            'Separate audio into individual stems'
+        );
+        
+        // Insert the track title between parent and current page
+        return [
+            baseBreadcrumbs[0], // Parent (Dashboard or Music Library)
+            { title: uploadData.title, href: route('uploads.show', { upload: uploadData.id }) },
+            baseBreadcrumbs[1], // Current page (Stem Separation)
+        ];
+    })();
 
     const handleStartSeparation = () => {
         post(route('uploads.stems.store', { upload: uploadData.id }));

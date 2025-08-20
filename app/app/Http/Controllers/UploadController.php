@@ -56,6 +56,46 @@ class UploadController extends Controller
     }
 
     /**
+     * API endpoint for fetching uploads (for dialogs, etc.)
+     */
+    public function apiIndex(Request $request)
+    {
+        $query = $request->user()->uploads();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('filename', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $uploads = $query->latest()
+            ->limit($request->integer('limit', 20))
+            ->with(['analysis', 'stems'])
+            ->get();
+
+        // Add computed properties for the frontend
+        $uploads = $uploads->map(function ($upload) {
+            return [
+                'id' => $upload->id,
+                'title' => $upload->title,
+                'filename' => $upload->filename,
+                'description' => $upload->description,
+                'status' => $upload->status,
+                'created_at' => $upload->created_at,
+                'has_stems' => $upload->hasStems(),
+                'has_analysis' => $upload->hasAnalysis(),
+            ];
+        });
+
+        return response()->json([
+            'uploads' => $uploads,
+        ]);
+    }
+
+    /**
      * Show the form for creating a new upload.
      */
     public function create()

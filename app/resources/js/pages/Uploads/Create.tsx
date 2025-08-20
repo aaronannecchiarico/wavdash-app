@@ -1,5 +1,6 @@
 import { MusicLibraryUploadForm } from '@/components/music-library-upload-form';
 import AppLayout from '@/layouts/app-layout';
+import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -32,10 +33,11 @@ export default function Create() {
         });
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Music Library', href: route('uploads.index') },
-        { title: 'Upload', href: route('uploads.create'), description: 'Add a new track to your library' },
-    ];
+    const breadcrumbs: BreadcrumbItem[] = generateDynamicBreadcrumbs(
+        'Upload',
+        route('uploads.create'),
+        'Add a new track to your library'
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

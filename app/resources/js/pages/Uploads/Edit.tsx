@@ -1,5 +1,6 @@
 import { MusicLibraryUploadForm } from '@/components/music-library-upload-form';
 import AppLayout from '@/layouts/app-layout';
+import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
 import { type BreadcrumbItem, type Upload as UploadType } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 
@@ -48,11 +49,20 @@ export default function Edit({ upload }: EditUploadProps) {
         });
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Music Library', href: route('uploads.index') },
-        { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
-        { title: 'Edit', href: route('uploads.edit', uploadData.id), description: 'Edit this track' },
-    ];
+    const breadcrumbs: BreadcrumbItem[] = (() => {
+        const baseBreadcrumbs = generateDynamicBreadcrumbs(
+            'Edit',
+            route('uploads.edit', uploadData.id),
+            'Edit this track'
+        );
+        
+        // Insert the track title between parent and current page
+        return [
+            baseBreadcrumbs[0], // Parent (Dashboard or Music Library)
+            { title: uploadData.title, href: route('uploads.show', uploadData.id), description: 'View track details' },
+            baseBreadcrumbs[1], // Current page (Edit)
+        ];
+    })();
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
