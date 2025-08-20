@@ -42,7 +42,7 @@ export default function Create() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Upload Audio" />
-            <div className="mx-auto max-w-2xl py-8">
+            <div className="mx-auto max-w-4xl py-8">
                 <MusicLibraryUploadForm
                     mode="create"
                     data={data}

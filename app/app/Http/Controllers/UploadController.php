@@ -21,12 +21,52 @@ class UploadController extends Controller
     {
         $query = Auth::user()->uploads();
 
-        // Filtering
+        // Filtering by basic properties
         if ($request->has('status')) {
             $query->where('status', $request->input('status'));
         }
         if ($request->has('type')) {
             $query->where('mime_type', 'like', 'audio/'.$request->input('type'));
+        }
+
+        // Filtering by processing status
+        if ($request->has('analysis_status')) {
+            $analysisStatus = $request->input('analysis_status');
+            if ($analysisStatus === 'completed') {
+                $query->whereHas('analysis');
+            } elseif ($analysisStatus === 'not_completed') {
+                $query->whereDoesntHave('analysis');
+            } elseif ($analysisStatus === 'in_progress') {
+                $query->whereHas('analysisTask', function ($q) {
+                    $q->whereIn('status', ['pending', 'processing']);
+                });
+            }
+        }
+
+        if ($request->has('stems_status')) {
+            $stemsStatus = $request->input('stems_status');
+            if ($stemsStatus === 'completed') {
+                $query->whereHas('stems');
+            } elseif ($stemsStatus === 'not_completed') {
+                $query->whereDoesntHave('stems');
+            } elseif ($stemsStatus === 'in_progress') {
+                $query->whereHas('stemTask', function ($q) {
+                    $q->whereIn('status', ['pending', 'processing']);
+                });
+            }
+        }
+
+        if ($request->has('tempo_status')) {
+            $tempoStatus = $request->input('tempo_status');
+            if ($tempoStatus === 'completed') {
+                $query->whereHas('tempos');
+            } elseif ($tempoStatus === 'not_completed') {
+                $query->whereDoesntHave('tempos');
+            } elseif ($tempoStatus === 'in_progress') {
+                $query->whereHas('tempoTask', function ($q) {
+                    $q->whereIn('status', ['pending', 'processing']);
+                });
+            }
         }
 
         // Sorting
@@ -38,7 +78,7 @@ class UploadController extends Controller
             $query->latest('updated_at');
         }
 
-        $uploads = $query->with(['analysisTask', 'analysis', 'stemTask', 'stems'])->paginate(10)->withQueryString();
+        $uploads = $query->with(['analysisTask', 'analysis', 'stemTask', 'stems', 'tempoTask', 'tempos'])->paginate(10)->withQueryString();
 
         $statuses = Upload::distinct()->pluck('status')->toArray();
         $types = Upload::distinct()->pluck('mime_type')->map(function ($mime) {
@@ -47,10 +87,15 @@ class UploadController extends Controller
 
         return inertia('uploads/index', [
             'uploads' => UploadResource::collection($uploads),
-            'filters' => $request->only(['sort', 'direction', 'status', 'type']),
+            'filters' => $request->only(['sort', 'direction', 'status', 'type', 'analysis_status', 'stems_status', 'tempo_status']),
             'filterOptions' => [
                 'statuses' => $statuses,
                 'types' => $types,
+                'processingStatuses' => [
+                    'completed' => 'Completed',
+                    'not_completed' => 'Not Completed',
+                    'in_progress' => 'In Progress',
+                ],
             ],
         ]);
     }

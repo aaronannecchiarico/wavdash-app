@@ -24,10 +24,14 @@ interface Props {
         type?: string;
         sort?: string;
         direction?: string;
+        analysis_status?: string;
+        stems_status?: string;
+        tempo_status?: string;
     };
     filterOptions: {
         statuses: string[];
         types: string[];
+        processingStatuses: Record<string, string>;
     };
 }
 
@@ -63,17 +67,15 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Music Library" />
             <div className="p-4 sm:p-6 lg:p-8">
-                <div className="mb-4">
+                <div className="mb-4 flex items-center justify-between">
                     <MusicLibraryControls filters={filters} filterOptions={filterOptions} />
+                    <Link href={route('uploads.create')}>
+                        <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">
+                            <PlusIcon className="mr-2 h-4 w-4" />
+                            Create Upload
+                        </Button>
+                    </Link>
                 </div>
-                <Link href={route('uploads.create')}>
-                    <Button
-                        className="fixed right-6 bottom-6 z-50 h-14 w-14 rounded-full bg-blue-600 p-0 shadow-lg transition-all duration-200 hover:scale-105 hover:bg-blue-700 hover:shadow-xl dark:bg-blue-700 dark:hover:bg-blue-600"
-                        size="lg"
-                    >
-                        <PlusIcon className="h-6 w-6" />
-                    </Button>
-                </Link>
                 <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
                     {uploads.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">

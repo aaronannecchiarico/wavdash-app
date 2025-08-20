@@ -183,14 +183,39 @@ export const MusicCard = ({
             </CardContent>
 
             <CardFooter className="pt-0">
-                <div className="flex w-full items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center space-x-1">
-                        <User className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                        <span className="truncate">{upload.user.name}</span>
+                <div className="flex w-full flex-col space-y-3">
+                    {/* Status badges */}
+                    <div className="flex flex-wrap gap-1">
+                        {upload.has_analysis && (
+                            <Badge variant="secondary" className="text-xs">
+                                <BarChart3 className="mr-1 h-3 w-3" />
+                                Analysis
+                            </Badge>
+                        )}
+                        {upload.has_stems && (
+                            <Badge variant="secondary" className="text-xs">
+                                <Scissors className="mr-1 h-3 w-3" />
+                                Stems
+                            </Badge>
+                        )}
+                        {upload.has_tempos && (
+                            <Badge variant="secondary" className="text-xs">
+                                <Gauge className="mr-1 h-3 w-3" />
+                                Tempo Effects
+                            </Badge>
+                        )}
                     </div>
-                    <div className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-                        <span>{formatDate(upload.created_at)}</span>
+                    
+                    {/* User and date info */}
+                    <div className="flex w-full items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-1">
+                            <User className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <span className="truncate">{upload.user.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                            <Calendar className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <span>{formatDate(upload.created_at)}</span>
+                        </div>
                     </div>
                 </div>
             </CardFooter>

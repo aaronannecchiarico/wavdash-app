@@ -5,7 +5,6 @@ namespace Tests\Feature\Http\Controllers;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -28,10 +27,10 @@ final class UploadControllerTest extends TestCase
     public function index_returns_proper_inertia_response()
     {
         $user = User::factory()->create();
-        
+
         // Create some uploads for the user - avoid afterCreating hook that copies files
         Upload::factory()->count(3)->for($user)->state(['status' => 'ready'])->create();
-        
+
         // Create uploads for another user (should not appear)
         $otherUser = User::factory()->create();
         Upload::factory()->count(2)->for($otherUser)->state(['status' => 'ready'])->create();
@@ -60,18 +59,18 @@ final class UploadControllerTest extends TestCase
             );
     }
 
-    #[Test] 
+    #[Test]
     public function index_applies_status_filter()
     {
         $user = User::factory()->create();
-        
+
         // Create uploads with different statuses - disable hooks using make() then save()
         $readyUpload = Upload::factory()->for($user)->make(['status' => 'ready']);
         $readyUpload->save();
-        
+
         $pendingUpload = Upload::factory()->for($user)->make(['status' => 'pending']);
         $pendingUpload->save();
-        
+
         $failedUpload = Upload::factory()->for($user)->make(['status' => 'failed']);
         $failedUpload->save();
 
@@ -88,6 +87,25 @@ final class UploadControllerTest extends TestCase
                 ->has('uploads.data', 1)
                 ->where('uploads.data.0.status', 'pending')
                 ->where('filters.status', 'pending')
+            );
+    }
+
+    #[Test]
+    public function index_includes_processing_status_filter_options()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('uploads.index'));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('uploads/index')
+                ->has('filterOptions.processingStatuses.completed')
+                ->has('filterOptions.processingStatuses.not_completed')
+                ->has('filterOptions.processingStatuses.in_progress')
+                ->where('filterOptions.processingStatuses.completed', 'Completed')
+                ->where('filterOptions.processingStatuses.not_completed', 'Not Completed')
+                ->where('filterOptions.processingStatuses.in_progress', 'In Progress')
             );
     }
 
@@ -142,12 +160,12 @@ final class UploadControllerTest extends TestCase
     public function show_includes_stream_url_for_ready_uploads_with_stream_path()
     {
         $user = User::factory()->create();
-        
+
         // Create upload without factory hooks to avoid file operations
         $upload = Upload::factory()->for($user)->make([
             'status' => 'ready',
             'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
-            'uses_r2_storage' => false
+            'uses_r2_storage' => false,
         ]);
         $upload->save();
 
@@ -168,13 +186,13 @@ final class UploadControllerTest extends TestCase
     public function show_includes_r2_stream_url_for_r2_uploads()
     {
         $user = User::factory()->create();
-        
+
         // Create upload without factory hooks to avoid file operations
         $upload = Upload::factory()->for($user)->make([
             'status' => 'ready',
             'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'uploads/1/2025/08/13/test-file.mp3'
+            'r2_upload_path' => 'uploads/1/2025/08/13/test-file.mp3',
         ]);
         $upload->save();
 
@@ -198,11 +216,11 @@ final class UploadControllerTest extends TestCase
     public function show_excludes_stream_url_for_non_ready_uploads()
     {
         $user = User::factory()->create();
-        
+
         // Create upload without factory hooks to avoid file operations
         $upload = Upload::factory()->for($user)->make([
             'status' => 'processing',
-            'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg'
+            'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
         ]);
         $upload->save();
 
@@ -222,11 +240,11 @@ final class UploadControllerTest extends TestCase
     public function show_excludes_stream_url_for_uploads_without_stream_path()
     {
         $user = User::factory()->create();
-        
-        // Create upload without factory hooks to avoid file operations  
+
+        // Create upload without factory hooks to avoid file operations
         $upload = Upload::factory()->for($user)->make([
             'status' => 'ready',
-            'stream_path' => null
+            'stream_path' => null,
         ]);
         $upload->save();
 
@@ -282,7 +300,7 @@ final class UploadControllerTest extends TestCase
         $upload = Upload::factory()->for($user)->state([
             'title' => 'Original Title',
             'description' => 'Original Description',
-            'status' => 'ready'
+            'status' => 'ready',
         ])->create();
 
         $response = $this->actingAs($user)->put(route('uploads.update', $upload), [

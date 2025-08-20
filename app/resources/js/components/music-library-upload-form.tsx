@@ -178,11 +178,11 @@ export function MusicLibraryUploadForm({
                         </div>
                     </div>
                 )}
-                <CardFooter className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => window.history.back()} disabled={processing}>
+                <CardFooter className="flex justify-end space-x-4 px-6 py-4">
+                    <Button type="button" variant="outline" onClick={() => window.history.back()} disabled={processing} className="px-6 py-2">
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)}>
+                    <Button type="submit" disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)} className="px-6 py-2">
                         {processing && uploadProgress === 0 && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {processing ? 'Uploading...' : mode === 'create' ? 'Upload' : 'Save Changes'}
                     </Button>
