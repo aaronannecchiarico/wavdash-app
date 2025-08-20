@@ -1,11 +1,12 @@
 import { UploadSelectionDialog } from '@/components/upload-selection-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { formatDistance } from 'date-fns';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { Music, Scissors, BarChart3, Clock } from 'lucide-react';
+import { Music, Scissors, BarChart3, Clock, Gauge } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,7 +16,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface DashboardProps {
-    recentUploads: Upload[];
+    recentUploads: {
+        data: Upload[];
+    };
 }
 
 export default function Dashboard({ recentUploads }: DashboardProps) {
@@ -83,7 +86,7 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                         </Button>
                     </div>
                     
-                    {recentUploads.length === 0 ? (
+                    {recentUploads.data.length === 0 ? (
                         <Card>
                             <CardContent className="flex flex-col items-center justify-center py-12">
                                 <Music className="size-12 text-muted-foreground mb-4" />
@@ -98,11 +101,11 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                         </Card>
                     ) : (
                         <div className="space-y-4">
-                            {recentUploads.map((upload) => (
+                            {recentUploads.data.map((upload) => (
                                 <Card 
                                     key={upload.id} 
                                     className="cursor-pointer hover:bg-accent/50 transition-colors"
-                                    onClick={() => router.visit(`/uploads/${upload.id}/edit?from=dashboard`)}
+                                    onClick={() => router.visit(`/uploads/${upload.id}?from=dashboard`)}
                                 >
                                     <CardContent className="p-6">
                                         <div className="flex items-start justify-between">
@@ -123,10 +126,32 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                                                     {upload.filename}
                                                 </p>
                                                 {upload.description && (
-                                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                                         {upload.description}
                                                     </p>
                                                 )}
+                                                
+                                                {/* Processing badges */}
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {upload.has_analysis && (
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            <BarChart3 className="mr-1 h-3 w-3" />
+                                                            Analysis
+                                                        </Badge>
+                                                    )}
+                                                    {upload.has_stems && (
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            <Scissors className="mr-1 h-3 w-3" />
+                                                            Stems
+                                                        </Badge>
+                                                    )}
+                                                    {upload.has_tempos && (
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            <Gauge className="mr-1 h-3 w-3" />
+                                                            Tempo Effects
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="flex flex-col items-end text-xs text-muted-foreground ml-4">
                                                 <div className="flex items-center gap-1">

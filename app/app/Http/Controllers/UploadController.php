@@ -249,7 +249,7 @@ class UploadController extends Controller
     {
         $this->authorize('view', $upload);
 
-        $upload->load(['analysisTask', 'analysis', 'stemTask', 'stems']);
+        $upload->load(['analysisTask', 'analysis', 'stemTask', 'stems', 'tempoTask', 'tempos']);
 
         return inertia('uploads/show', [
             'upload' => new UploadResource($upload),

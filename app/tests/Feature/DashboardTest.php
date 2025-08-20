@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -20,5 +22,30 @@ class DashboardTest extends TestCase
         $this->actingAs($user = User::factory()->create());
 
         $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_dashboard_returns_proper_inertia_response_with_recent_uploads()
+    {
+        $user = User::factory()->create();
+        
+        // Create uploads with processing data
+        Upload::factory()->count(3)->for($user)->state(['status' => 'ready'])->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->has('recentUploads.data', 3)
+                ->has('recentUploads.data.0', fn (Assert $upload) => $upload
+                    ->has('id')
+                    ->has('title')
+                    ->has('status')
+                    ->has('has_analysis')
+                    ->has('has_stems') 
+                    ->has('has_tempos')
+                    ->etc()
+                )
+            );
     }
 }

@@ -10,12 +10,13 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         $recentUploads = auth()->user()->uploads()
+            ->with(['analysisTask', 'analysis', 'stemTask', 'stems', 'tempoTask', 'tempos'])
             ->latest()
             ->limit(10)
             ->get();
 
         return Inertia::render('dashboard', [
-            'recentUploads' => $recentUploads,
+            'recentUploads' => \App\Http\Resources\UploadResource::collection($recentUploads),
         ]);
     })->name('dashboard');
 
