@@ -21,13 +21,10 @@ class UploadResource extends JsonResource
             'duration' => $this->duration_seconds,
             'stream_url' => $this->when($this->stream_path && $this->status === 'ready',
                 function () {
-                    // For R2 storage, getStreamPath returns the full URL
                     if ($this->usesR2Storage()) {
                         return $this->getStreamPath();
                     }
-
-                    // For local storage, use Storage::url() to get proper public URL
-                    return Storage::url($this->stream_path);
+                    return Storage::disk('public')->url($this->stream_path);
                 }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

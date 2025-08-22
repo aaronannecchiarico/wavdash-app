@@ -188,19 +188,21 @@ class UploadController extends Controller
         ]);
 
         if ($disk === 'r2') {
-            // For R2 storage
-            $file->storeAs('uploads/'.$user->id.'/'.$date->format('Y/m/d'), $filename, $disk);
+            // For R2 storage - use private/uploads prefix to match local structure
+            $r2Path = 'private/uploads/'.$user->id.'/'.$date->format('Y/m/d');
+            $file->storeAs($r2Path, $filename, $disk);
 
+            $fullR2Path = $r2Path.'/'.$filename;
             $uploadData = array_merge($uploadData, [
-                'r2_upload_path' => $path,
+                'r2_upload_path' => $fullR2Path,
                 'uses_r2_storage' => true,
                 'r2_uploaded_at' => now(),
-                'path' => $path,
+                'path' => $fullR2Path,
             ]);
 
             Log::info('File uploaded to R2', [
                 'filename' => $originalFilename,
-                'path' => $path,
+                'path' => $fullR2Path,
             ]);
         } else {
             // For local storage (or any other disk) - use same path structure

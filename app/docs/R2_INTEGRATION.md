@@ -85,6 +85,7 @@ User Upload → UploadController.store()
             uploads/{user_id}/{Y/m/d}/filename
             ↓
             ProcessAudioUpload Job:
+            - Validate storage compatibility (if analysis enabled)
             - Download from R2 to temp file
             - Convert with FFmpeg (to OGG)
             - Upload processed file back to R2:
@@ -101,6 +102,7 @@ User Upload → UploadController.store()
             storage/app/private/uploads/{user_id}/{Y/m/d}/filename
             ↓
             ProcessAudioUpload Job:
+            - Validate storage compatibility (if analysis enabled)
             - Convert with FFmpeg (to OGG)
             - Save to public storage:
               storage/app/public/uploads/stream/{user_id}/{Y/m/d}/filename.ogg
@@ -172,6 +174,27 @@ Analysis Request → AudioAnalysisService.submitForAnalysis()
 - `r2_integration_enabled`: R2 integration enabled for microservice
 - `base_url`: Microservice endpoint URL
 
+### Storage Status Endpoint
+
+**Endpoint:** `GET /storage/status`
+
+**Example Response:**
+```json
+{
+  "enabled": true,
+  "storage_type": "r2",
+  "message": "R2 storage is enabled and ready"
+}
+```
+
+**Response Fields:**
+- `enabled`: Storage system is enabled and operational
+- `storage_type`: Current storage type ("r2", "local", etc.)
+- `message`: Human-readable status message
+
+**Usage in Laravel:**
+The ProcessAudioUpload job automatically validates storage compatibility before processing uploads when audio analysis is enabled. This ensures Laravel and the microservice are using the same storage backend.
+
 ## 🗃️ Database Schema
 
 ### Upload Model Fields
@@ -219,6 +242,9 @@ $analysisService = app(AudioAnalysisService::class);
 // Service status and health checks
 $analysisService->isServiceAvailable();          // Check if microservice is available
 $analysisService->getServiceStatus();            // Complete status array
+
+// Storage validation
+$analysisService->validateStorageCompatibility($upload); // Validate Laravel/microservice storage match
 
 // Analysis submission (automatically routes based on storage type)
 $analysisService->submitForAnalysis($upload);    // Smart routing: R2 vs local
@@ -385,6 +411,82 @@ Analysis Request
 4. **Smart Analysis Routing**: AudioAnalysisService automatically detects storage type
 5. **Comprehensive Cleanup**: Migration rollbacks clear both local and R2 storage
 6. **Frontend Integration**: Upload model methods handle URL generation for both storage types
+7. **Fixed Storage Detection**: ProcessAudioUpload job now correctly processes files based on `upload.usesR2Storage()` rather than default filesystem configuration
+8. **Storage Validation**: ProcessAudioUpload job validates Laravel/microservice storage compatibility before processing (when audio analysis is enabled)
+
+## 🛠️ Recent Fixes
+
+### ProcessAudioUpload Storage Detection (Fixed 2025-08-21)
+
+**Issue**: When `FILESYSTEM_DISK=local` but uploads used R2 storage (`uses_r2_storage=true`), the ProcessAudioUpload job incorrectly tried to process files from local storage instead of R2.
+
+**Root Cause**: Job was checking `config('filesystems.default') === 'r2'` instead of `upload.usesR2Storage()`.
+
+**Fix**: Updated ProcessAudioUpload logic to use upload's actual storage type:
+
+```php
+// OLD (broken): Required default disk to be 'r2'
+if ($this->upload->usesR2Storage() && $disk === 'r2') {
+    // R2 processing...
+}
+
+// NEW (fixed): Uses upload's actual storage type
+if ($this->upload->usesR2Storage()) {
+    // R2 processing...
+}
+```
+
+**Testing**: Added comprehensive tests in `ProcessAudioUploadStorageTest.php` to verify storage switching works correctly regardless of default filesystem configuration.
+
+### Storage Validation Implementation (Added 2025-08-21)
+
+**Feature**: Added storage compatibility validation between Laravel and the audio analysis microservice before processing uploads.
+
+**Implementation**:
+- New `validateStorageCompatibility()` method in `AudioAnalysisService`
+- Automatic validation in `ProcessAudioUpload` job when audio analysis is enabled
+- Validates that Laravel and microservice use the same storage backend (r2 vs local)
+- Logs validation results and continues processing even if validation fails (non-blocking)
+
+**Key Benefits**:
+- Prevents storage type mismatches that could cause processing failures
+- Provides early warning when storage configurations are out of sync
+- Maintains backward compatibility by being non-blocking
+
+**Testing**: Added comprehensive tests in `StorageValidationTest.php` covering all validation scenarios including success, failure, and microservice unavailability cases.
+
+### FFMpeg Path Resolution Fix (2025-08-21)
+
+**Issue**: FFMpeg was incorrectly prepending Laravel's storage app path to absolute temporary file paths when processing R2 files.
+
+**Error**: `FFMpeg cannot find "/Users/.../storage/app/var/folders/.../T/..."`
+
+**Root Cause**: `FFMpeg::open($tempFilePath)` expects relative paths within a filesystem disk, not absolute paths. When processing R2 files, the job downloads to a temporary file with an absolute path, but Laravel FFMpeg was treating it as relative to the app storage directory.
+
+**Solution**: Created custom filesystem adapter using root directory as base, allowing absolute paths to be treated as relative paths from root:
+
+```php
+// Create a filesystem instance that uses root directory as base
+$adapter = new LocalFilesystemAdapter('/');
+$flysystemFilesystem = new Filesystem($adapter);
+$filesystem = new FilesystemAdapter($flysystemFilesystem, $adapter, []);
+
+// Remove leading slash to make it relative to root
+$relativePath = ltrim($tempFilePath, '/');
+$ffmpeg = FFMpeg::fromFilesystem($filesystem)->open($relativePath);
+```
+
+**Key Benefits**:
+- Fixes path resolution for R2 temporary files
+- Maintains compatibility with Laravel FFMpeg API
+- No impact on local storage processing
+- Proper error handling for FFMpeg operations
+
+**Testing**: Added comprehensive test suite in `ProcessAudioUploadFFMpegTest.php` to verify:
+- Temporary file path conversion works correctly
+- FFMpeg no longer receives Laravel storage path prefixes
+- R2 file download and processing workflow
+- Path resolution errors are eliminated
 
 ## 📊 Monitoring & Debugging
 
@@ -398,6 +500,8 @@ Analysis Request
 
 # ProcessAudioUpload Job
 "ProcessAudioUpload - Starting job" with upload_id, storage type
+"ProcessAudioUpload - Storage compatibility validated successfully" with validation_message
+"ProcessAudioUpload - Storage compatibility validation failed" with validation_result (warning)
 "ProcessAudioUpload - Configuration" with disk, paths, file existence
 "ProcessAudioUpload - FFmpeg opened successfully"
 "Audio file processed successfully"

@@ -229,6 +229,69 @@ class AudioAnalysisService
     }
 
     /**
+     * Validate that Laravel and microservice storage configurations match.
+     */
+    public function validateStorageCompatibility(Upload $upload): array
+    {
+        try {
+            $laravelStorageType = $upload->usesR2Storage() ? 'r2' : 'local';
+
+            Log::info('AudioAnalysisService - Validating storage compatibility', [
+                'upload_id' => $upload->id,
+                'laravel_storage_type' => $laravelStorageType,
+                'upload_uses_r2' => $upload->usesR2Storage(),
+            ]);
+
+            // Get microservice storage status
+            $storageStatus = $this->client->getStorageStatus();
+            $microserviceStorageType = $storageStatus['storage_type'] ?? 'unknown';
+            $microserviceEnabled = $storageStatus['enabled'] ?? false;
+
+            Log::info('AudioAnalysisService - Microservice storage status', [
+                'microservice_storage_type' => $microserviceStorageType,
+                'microservice_enabled' => $microserviceEnabled,
+                'full_response' => $storageStatus,
+            ]);
+
+            $isCompatible = $laravelStorageType === $microserviceStorageType && $microserviceEnabled;
+
+            $result = [
+                'compatible' => $isCompatible,
+                'laravel_storage_type' => $laravelStorageType,
+                'microservice_storage_type' => $microserviceStorageType,
+                'microservice_enabled' => $microserviceEnabled,
+                'message' => $isCompatible
+                    ? "Storage types match ({$laravelStorageType})"
+                    : "Storage type mismatch: Laravel uses {$laravelStorageType}, microservice uses {$microserviceStorageType}",
+                'microservice_status' => $storageStatus,
+            ];
+
+            Log::info('AudioAnalysisService - Storage compatibility result', [
+                'upload_id' => $upload->id,
+                'result' => $result,
+            ]);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('AudioAnalysisService - Storage validation failed', [
+                'upload_id' => $upload->id,
+                'error' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'compatible' => false,
+                'laravel_storage_type' => $upload->usesR2Storage() ? 'r2' : 'local',
+                'microservice_storage_type' => 'unknown',
+                'microservice_enabled' => false,
+                'message' => 'Failed to validate storage compatibility: '.$e->getMessage(),
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Find similar uploads based on musical analysis.
      */
     public function findSimilarUploads(Upload $upload, int $limit = 10): \Illuminate\Database\Eloquent\Collection

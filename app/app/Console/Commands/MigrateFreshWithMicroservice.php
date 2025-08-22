@@ -5,7 +5,8 @@ namespace App\Console\Commands;
 use App\Services\AudioMicroserviceMigrationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Console\Input\InputInterface;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\Console\Input\InputOption;
 
 class MigrateFreshWithMicroservice extends Command
 {
@@ -14,7 +15,7 @@ class MigrateFreshWithMicroservice extends Command
      *
      * @var string
      */
-    protected $signature = 'migrate:fresh-with-microservice 
+    protected $signature = 'migrate:fresh-with-microservice
                            {--seed : Seed the database after migration}
                            {--seeder= : The class name of the root seeder}
                            {--force : Force the operation to run when in production}
@@ -159,7 +160,7 @@ class MigrateFreshWithMicroservice extends Command
 
         // Check Laravel database
         try {
-            $tables = \DB::select('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"');
+            $tables = DB::select('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"');
             $this->line('  Database Tables: '.count($tables).' tables created');
         } catch (\Exception $e) {
             $this->line('  Database: ✅ Connected');
@@ -206,11 +207,11 @@ class MigrateFreshWithMicroservice extends Command
     protected function getOptions(): array
     {
         return [
-            ['seed', null, InputInterface::OPTION_NONE, 'Seed the database after migration'],
-            ['seeder', null, InputInterface::OPTION_VALUE_OPTIONAL, 'The class name of the root seeder'],
-            ['force', null, InputInterface::OPTION_NONE, 'Force the operation to run when in production'],
-            ['skip-microservice', null, InputInterface::OPTION_NONE, 'Skip microservice migration'],
-            ['microservice-only', null, InputInterface::OPTION_NONE, 'Only run microservice migration'],
+            ['seed', null, InputOption::VALUE_NONE, 'Seed the database after migration'],
+            ['seeder', null, InputOption::VALUE_OPTIONAL, 'The class name of the root seeder'],
+            ['force', null, InputOption::VALUE_NONE, 'Force the operation to run when in production'],
+            ['skip-microservice', null, InputOption::VALUE_NONE, 'Skip microservice migration'],
+            ['microservice-only', null, InputOption::VALUE_NONE, 'Only run microservice migration'],
         ];
     }
 

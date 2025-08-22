@@ -161,11 +161,18 @@ final class UploadControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Create upload without factory hooks to avoid file operations
-        $upload = Upload::factory()->for($user)->make([
+        // Create upload directly without factory hooks to avoid file operations
+        $upload = new \App\Models\Upload([
+            'user_id' => $user->id,
+            'title' => 'Test Upload',
+            'filename' => 'test-file.mp3',
+            'path' => 'uploads/1/2025/08/13/test-file.mp3',
+            'mime_type' => 'audio/mpeg',
+            'size' => 1000000,
             'status' => 'ready',
             'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
             'uses_r2_storage' => false,
+            'r2_upload_path' => null,
         ]);
         $upload->save();
 
@@ -176,7 +183,7 @@ final class UploadControllerTest extends TestCase
                 ->component('uploads/show')
                 ->has('upload.data', fn (Assert $upload) => $upload
                     ->has('stream_url')
-                    ->where('stream_url', '/storage/uploads/stream/1/2025/08/13/test-file.ogg')
+                    ->where('stream_url', 'http://localhost/storage/uploads/stream/1/2025/08/13/test-file.ogg')
                     ->etc()
                 )
             );
@@ -192,7 +199,7 @@ final class UploadControllerTest extends TestCase
             'status' => 'ready',
             'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'uploads/1/2025/08/13/test-file.mp3',
+            'r2_upload_path' => 'private/uploads/1/2025/08/13/test-file.mp3',
         ]);
         $upload->save();
 
@@ -206,7 +213,7 @@ final class UploadControllerTest extends TestCase
                 ->component('uploads/show')
                 ->has('upload.data', fn (Assert $upload) => $upload
                     ->has('stream_url')
-                    ->where('stream_url', 'https://example.r2.dev/uploads/1/2025/08/13/test-file.mp3')
+                    ->where('stream_url', 'https://example.r2.dev/uploads/stream/1/2025/08/13/test-file.ogg')
                     ->etc()
                 )
             );

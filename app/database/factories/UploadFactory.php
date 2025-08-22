@@ -19,20 +19,24 @@ class UploadFactory extends Factory
     public function definition(): array
     {
         // Use mock data for basic factory - real file copying will be handled in configure()
-        $filename = $this->faker->uuid . '.mp3';
+        $filename = $this->faker->uuid.'.mp3';
+        $defaultDisk = config('filesystems.default');
+        $usesR2Storage = $defaultDisk === 'r2';
+
         return [
             'user_id' => \App\Models\User::factory(),
             'title' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->paragraph(),
             'genre' => $this->faker->randomElement(['Hip Hop', 'Electronic', 'Pop', 'Rock', 'Jazz', 'Classical', 'Lo-Fi']),
             'filename' => $filename,
-            'path' => 'uploads/original/' . $filename,
+            'path' => 'uploads/original/'.$filename,
             'stream_path' => null,
             'mime_type' => 'audio/mpeg',
             'size' => $this->faker->numberBetween(1000000, 10000000),
             'status' => 'pending',
             'duration_seconds' => null,
-            'uses_r2_storage' => false,
+            'uses_r2_storage' => $usesR2Storage,
+            'r2_upload_path' => $usesR2Storage ? null : null, // Will be set in configure() if R2
         ];
     }
 
@@ -43,49 +47,82 @@ class UploadFactory extends Factory
     {
         return $this->afterCreating(function (\App\Models\Upload $upload) {
             $sourcePath = base_path('test_audio.wav');
-            
+
             if (file_exists($sourcePath)) {
                 $disk = config('filesystems.default');
-                $storageDisk = $disk === 'local' ? 'private' : $disk;
-                
-                $filename = Str::uuid() . '.wav';
-                $streamFilename = Str::slug(pathinfo('test_audio', PATHINFO_FILENAME)) . '-' . Str::uuid() . '.ogg';
+                $filename = Str::uuid().'.wav';
+                $streamFilename = Str::slug(pathinfo('test_audio', PATHINFO_FILENAME)).'-'.Str::uuid().'.ogg';
                 $date = now();
-                
-                // Create user-organized path structure for original file
-                $targetPath = sprintf(
-                    'uploads/%s/%s/%s',
-                    $upload->user_id,
-                    $date->format('Y/m/d'),
-                    $filename
-                );
-                
-                // Create user-organized path structure for stream file
-                $streamPath = sprintf(
-                    'uploads/stream/%s/%s/%s',
-                    $upload->user_id,
-                    $date->format('Y/m/d'),
-                    $streamFilename
-                );
-                
-                // Copy original file to private storage
                 $content = file_get_contents($sourcePath);
-                Storage::disk($storageDisk)->put($targetPath, $content);
-                
-                // Copy file to public storage as stream file (for seeding purposes)
-                // In real usage, this would be converted by ProcessAudioUpload job
-                Storage::disk('public')->put($streamPath, $content);
-                
-                // Update the upload record with real file data
-                $upload->update([
-                    'filename' => 'test_audio.wav',
-                    'path' => $targetPath,
-                    'stream_path' => $streamPath,
-                    'mime_type' => 'audio/wav',
-                    'size' => filesize($sourcePath),
-                    'status' => 'ready', // Mark as ready since we're providing the stream file
-                    'duration_seconds' => 2, // Test audio is ~2 seconds
-                ]);
+
+                if ($upload->usesR2Storage()) {
+                    // R2 Storage paths using the new consistent structure
+                    $targetPath = sprintf(
+                        'private/uploads/%s/%s/%s',
+                        $upload->user_id,
+                        $date->format('Y/m/d'),
+                        $filename
+                    );
+
+                    $streamPath = sprintf(
+                        'public/uploads/stream/%s/%s/%s',
+                        $upload->user_id,
+                        $date->format('Y/m/d'),
+                        $streamFilename
+                    );
+
+                    // Upload original file to R2 private area
+                    Storage::disk('r2')->put($targetPath, $content);
+
+                    // Upload stream file to R2 public area
+                    Storage::disk('r2')->put($streamPath, $content);
+
+                    // Update the upload record with R2 paths
+                    $upload->update([
+                        'filename' => 'test_audio.wav',
+                        'path' => $targetPath,
+                        'r2_upload_path' => $targetPath,
+                        'stream_path' => $streamPath,
+                        'mime_type' => 'audio/wav',
+                        'size' => filesize($sourcePath),
+                        'status' => 'ready',
+                        'duration_seconds' => 2,
+                    ]);
+                } else {
+                    // Local Storage paths
+                    $storageDisk = $disk === 'local' ? 'private' : $disk;
+
+                    $targetPath = sprintf(
+                        'uploads/%s/%s/%s',
+                        $upload->user_id,
+                        $date->format('Y/m/d'),
+                        $filename
+                    );
+
+                    $streamPath = sprintf(
+                        'uploads/stream/%s/%s/%s',
+                        $upload->user_id,
+                        $date->format('Y/m/d'),
+                        $streamFilename
+                    );
+
+                    // Copy original file to private storage
+                    Storage::disk($storageDisk)->put($targetPath, $content);
+
+                    // Copy file to public storage as stream file (for seeding purposes)
+                    Storage::disk('public')->put($streamPath, $content);
+
+                    // Update the upload record with local paths
+                    $upload->update([
+                        'filename' => 'test_audio.wav',
+                        'path' => $targetPath,
+                        'stream_path' => $streamPath,
+                        'mime_type' => 'audio/wav',
+                        'size' => filesize($sourcePath),
+                        'status' => 'ready',
+                        'duration_seconds' => 2,
+                    ]);
+                }
             }
         });
     }

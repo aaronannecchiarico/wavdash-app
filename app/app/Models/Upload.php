@@ -186,8 +186,8 @@ class Upload extends Model
      */
     public function getStreamPath(): ?string
     {
-        if ($this->usesR2Storage() && config('filesystems.disks.r2.url')) {
-            return config('filesystems.disks.r2.url').'/'.$this->r2_upload_path;
+        if ($this->usesR2Storage() && $this->stream_path && config('filesystems.disks.r2.url')) {
+            return config('filesystems.disks.r2.url').'/'.$this->stream_path;
         }
 
         return $this->stream_path;
