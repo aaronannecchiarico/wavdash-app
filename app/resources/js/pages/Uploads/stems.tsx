@@ -22,6 +22,7 @@ interface Stem {
     id: number;
     stem_type: string;
     file_path: string;
+    public_path?: string;
     storage_type: string;
     file_size?: number;
     duration?: number;

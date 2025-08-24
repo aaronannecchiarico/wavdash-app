@@ -338,9 +338,6 @@ class AudioAnalysisCallbackController extends Controller
         ]);
     }
 
-    /**
-     * Handle stem separation completion.
-     */
     private function handleCompletedStemSeparation(Upload $upload, UploadStemTask $task, array $data): void
     {
         $storagePaths = $data['storage_paths'] ?? [];
@@ -351,21 +348,24 @@ class AudioAnalysisCallbackController extends Controller
         }, ARRAY_FILTER_USE_KEY);
 
         if (! empty($stemPaths)) {
-            // Create UploadStem records for each separated stem
+            // Create UploadStem records for each separated stem and dispatch conversion jobs
             foreach ($stemPaths as $stemType => $filePath) {
                 // Adjust file path based on storage type
                 $adjustedFilePath = $filePath;
-                if (($data['storage_type'] ?? 'r2') === 'local') {
+                $storageType = $data['storage_type'] ?? 'r2';
+
+                if ($storageType === 'local') {
                     // For local storage, prepend 'private/' if not already present
                     if (! str_starts_with($filePath, 'private/')) {
                         $adjustedFilePath = 'private/'.$filePath;
                     }
                 }
 
+                // Create the stem record first
                 $upload->stems()->create([
                     'stem_type' => $stemType,
                     'file_path' => $adjustedFilePath,
-                    'storage_type' => $data['storage_type'] ?? 'r2',
+                    'storage_type' => $storageType,
                     'file_size' => null, // Will be populated later if needed
                     'duration' => $upload->duration_seconds ?? null,
                     'metadata' => [
@@ -373,6 +373,40 @@ class AudioAnalysisCallbackController extends Controller
                         'task_id' => $task->task_id,
                     ],
                 ]);
+
+                // Create public path with upload_id included
+                // New structure: uploads/stream/{user_id}/{year/m/d}/stems/{upload_id}/{stem_type}.ogg
+                $userId = $upload->user_id;
+                $dateStr = date('Y/m/d', strtotime($upload->created_at));
+                $publicFilePath = "uploads/stream/{$userId}/{$dateStr}/stems/{$upload->id}/{$stemType}.ogg";
+
+                // Dispatch conversion and publish job
+                if (($storageType === 'local' && ! $upload->usesR2Storage()) ||
+                    ($storageType === 'r2' && $upload->usesR2Storage())) {
+
+                    Log::info('Dispatching ConvertAndPublishAudio job for stem file', [
+                        'upload_id' => $upload->id,
+                        'stem_type' => $stemType,
+                        'source_path' => $adjustedFilePath,
+                        'public_path' => $publicFilePath,
+                        'storage_type' => $storageType,
+                    ]);
+
+                    \App\Jobs\ConvertAndPublishAudio::dispatch(
+                        $upload,
+                        $adjustedFilePath,
+                        $publicFilePath,
+                        'stem',
+                        $stemType
+                    );
+                } else {
+                    Log::info('Skipping ConvertAndPublishAudio job due to storage mismatch', [
+                        'upload_id' => $upload->id,
+                        'stem_type' => $stemType,
+                        'callback_storage_type' => $storageType,
+                        'upload_uses_r2' => $upload->usesR2Storage(),
+                    ]);
+                }
             }
 
             // Also store stems paths in the upload record for backward compatibility
@@ -403,9 +437,6 @@ class AudioAnalysisCallbackController extends Controller
         ]);
     }
 
-    /**
-     * Handle tempo processing completion.
-     */
     private function handleCompletedTempoProcessing(Upload $upload, UploadTempoTask $task, array $data): void
     {
         Log::info('Starting to handle completed tempo processing', [
@@ -435,7 +466,9 @@ class AudioAnalysisCallbackController extends Controller
 
                 // Adjust file path based on storage type
                 $adjustedFilePath = $storagePaths['processed_audio'];
-                if (($data['storage_type'] ?? 'r2') === 'local') {
+                $storageType = $data['storage_type'] ?? 'r2';
+
+                if ($storageType === 'local') {
                     // For local storage, prepend 'private/' if not already present
                     if (! str_starts_with($adjustedFilePath, 'private/')) {
                         $adjustedFilePath = 'private/'.$adjustedFilePath;
@@ -458,7 +491,7 @@ class AudioAnalysisCallbackController extends Controller
                 $actualDuration = null;
 
                 // Get processed file size and duration
-                if (($data['storage_type'] ?? 'r2') === 'local') {
+                if ($storageType === 'local') {
                     // For local storage, check if the file exists and get its size
                     $fullPath = storage_path('app/'.$adjustedFilePath);
                     if (file_exists($fullPath)) {
@@ -483,6 +516,7 @@ class AudioAnalysisCallbackController extends Controller
                             : $upload->duration_seconds);
                 }
 
+                // Create the tempo record
                 $upload->tempos()->create([
                     'preset' => $preset,
                     'tempo_factor' => (float) $tempoFactor,
@@ -491,7 +525,7 @@ class AudioAnalysisCallbackController extends Controller
                     'add_reverb' => (bool) $addReverb,
                     'use_stems' => (bool) $useStems,
                     'file_path' => $adjustedFilePath,
-                    'storage_type' => $data['storage_type'] ?? 'r2',
+                    'storage_type' => $storageType,
                     'file_size' => $actualFileSize,
                     'duration' => $actualDuration,
                     'final_bpm' => $tempoProcessing['final_bpm'] ?? null,
@@ -505,6 +539,37 @@ class AudioAnalysisCallbackController extends Controller
                         'task_options' => $taskOptions,
                     ],
                 ]);
+
+                // Create public path with upload_id included
+                // New structure: uploads/stream/{user_id}/{year/m/d}/tempo/{upload_id}/tempo.ogg
+                $userId = $upload->user_id;
+                $dateStr = date('Y/m/d', strtotime($upload->created_at));
+                $publicFilePath = "uploads/stream/{$userId}/{$dateStr}/tempo/{$upload->id}/tempo.ogg";
+
+                // Dispatch conversion and publish job
+                if (($storageType === 'local' && ! $upload->usesR2Storage()) ||
+                    ($storageType === 'r2' && $upload->usesR2Storage())) {
+
+                    Log::info('Dispatching ConvertAndPublishAudio job for tempo file', [
+                        'upload_id' => $upload->id,
+                        'source_path' => $adjustedFilePath,
+                        'public_path' => $publicFilePath,
+                        'storage_type' => $storageType,
+                    ]);
+
+                    \App\Jobs\ConvertAndPublishAudio::dispatch(
+                        $upload,
+                        $adjustedFilePath,
+                        $publicFilePath,
+                        'tempo'
+                    );
+                } else {
+                    Log::info('Skipping ConvertAndPublishAudio job due to storage mismatch', [
+                        'upload_id' => $upload->id,
+                        'callback_storage_type' => $storageType,
+                        'upload_uses_r2' => $upload->usesR2Storage(),
+                    ]);
+                }
 
                 Log::info('Tempo processing completed successfully', [
                     'upload_id' => $upload->id,

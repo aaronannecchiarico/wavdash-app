@@ -56,9 +56,41 @@ class ProcessAudioUpload implements ShouldQueue
      */
     public function handle(): void
     {
-        // Update upload status to processing
-        $this->upload->update(['status' => 'processing']);
+        $this->updateUploadStatus('processing');
+        $this->logJobStart();
+        $this->validateStorageCompatibility();
 
+        $tempFilePath = null;
+
+        try {
+            $ffmpeg = $this->setupFFMpeg($tempFilePath);
+            $duration = $this->getDuration($ffmpeg);
+            $streamPath = $this->processAudioFile($ffmpeg);
+
+            $this->finalizeUpload($streamPath, $duration);
+            $this->broadcastSuccess();
+
+        } catch (\Exception $e) {
+            $this->handleProcessingError($e, $tempFilePath);
+            throw $e;
+        } finally {
+            $this->cleanupTempFile($tempFilePath);
+        }
+    }
+
+    /**
+     * Update upload status.
+     */
+    private function updateUploadStatus(string $status): void
+    {
+        $this->upload->update(['status' => $status]);
+    }
+
+    /**
+     * Log job start information.
+     */
+    private function logJobStart(): void
+    {
         Log::info('ProcessAudioUpload - Starting job', [
             'upload_id' => $this->upload->id,
             'upload_path' => $this->upload->path,
@@ -66,255 +98,310 @@ class ProcessAudioUpload implements ShouldQueue
             'uses_r2_storage' => $this->upload->usesR2Storage(),
             'upload_status' => $this->upload->status,
         ]);
+    }
 
-        // Validate storage compatibility before processing if audio analysis is enabled
-        if (config('services.audio_analysis.enabled', false)) {
-            $audioAnalysisService = app(AudioAnalysisService::class);
-            $storageValidation = $audioAnalysisService->validateStorageCompatibility($this->upload);
-
-            if (! $storageValidation['compatible']) {
-                Log::warning('ProcessAudioUpload - Storage compatibility validation failed', [
-                    'upload_id' => $this->upload->id,
-                    'validation_result' => $storageValidation,
-                ]);
-
-                // We continue processing even if validation fails, but log the issue
-                // This ensures existing functionality isn't broken if microservice is unavailable
-            } else {
-                Log::info('ProcessAudioUpload - Storage compatibility validated successfully', [
-                    'upload_id' => $this->upload->id,
-                    'validation_message' => $storageValidation['message'],
-                ]);
-            }
+    /**
+     * Validate storage compatibility for audio analysis.
+     */
+    private function validateStorageCompatibility(): void
+    {
+        if (! config('services.audio_analysis.enabled', false)) {
+            return;
         }
 
-        $tempFilePath = null;
+        $audioAnalysisService = app(AudioAnalysisService::class);
+        $storageValidation = $audioAnalysisService->validateStorageCompatibility($this->upload);
 
-        try {
-            $filename = pathinfo($this->upload->filename, PATHINFO_FILENAME);
-            $duration = 0;
-            $defaultDisk = config('filesystems.default');
-
-            Log::info('ProcessAudioUpload - Configuration', [
-                'default_disk' => $defaultDisk,
-                'upload_uses_r2' => $this->upload->usesR2Storage(),
-                'filename_without_ext' => $filename,
-                'php_temp_dir' => sys_get_temp_dir(),
-                'upload_model_data' => $this->upload->toArray(),
-            ]);
-
-            // Handle different storage types based on upload's actual storage type
-            if ($this->upload->usesR2Storage()) {
-                Log::info('ProcessAudioUpload - Processing R2 file', [
-                    'r2_upload_path' => $this->upload->r2_upload_path,
-                    'uses_r2_storage' => $this->upload->uses_r2_storage,
-                ]);
-
-                // Download file from R2 to temporary local storage for processing
-                $tempFilePath = $this->downloadFromR2ToTemp();
-
-                if (! $tempFilePath) {
-                    throw new \Exception('Failed to download file from R2 for processing');
-                }
-
-                Log::info('ProcessAudioUpload - Opening temp file with FFmpeg', [
-                    'temp_file_path' => $tempFilePath,
-                    'temp_file_exists' => file_exists($tempFilePath),
-                    'temp_file_size' => file_exists($tempFilePath) ? filesize($tempFilePath) : 'N/A',
-                ]);
-
-                // Create a temporary disk configuration that uses the system temp directory
-                // This allows FFMpeg to work with the absolute path correctly
-                $tempDirPath = sys_get_temp_dir();
-                $tempFileName = basename($tempFilePath);
-
-                // Create filesystem adapter for temp directory
-                $adapter = new LocalFilesystemAdapter($tempDirPath);
-                $flysystemFilesystem = new Filesystem($adapter);
-                $tempDisk = new FilesystemAdapter(
-                    $flysystemFilesystem,
-                    $adapter,
-                    ['root' => $tempDirPath]
-                );
-
-                Log::info('ProcessAudioUpload - Opening with temp disk', [
-                    'temp_dir_path' => $tempDirPath,
-                    'temp_file_name' => $tempFileName,
-                    'full_temp_path' => $tempFilePath,
-                    'file_exists_in_temp_dir' => file_exists($tempDirPath . '/' . $tempFileName),
-                ]);
-
-                // Use the temporary disk with just the filename
-                $ffmpeg = FFMpeg::fromFilesystem($tempDisk)->open($tempFileName);
-            } else {
-                // Use local storage processing
-                $storageDisk = $defaultDisk === 'local' ? 'private' : $defaultDisk;
-
-                Log::info('ProcessAudioUpload - Processing local file', [
-                    'storage_disk' => $storageDisk,
-                    'upload_path' => $this->upload->path,
-                    'absolute_path' => Storage::disk($storageDisk)->path($this->upload->path),
-                    'file_exists' => Storage::disk($storageDisk)->exists($this->upload->path),
-                    'file_size' => Storage::disk($storageDisk)->exists($this->upload->path) ? Storage::disk($storageDisk)->size($this->upload->path) : 'N/A',
-                ]);
-
-                if (! Storage::disk($storageDisk)->exists($this->upload->path)) {
-                    throw new \Exception("Source file does not exist at path: {$this->upload->path} on disk: {$storageDisk}");
-                }
-
-                Log::info('ProcessAudioUpload - Opening file with FFmpeg', [
-                    'storage_disk' => $storageDisk,
-                    'file_path' => $this->upload->path,
-                ]);
-
-                $ffmpeg = FFMpeg::fromDisk($storageDisk)->open($this->upload->path);
-
-                Log::info('ProcessAudioUpload - FFmpeg opened successfully', [
-                    'upload_id' => $this->upload->id,
-                ]);
-            }
-
-            Log::info('ProcessAudioUpload - Getting file duration', [
+        if (! $storageValidation['compatible']) {
+            Log::warning('ProcessAudioUpload - Storage compatibility validation failed', [
                 'upload_id' => $this->upload->id,
+                'validation_result' => $storageValidation,
             ]);
-
-            $duration = $ffmpeg->getDurationInSeconds();
-
-            Log::info('ProcessAudioUpload - Duration obtained', [
+        } else {
+            Log::info('ProcessAudioUpload - Storage compatibility validated successfully', [
                 'upload_id' => $this->upload->id,
-                'duration_seconds' => $duration,
+                'validation_message' => $storageValidation['message'],
             ]);
+        }
+    }
 
-            // Process to streamable format
-            $extension = 'ogg';
-            $destinationFilename = Str::slug($filename).'-'.Str::uuid().'.'.$extension;
+    /**
+     * Setup FFMpeg instance based on storage type.
+     */
+    private function setupFFMpeg(?string &$tempFilePath)
+    {
+        $filename = pathinfo($this->upload->filename, PATHINFO_FILENAME);
+        $defaultDisk = config('filesystems.default');
 
-            Log::info('ProcessAudioUpload - Preparing export', [
-                'destination_filename' => $destinationFilename,
-                'export_format' => 'OGG Vorbis',
-            ]);
+        Log::info('ProcessAudioUpload - Configuration', [
+            'default_disk' => $defaultDisk,
+            'upload_uses_r2' => $this->upload->usesR2Storage(),
+            'filename_without_ext' => $filename,
+        ]);
 
-            // Export to OGG format
-            $format = new Vorbis;
-            $format->setAudioChannels(2)->setAudioKiloBitrate(128);
+        if ($this->upload->usesR2Storage()) {
+            return $this->setupR2FFMpeg($tempFilePath);
+        }
 
-            if ($this->upload->usesR2Storage()) {
-                // For R2, export to temp file then upload to R2
-                $tempStreamPath = sys_get_temp_dir() . '/' . $destinationFilename;
+        return $this->setupLocalFFMpeg($defaultDisk);
+    }
 
-                Log::info('ProcessAudioUpload - Starting R2 export', [
-                    'temp_stream_path' => $tempStreamPath,
-                    'upload_id' => $this->upload->id,
-                ]);
+    /**
+     * Setup FFMpeg for R2 storage.
+     */
+    private function setupR2FFMpeg(?string &$tempFilePath)
+    {
+        Log::info('ProcessAudioUpload - Processing R2 file', [
+            'r2_upload_path' => $this->upload->r2_upload_path,
+            'uses_r2_storage' => $this->upload->uses_r2_storage,
+        ]);
 
-                // Create a separate disk for saving output to avoid path duplication
-                // We'll use the default local disk with absolute path resolution
-                $outputDir = sys_get_temp_dir();
-                $outputAdapter = new LocalFilesystemAdapter($outputDir);
-                $outputFlysystemFilesystem = new Filesystem($outputAdapter);
-                $outputDisk = new FilesystemAdapter(
-                    $outputFlysystemFilesystem,
-                    $outputAdapter,
-                    ['root' => $outputDir]
-                );
+        $tempFilePath = $this->downloadFromR2ToTemp();
 
-                // Export using the output disk with just the filename
-                $ffmpeg->export()->toDisk($outputDisk)->inFormat($format)->save($destinationFilename);
+        if (! $tempFilePath) {
+            throw new \Exception('Failed to download file from R2 for processing');
+        }
 
-                Log::info('ProcessAudioUpload - R2 export completed', [
-                    'temp_stream_path' => $tempStreamPath,
-                    'temp_file_exists' => file_exists($tempStreamPath),
-                    'temp_file_size' => file_exists($tempStreamPath) ? filesize($tempStreamPath) : 'N/A',
-                ]);
+        return $this->createTempDiskFFMpeg($tempFilePath);
+    }
 
-                // Upload processed file to R2 with same structure as local (public/uploads/stream)
-                $date = now();
-                $r2StreamPath = sprintf(
-                    'public/uploads/stream/%s/%s/%s',
-                    $this->upload->user_id,
-                    $date->format('Y/m/d'),
-                    $destinationFilename
-                );
-                $content = file_get_contents($tempStreamPath);
+    /**
+     * Create temporary disk FFMpeg instance.
+     */
+    private function createTempDiskFFMpeg(string $tempFilePath)
+    {
+        $tempDirPath = sys_get_temp_dir();
+        $tempFileName = basename($tempFilePath);
 
-                Log::info('ProcessAudioUpload - Uploading to R2', [
-                    'r2_stream_path' => $r2StreamPath,
-                    'content_size' => strlen($content),
-                ]);
+        $adapter = new LocalFilesystemAdapter($tempDirPath);
+        $flysystemFilesystem = new Filesystem($adapter);
+        $tempDisk = new FilesystemAdapter(
+            $flysystemFilesystem,
+            $adapter,
+            ['root' => $tempDirPath]
+        );
 
-                if (Storage::disk('r2')->put($r2StreamPath, $content)) {
-                    $streamPath = $r2StreamPath;
-                    Log::info('Processed file uploaded to R2', ['path' => $r2StreamPath]);
+        Log::info('ProcessAudioUpload - Opening with temp disk', [
+            'temp_dir_path' => $tempDirPath,
+            'temp_file_name' => $tempFileName,
+        ]);
 
-                    // Clean up temp stream file
-                    unlink($tempStreamPath);
-                } else {
-                    throw new \Exception('Failed to upload processed file to R2');
-                }
-            } else {
-                // Use local storage with user-organized structure
-                $date = now();
-                $streamPath = sprintf(
-                    'uploads/stream/%s/%s/%s',
-                    $this->upload->user_id,
-                    $date->format('Y/m/d'),
-                    $destinationFilename
-                );
+        return FFMpeg::fromFilesystem($tempDisk)->open($tempFileName);
+    }
 
-                Log::info('ProcessAudioUpload - Starting local export', [
-                    'stream_path' => $streamPath,
-                    'target_disk' => 'public',
-                    'upload_id' => $this->upload->id,
-                ]);
+    /**
+     * Setup FFMpeg for local storage.
+     */
+    private function setupLocalFFMpeg(string $defaultDisk)
+    {
+        $storageDisk = $defaultDisk === 'local' ? 'private' : $defaultDisk;
 
-                $ffmpeg->export()->toDisk('public')->inFormat($format)->save($streamPath);
+        Log::info('ProcessAudioUpload - Processing local file', [
+            'storage_disk' => $storageDisk,
+            'upload_path' => $this->upload->path,
+        ]);
 
-                Log::info('ProcessAudioUpload - Local export completed', [
-                    'stream_path' => $streamPath,
-                    'file_exists' => Storage::disk('public')->exists($streamPath),
-                    'file_size' => Storage::disk('public')->exists($streamPath) ? Storage::disk('public')->size($streamPath) : 'N/A',
-                ]);
-            }
+        if (! Storage::disk($storageDisk)->exists($this->upload->path)) {
+            throw new \Exception("Source file does not exist at path: {$this->upload->path} on disk: {$storageDisk}");
+        }
 
-            // Update the upload record with the streamable path and set status to ready
-            $updateData = [
-                'stream_path' => $streamPath,
-                'status' => 'ready',
-                'duration_seconds' => $duration,
-            ];
+        return FFMpeg::fromDisk($storageDisk)->open($this->upload->path);
+    }
 
-            $this->upload->update($updateData);
+    /**
+     * Get duration from FFMpeg instance.
+     */
+    private function getDuration($ffmpeg): float
+    {
+        Log::info('ProcessAudioUpload - Getting file duration', [
+            'upload_id' => $this->upload->id,
+        ]);
 
-            // Broadcast the event
-            \App\Events\UploadProcessed::dispatch($this->upload);
+        $duration = $ffmpeg->getDurationInSeconds();
 
-            Log::info('Audio file processed successfully', [
-                'upload_id' => $this->upload->id,
-                'storage' => $this->upload->usesR2Storage() ? 'r2' : $defaultDisk,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to process audio file', [
-                'upload_id' => $this->upload->id,
-                'error' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'storage_type' => $this->upload->usesR2Storage() ? 'r2' : $defaultDisk,
-                'upload_path' => $this->upload->path ?? 'unknown',
-                'temp_file_path' => $tempFilePath ?? 'none',
-            ]);
+        Log::info('ProcessAudioUpload - Duration obtained', [
+            'upload_id' => $this->upload->id,
+            'duration_seconds' => $duration,
+        ]);
 
-            $this->upload->update(['status' => 'failed']);
+        return $duration;
+    }
 
-            // Broadcast the event
-            \App\Events\UploadProcessed::dispatch($this->upload);
+    /**
+     * Process audio file to streamable format.
+     */
+    private function processAudioFile($ffmpeg): string
+    {
+        $filename = pathinfo($this->upload->filename, PATHINFO_FILENAME);
+        $destinationFilename = Str::slug($filename).'-'.Str::uuid().'.ogg';
 
-            throw $e;
-        } finally {
-            // Clean up temporary file if it exists
-            if ($tempFilePath && file_exists($tempFilePath)) {
-                unlink($tempFilePath);
-            }
+        Log::info('ProcessAudioUpload - Preparing export', [
+            'destination_filename' => $destinationFilename,
+            'export_format' => 'OGG Vorbis',
+        ]);
+
+        $format = new Vorbis;
+        $format->setAudioChannels(2)->setAudioKiloBitrate(128);
+
+        if ($this->upload->usesR2Storage()) {
+            return $this->processR2Audio($ffmpeg, $format, $destinationFilename);
+        }
+
+        return $this->processLocalAudio($ffmpeg, $format, $destinationFilename);
+    }
+
+    /**
+     * Process R2 audio file.
+     */
+    private function processR2Audio($ffmpeg, $format, string $destinationFilename): string
+    {
+        $tempStreamPath = sys_get_temp_dir().'/'.$destinationFilename;
+
+        // Export to temp file
+        $this->exportToTempFile($ffmpeg, $format, $destinationFilename);
+
+        // Upload to private bucket and dispatch publish job
+        return $this->uploadToR2AndDispatchPublish($tempStreamPath, $destinationFilename);
+    }
+
+    /**
+     * Export audio to temporary file.
+     */
+    private function exportToTempFile($ffmpeg, $format, string $destinationFilename): void
+    {
+        $outputDir = sys_get_temp_dir();
+        $outputAdapter = new LocalFilesystemAdapter($outputDir);
+        $outputFlysystemFilesystem = new Filesystem($outputAdapter);
+        $outputDisk = new FilesystemAdapter(
+            $outputFlysystemFilesystem,
+            $outputAdapter,
+            ['root' => $outputDir]
+        );
+
+        $ffmpeg->export()->toDisk($outputDisk)->inFormat($format)->save($destinationFilename);
+    }
+
+    /**
+     * Upload to R2 private bucket and dispatch publish job.
+     */
+    private function uploadToR2AndDispatchPublish(string $tempStreamPath, string $destinationFilename): string
+    {
+        $date = now();
+        $r2PrivateStreamPath = sprintf(
+            'processed/uploads/stream/%s/%s/%s',
+            $this->upload->user_id,
+            $date->format('Y/m/d'),
+            $destinationFilename
+        );
+
+        $content = file_get_contents($tempStreamPath);
+
+        if (! Storage::disk('r2_private')->put($r2PrivateStreamPath, $content)) {
+            throw new \Exception('Failed to upload processed file to R2 private bucket');
+        }
+
+        $r2PublicStreamPath = sprintf(
+            'uploads/stream/%s/%s/%s',
+            $this->upload->user_id,
+            $date->format('Y/m/d'),
+            $destinationFilename
+        );
+
+        \App\Jobs\PublishToPublicBucket::dispatch(
+            $this->upload,
+            $r2PrivateStreamPath,
+            $r2PublicStreamPath,
+            'stream'
+        );
+
+        Log::info('PublishToPublicBucket job dispatched for stream file', [
+            'upload_id' => $this->upload->id,
+            'private_path' => $r2PrivateStreamPath,
+            'public_path' => $r2PublicStreamPath,
+        ]);
+
+        unlink($tempStreamPath);
+
+        return $r2PublicStreamPath;
+    }
+
+    /**
+     * Process local audio file.
+     */
+    private function processLocalAudio($ffmpeg, $format, string $destinationFilename): string
+    {
+        $date = now();
+        $streamPath = sprintf(
+            'uploads/stream/%s/%s/%s',
+            $this->upload->user_id,
+            $date->format('Y/m/d'),
+            $destinationFilename
+        );
+
+        Log::info('ProcessAudioUpload - Starting local export', [
+            'stream_path' => $streamPath,
+            'target_disk' => 'public',
+        ]);
+
+        $ffmpeg->export()->toDisk('public')->inFormat($format)->save($streamPath);
+
+        Log::info('ProcessAudioUpload - Local export completed', [
+            'stream_path' => $streamPath,
+            'file_exists' => Storage::disk('public')->exists($streamPath),
+        ]);
+
+        return $streamPath;
+    }
+
+    /**
+     * Finalize upload with stream path and duration.
+     */
+    private function finalizeUpload(string $streamPath, float $duration): void
+    {
+        $this->upload->update([
+            'stream_path' => $streamPath,
+            'status' => 'ready',
+            'duration_seconds' => $duration,
+        ]);
+    }
+
+    /**
+     * Broadcast success event.
+     */
+    private function broadcastSuccess(): void
+    {
+        \App\Events\UploadProcessed::dispatch($this->upload);
+
+        Log::info('Audio file processed successfully', [
+            'upload_id' => $this->upload->id,
+            'storage' => $this->upload->usesR2Storage() ? 'r2' : config('filesystems.default'),
+        ]);
+    }
+
+    /**
+     * Handle processing errors.
+     */
+    private function handleProcessingError(\Exception $e, ?string $tempFilePath): void
+    {
+        Log::error('Failed to process audio file', [
+            'upload_id' => $this->upload->id,
+            'error' => $e->getMessage(),
+            'storage_type' => $this->upload->usesR2Storage() ? 'r2' : config('filesystems.default'),
+            'upload_path' => $this->upload->path ?? 'unknown',
+            'temp_file_path' => $tempFilePath ?? 'none',
+        ]);
+
+        $this->upload->update(['status' => 'failed']);
+        \App\Events\UploadProcessed::dispatch($this->upload);
+    }
+
+    /**
+     * Clean up temporary file.
+     */
+    private function cleanupTempFile(?string $tempFilePath): void
+    {
+        if ($tempFilePath && file_exists($tempFilePath)) {
+            unlink($tempFilePath);
         }
     }
 
@@ -324,17 +411,17 @@ class ProcessAudioUpload implements ShouldQueue
     private function downloadFromR2ToTemp(): ?string
     {
         try {
-            $tempFilePath = sys_get_temp_dir() . '/' . Str::uuid() . '_' . $this->upload->filename;
+            $tempFilePath = sys_get_temp_dir().'/'.Str::uuid().'_'.$this->upload->filename;
 
-            Log::info('ProcessAudioUpload - Starting R2 download', [
+            Log::info('ProcessAudioUpload - Starting R2 private download', [
                 'upload_id' => $this->upload->id,
                 'r2_upload_path' => $this->upload->r2_upload_path,
                 'temp_file_path' => $tempFilePath,
-                'r2_file_exists' => Storage::disk('r2')->exists($this->upload->r2_upload_path),
+                'r2_file_exists' => Storage::disk('r2_private')->exists($this->upload->r2_upload_path),
             ]);
 
-            if (! Storage::disk('r2')->exists($this->upload->r2_upload_path)) {
-                Log::error('R2 file does not exist', [
+            if (! Storage::disk('r2_private')->exists($this->upload->r2_upload_path)) {
+                Log::error('R2 private file does not exist', [
                     'upload_id' => $this->upload->id,
                     'r2_path' => $this->upload->r2_upload_path,
                 ]);
@@ -342,7 +429,7 @@ class ProcessAudioUpload implements ShouldQueue
                 return null;
             }
 
-            $r2Content = Storage::disk('r2')->get($this->upload->r2_upload_path);
+            $r2Content = Storage::disk('r2_private')->get($this->upload->r2_upload_path);
 
             Log::info('ProcessAudioUpload - R2 content retrieved', [
                 'upload_id' => $this->upload->id,
@@ -369,7 +456,7 @@ class ProcessAudioUpload implements ShouldQueue
 
             return null;
         } catch (\Exception $e) {
-            Log::error('Failed to download file from R2', [
+            Log::error('Failed to download file from R2 private bucket', [
                 'upload_id' => $this->upload->id,
                 'r2_path' => $this->upload->r2_upload_path,
                 'error' => $e->getMessage(),

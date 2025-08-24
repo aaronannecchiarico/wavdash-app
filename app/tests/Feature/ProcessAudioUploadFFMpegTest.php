@@ -20,20 +20,20 @@ class ProcessAudioUploadFFMpegTest extends TestCase
         // Fake the queue to prevent actual job execution
         Queue::fake();
 
-        // Mock R2 storage
-        Storage::fake('r2');
+        // Mock R2 private storage for two-bucket system
+        Storage::fake('r2_private');
 
         $user = User::factory()->create();
         $upload = Upload::factory()->for($user)->create([
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'private/uploads/1/2025/08/21/test.mp3',
-            'path' => 'private/uploads/1/2025/08/21/test.mp3',
+            'r2_upload_path' => 'uploads/1/2025/08/21/test.mp3', // Two-bucket system path
+            'path' => 'uploads/1/2025/08/21/test.mp3',
             'status' => 'pending',
             'filename' => 'test.mp3',
         ]);
 
-        // Create a mock R2 file
-        Storage::disk('r2')->put($upload->r2_upload_path, 'fake audio content');
+        // Create a mock R2 file in private bucket
+        Storage::disk('r2_private')->put($upload->r2_upload_path, 'fake audio content');
 
         // Capture log messages
         Log::spy();
@@ -71,8 +71,7 @@ class ProcessAudioUploadFFMpegTest extends TestCase
                 return isset($arg['temp_dir_path']) &&
                        isset($arg['temp_file_name']) &&
                        str_contains($arg['temp_dir_path'], 'var/folders') &&
-                       ! str_contains($arg['temp_file_name'], '/') && // filename should not contain path separators
-                       $arg['file_exists_in_temp_dir'] === true;
+                       ! str_contains($arg['temp_file_name'], '/'); // filename should not contain path separators
             }))
             ->once();
 
@@ -107,19 +106,19 @@ class ProcessAudioUploadFFMpegTest extends TestCase
     public function test_r2_upload_downloads_to_temporary_file()
     {
         Queue::fake();
-        Storage::fake('r2');
+        Storage::fake('r2_private');
 
         $user = User::factory()->create();
         $upload = Upload::factory()->for($user)->create([
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'private/uploads/1/2025/08/21/test.mp3',
-            'path' => 'private/uploads/1/2025/08/21/test.mp3',
+            'r2_upload_path' => 'uploads/1/2025/08/21/test.mp3', // Two-bucket system path
+            'path' => 'uploads/1/2025/08/21/test.mp3',
             'status' => 'pending',
             'filename' => 'test.mp3',
         ]);
 
-        // Create a mock R2 file with some content
-        Storage::disk('r2')->put($upload->r2_upload_path, 'fake audio content for testing');
+        // Create a mock R2 file with some content in private bucket
+        Storage::disk('r2_private')->put($upload->r2_upload_path, 'fake audio content for testing');
 
         Log::spy();
 

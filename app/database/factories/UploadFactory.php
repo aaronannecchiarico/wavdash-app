@@ -36,7 +36,7 @@ class UploadFactory extends Factory
             'status' => 'pending',
             'duration_seconds' => null,
             'uses_r2_storage' => $usesR2Storage,
-            'r2_upload_path' => $usesR2Storage ? null : null, // Will be set in configure() if R2
+            'r2_upload_path' => null, // Will be set in configure() if R2
         ];
     }
 
@@ -55,27 +55,28 @@ class UploadFactory extends Factory
                 $date = now();
                 $content = file_get_contents($sourcePath);
 
-                if ($upload->usesR2Storage()) {
-                    // R2 Storage paths using the new consistent structure
+                // Check if R2 storage is enabled based on default disk, not usesR2Storage() method
+                if ($upload->uses_r2_storage) {
+                    // R2 Storage paths using two-bucket system (no prefixes)
                     $targetPath = sprintf(
-                        'private/uploads/%s/%s/%s',
+                        'uploads/%s/%s/%s',
                         $upload->user_id,
                         $date->format('Y/m/d'),
                         $filename
                     );
 
                     $streamPath = sprintf(
-                        'public/uploads/stream/%s/%s/%s',
+                        'uploads/stream/%s/%s/%s',
                         $upload->user_id,
                         $date->format('Y/m/d'),
                         $streamFilename
                     );
 
-                    // Upload original file to R2 private area
-                    Storage::disk('r2')->put($targetPath, $content);
+                    // Upload original file to R2 private bucket
+                    Storage::disk('r2_private')->put($targetPath, $content);
 
-                    // Upload stream file to R2 public area
-                    Storage::disk('r2')->put($streamPath, $content);
+                    // Upload stream file to R2 public bucket
+                    Storage::disk('r2_public')->put($streamPath, $content);
 
                     // Update the upload record with R2 paths
                     $upload->update([

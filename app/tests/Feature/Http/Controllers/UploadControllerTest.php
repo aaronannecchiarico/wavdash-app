@@ -199,12 +199,12 @@ final class UploadControllerTest extends TestCase
             'status' => 'ready',
             'stream_path' => 'uploads/stream/1/2025/08/13/test-file.ogg',
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'private/uploads/1/2025/08/13/test-file.mp3',
+            'r2_upload_path' => 'uploads/1/2025/08/13/test-file.mp3', // Now stored in private bucket without prefix
         ]);
         $upload->save();
 
-        // Mock R2 URL configuration
-        config(['filesystems.disks.r2.url' => 'https://example.r2.dev']);
+        // Mock R2 public URL configuration for two-bucket system
+        config(['filesystems.disks.r2_public.url' => 'https://example.r2.dev']);
 
         $response = $this->actingAs($user)->get(route('uploads.show', $upload));
 

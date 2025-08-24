@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Services\AudioMicroserviceMigrationService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Input\InputOption;
 
 class MigrateFreshWithMicroservice extends Command
@@ -220,6 +220,85 @@ class MigrateFreshWithMicroservice extends Command
      */
     private function clearStorageDirectories(): void
     {
+        $defaultDisk = config('filesystems.default');
+
+        if ($defaultDisk === 'r2') {
+            // For R2 two-bucket system, clear buckets directly
+            $this->clearR2Buckets();
+        } else {
+            // For local/other storage, clear traditional directory structure
+            $this->clearLocalStorageDirectories();
+        }
+    }
+
+    /**
+     * Clear R2 buckets for two-bucket system
+     */
+    private function clearR2Buckets(): void
+    {
+        try {
+            // Clear using direct R2 client
+            $s3Client = new \Aws\S3\S3Client([
+                'version' => 'latest',
+                'region' => 'auto',
+                'endpoint' => config('filesystems.disks.r2.endpoint'),
+                'use_path_style_endpoint' => true,
+                'credentials' => [
+                    'key' => config('filesystems.disks.r2.key'),
+                    'secret' => config('filesystems.disks.r2.secret'),
+                ],
+            ]);
+
+            $clearedFiles = 0;
+
+            // Clear audio-private bucket
+            $privateBucket = env('R2_PRIVATE_BUCKET', 'audio-private');
+            $result = $s3Client->listObjectsV2(['Bucket' => $privateBucket]);
+            if (isset($result['Contents']) && count($result['Contents']) > 0) {
+                $objects = array_map(fn ($obj) => ['Key' => $obj['Key']], $result['Contents']);
+                $s3Client->deleteObjects([
+                    'Bucket' => $privateBucket,
+                    'Delete' => ['Objects' => $objects],
+                ]);
+                $clearedFiles += count($objects);
+                $this->line("  ✓ Cleared R2 private bucket ({$privateBucket}) - ".count($objects).' files');
+            } else {
+                $this->line("  ○ R2 private bucket ({$privateBucket}) already empty");
+            }
+
+            // Clear audio-public bucket
+            $publicBucket = env('R2_PUBLIC_BUCKET', 'audio-public');
+            $result = $s3Client->listObjectsV2(['Bucket' => $publicBucket]);
+            if (isset($result['Contents']) && count($result['Contents']) > 0) {
+                $objects = array_map(fn ($obj) => ['Key' => $obj['Key']], $result['Contents']);
+                $s3Client->deleteObjects([
+                    'Bucket' => $publicBucket,
+                    'Delete' => ['Objects' => $objects],
+                ]);
+                $clearedFiles += count($objects);
+                $this->line("  ✓ Cleared R2 public bucket ({$publicBucket}) - ".count($objects).' files');
+            } else {
+                $this->line("  ○ R2 public bucket ({$publicBucket}) already empty");
+            }
+
+            if ($clearedFiles > 0) {
+                $this->info("✅ R2 storage cleanup completed: {$clearedFiles} files removed from both buckets");
+            } else {
+                $this->info('✅ R2 buckets were already clean');
+            }
+
+        } catch (\Exception $e) {
+            $this->warn("⚠️  Failed to clear R2 buckets: {$e->getMessage()}");
+            $this->warn('Falling back to local storage cleanup...');
+            $this->clearLocalStorageDirectories();
+        }
+    }
+
+    /**
+     * Clear local storage directories (traditional approach)
+     */
+    private function clearLocalStorageDirectories(): void
+    {
         $directories = [
             'private/uploads',
             'private/processed',
@@ -231,30 +310,33 @@ class MigrateFreshWithMicroservice extends Command
         $totalFiles = 0;
 
         foreach ($directories as $directory) {
-            if (Storage::exists($directory)) {
-                $files = Storage::allFiles($directory);
+            // Use local disk specifically to avoid R2
+            $disk = Storage::disk('local');
+
+            if ($disk->exists($directory)) {
+                $files = $disk->allFiles($directory);
                 $totalFiles += count($files);
 
                 if (count($files) > 0) {
-                    Storage::deleteDirectory($directory);
+                    $disk->deleteDirectory($directory);
                     $this->line("  ✓ Cleared {$directory} ({".count($files).'} files)');
                     $clearedCount++;
                 } else {
                     $this->line("  ○ {$directory} already empty");
                 }
 
-                // Recreate the directory structure
-                Storage::makeDirectory($directory);
+                // Recreate the directory structure on local disk
+                $disk->makeDirectory($directory);
             } else {
                 $this->line("  ○ {$directory} does not exist, creating...");
-                Storage::makeDirectory($directory);
+                $disk->makeDirectory($directory);
             }
         }
 
         if ($totalFiles > 0) {
-            $this->info("✅ Storage cleanup completed: {$totalFiles} files removed from {$clearedCount} directories");
+            $this->info("✅ Local storage cleanup completed: {$totalFiles} files removed from {$clearedCount} directories");
         } else {
-            $this->info('✅ Storage directories were already clean');
+            $this->info('✅ Local storage directories were already clean');
         }
     }
 }

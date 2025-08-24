@@ -12,6 +12,7 @@ interface Stem {
     stem_type: string;
     stem_type_name?: string;
     file_path: string;
+    public_path?: string;
     storage_type: string;
 }
 
@@ -53,9 +54,10 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
 
     const getStemUrl = useCallback((stem: Stem) => {
         if (stem.storage_type === 'r2') {
-            // For R2 storage, construct the full URL
+            // For R2 storage, use public_path if available (converted OGG), otherwise fallback to file_path
             const r2BaseUrl = import.meta.env.VITE_R2_URL || '';
-            return `${r2BaseUrl}/${stem.file_path}`;
+            const stemPath = stem.public_path || stem.file_path;
+            return `${r2BaseUrl}/${stemPath}`;
         }
         // For local storage, use the download route
         return route('uploads.stems.download', { 

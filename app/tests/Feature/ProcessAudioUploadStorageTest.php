@@ -19,11 +19,11 @@ class ProcessAudioUploadStorageTest extends TestCase
 
         $user = User::factory()->create();
 
-        // Create an upload that uses R2 storage
+        // Create an upload that uses R2 storage (two-bucket system)
         $r2Upload = Upload::factory()->for($user)->make([
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'private/uploads/1/2025/08/21/test-file.mp3',
-            'path' => 'private/uploads/1/2025/08/21/test-file.mp3',
+            'r2_upload_path' => 'uploads/1/2025/08/21/test-file.mp3', // Stored in private bucket without prefix
+            'path' => 'uploads/1/2025/08/21/test-file.mp3',
             'status' => 'pending',
         ]);
         $r2Upload->save();
@@ -100,8 +100,8 @@ class ProcessAudioUploadStorageTest extends TestCase
 
         $r2Upload = Upload::factory()->for($user)->make([
             'uses_r2_storage' => true,
-            'r2_upload_path' => 'private/uploads/1/2025/08/21/test-file.mp3',
-            'path' => 'private/uploads/1/2025/08/21/test-file.mp3',
+            'r2_upload_path' => 'uploads/1/2025/08/21/test-file.mp3', // Two-bucket system path
+            'path' => 'uploads/1/2025/08/21/test-file.mp3',
         ]);
         $r2Upload->save();
 
@@ -110,5 +110,31 @@ class ProcessAudioUploadStorageTest extends TestCase
         // Both should work correctly regardless of default disk setting
         $this->assertFalse($localUpload->fresh()->usesR2Storage(), 'Local upload should remain local regardless of default disk');
         $this->assertTrue($r2Upload->fresh()->usesR2Storage(), 'R2 upload should remain R2 regardless of default disk');
+    }
+
+    public function test_two_bucket_system_path_structure()
+    {
+        Config::set('filesystems.default', 'r2');
+
+        $user = User::factory()->create();
+
+        // Test private bucket path structure (no prefix)
+        $r2Upload = Upload::factory()->for($user)->make([
+            'uses_r2_storage' => true,
+            'r2_upload_path' => 'uploads/1/2025/08/21/test-file.mp3',
+            'path' => 'uploads/1/2025/08/21/test-file.mp3',
+            'status' => 'ready',
+            'stream_path' => 'uploads/stream/1/2025/08/21/test-file.ogg', // Public bucket path
+        ]);
+        $r2Upload->save();
+
+        // Verify private bucket path (direct path, no private/ prefix)
+        $this->assertEquals('uploads/1/2025/08/21/test-file.mp3', $r2Upload->r2_upload_path);
+
+        // Verify public bucket path for streaming (also no prefix, goes to public bucket)
+        $this->assertEquals('uploads/stream/1/2025/08/21/test-file.ogg', $r2Upload->stream_path);
+
+        // Verify the upload uses R2 storage
+        $this->assertTrue($r2Upload->usesR2Storage());
     }
 }

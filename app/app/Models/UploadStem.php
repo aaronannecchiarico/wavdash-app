@@ -20,7 +20,9 @@ class UploadStem extends Model
         'upload_id',
         'stem_type',
         'file_path',
+        'public_path',
         'storage_type',
+        'converted_to_ogg',
         'file_size',
         'duration',
         'metadata',
@@ -36,6 +38,7 @@ class UploadStem extends Model
         return [
             'id' => 'integer',
             'upload_id' => 'integer',
+            'converted_to_ogg' => 'boolean',
             'file_size' => 'integer',
             'duration' => 'float',
             'metadata' => 'array',
@@ -69,18 +72,18 @@ class UploadStem extends Model
      */
     public function getFormattedFileSize(): string
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'Unknown size';
         }
 
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes >= 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -88,7 +91,7 @@ class UploadStem extends Model
      */
     public function getFormattedDuration(): string
     {
-        if (!$this->duration) {
+        if (! $this->duration) {
             return 'Unknown duration';
         }
 

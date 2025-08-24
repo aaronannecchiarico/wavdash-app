@@ -37,6 +37,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Stream files follow same structure: `uploads/stream/{user_id}/{Y/m/d}/filename.ogg`
 - Storage directories cleared: `private/uploads`, `private/processed`, `private/stems`, `public/uploads/stream`
 
+### Cloudflare R2 Management
+- **List buckets**: `npx wrangler r2 bucket list`
+- **Create bucket**: `npx wrangler r2 bucket create <bucket-name>`
+- **Delete bucket**: `npx wrangler r2 bucket delete <bucket-name>`
+- **List objects in bucket**: `npx wrangler r2 object list <bucket-name>`
+- **Enable public access**: `npx wrangler r2 bucket public <bucket-name> enable`
+- **Disable public access**: `npx wrangler r2 bucket public <bucket-name> disable`
+
 ## Architecture Overview
 
 This is a Laravel 12 + React + Inertia.js application for audio file management and processing, functioning as a "Beat Forge" platform.

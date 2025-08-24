@@ -155,90 +155,15 @@ class UploadController extends Controller
     {
         $user = Auth::user();
         $file = $request->file('audio_file');
-        $originalFilename = $file->getClientOriginalName();
 
-        $uploadData = [
-            'title' => $request->input('title'),
-            'description' => $request->input('description', ''),
-            'filename' => $originalFilename,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'status' => 'pending',
-        ];
+        $uploadData = $this->prepareUploadData($request, $file);
+        $this->logUploadStart($user, $file, $uploadData);
 
-        // Store file using the configured default disk with user-organized structure
-        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $disk = config('filesystems.default');
-        $date = now();
-        $path = sprintf(
-            'uploads/%s/%s/%s',
-            $user->id,
-            $date->format('Y/m/d'),
-            $filename
-        );
+        $uploadData = $this->storeFile($file, $user, $uploadData);
+        $upload = $this->createUploadRecord($user, $uploadData);
+        $this->dispatchProcessingJob($upload);
 
-        Log::info('Upload Controller - Starting file upload', [
-            'user_id' => $user->id,
-            'original_filename' => $originalFilename,
-            'generated_filename' => $filename,
-            'configured_disk' => $disk,
-            'target_path' => $path,
-            'file_size' => $file->getSize(),
-            'file_mime' => $file->getMimeType(),
-        ]);
-
-        if ($disk === 'r2') {
-            // For R2 storage - use private/uploads prefix to match local structure
-            $r2Path = 'private/uploads/'.$user->id.'/'.$date->format('Y/m/d');
-            $file->storeAs($r2Path, $filename, $disk);
-
-            $fullR2Path = $r2Path.'/'.$filename;
-            $uploadData = array_merge($uploadData, [
-                'r2_upload_path' => $fullR2Path,
-                'uses_r2_storage' => true,
-                'r2_uploaded_at' => now(),
-                'path' => $fullR2Path,
-            ]);
-
-            Log::info('File uploaded to R2', [
-                'filename' => $originalFilename,
-                'path' => $fullR2Path,
-            ]);
-        } else {
-            // For local storage (or any other disk) - use same path structure
-            $storageDisk = $disk === 'local' ? 'private' : $disk;
-            $directory = 'uploads/'.$user->id.'/'.$date->format('Y/m/d');
-
-            Log::info('Upload Controller - Storing to local disk', [
-                'storage_disk' => $storageDisk,
-                'directory' => $directory,
-                'filename' => $filename,
-                'full_path' => $path,
-            ]);
-
-            $storedPath = $file->storeAs($directory, $filename, $storageDisk);
-            $uploadData['path'] = $path;
-            $uploadData['uses_r2_storage'] = false;
-
-            Log::info('Upload Controller - File stored successfully', [
-                'original_filename' => $originalFilename,
-                'stored_path' => $storedPath,
-                'upload_data_path' => $path,
-                'storage_disk' => $storageDisk,
-                'absolute_path' => Storage::disk($storageDisk)->path($path),
-            ]);
-        }
-
-        // Create the upload record with pending status
-        $upload = $user->uploads()->create($uploadData);
-
-        // Dispatch a job to process the audio file
-        \App\Jobs\ProcessAudioUpload::dispatch($upload);
-
-        Log::info('Upload created', [
-            'id' => $upload->id,
-            'storage' => $disk,
-        ]);
+        $this->logUploadSuccess($upload);
 
         return redirect()->route('uploads.index')
             ->with('success', 'Audio file uploaded successfully and is now being processed!');
@@ -321,67 +246,9 @@ class UploadController extends Controller
     {
         try {
             $this->authorize('delete', $upload);
-
-            // Store title for message
             $title = $upload->title;
 
-            // Delete files based on storage configuration
-            $disk = config('filesystems.default');
-
-            if ($upload->usesR2Storage() && $disk === 'r2') {
-                // Delete from R2 storage
-                if ($upload->r2_upload_path && Storage::disk('r2')->exists($upload->r2_upload_path)) {
-                    Storage::disk('r2')->delete($upload->r2_upload_path);
-                } else {
-                    Log::warning("R2 file not found for upload ID: {$upload->id}");
-                }
-
-                // Delete R2 stems if they exist
-                if ($upload->hasR2Stems()) {
-                    foreach ($upload->r2_stems_paths as $stemPath) {
-                        if (Storage::disk('r2')->exists($stemPath)) {
-                            Storage::disk('r2')->delete($stemPath);
-                        }
-                    }
-                }
-
-                // Delete R2 analysis file if it exists
-                if ($upload->r2_analysis_path && Storage::disk('r2')->exists($upload->r2_analysis_path)) {
-                    Storage::disk('r2')->delete($upload->r2_analysis_path);
-                }
-            } else {
-                // Delete from local/private storage
-                $storageDisk = $disk === 'local' ? 'private' : $disk;
-
-                Log::info('Deleting local files for upload', [
-                    'upload_id' => $upload->id,
-                    'storage_disk' => $storageDisk,
-                    'original_path' => $upload->path,
-                    'stream_path' => $upload->stream_path,
-                ]);
-
-                if ($upload->path && Storage::disk($storageDisk)->exists($upload->path)) {
-                    Storage::disk($storageDisk)->delete($upload->path);
-                    Log::info('Deleted original file', ['path' => $upload->path]);
-                } else {
-                    Log::warning("Original file not found for upload ID: {$upload->id}", [
-                        'path' => $upload->path,
-                        'disk' => $storageDisk,
-                        'file_exists' => $upload->path ? Storage::disk($storageDisk)->exists($upload->path) : false,
-                    ]);
-                }
-
-                if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
-                    Storage::disk('public')->delete($upload->stream_path);
-                    Log::info('Deleted stream file', ['path' => $upload->stream_path]);
-                } elseif ($upload->stream_path) {
-                    Log::warning("Stream file not found for upload ID: {$upload->id}", [
-                        'stream_path' => $upload->stream_path,
-                        'file_exists' => Storage::disk('public')->exists($upload->stream_path),
-                    ]);
-                }
-            }
-
+            $this->deleteUploadFiles($upload);
             $upload->delete();
 
             return redirect()->route('uploads.index')
@@ -391,6 +258,211 @@ class UploadController extends Controller
 
             return redirect()->route('uploads.index')
                 ->with('error', 'Failed to delete the upload. '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Prepare upload data from request and file.
+     */
+    private function prepareUploadData(StoreUploadRequest $request, $file): array
+    {
+        return [
+            'title' => $request->input('title'),
+            'description' => $request->input('description', ''),
+            'filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'status' => 'pending',
+        ];
+    }
+
+    /**
+     * Log upload start information.
+     */
+    private function logUploadStart($user, $file, array $uploadData): void
+    {
+        Log::info('Upload Controller - Starting file upload', [
+            'user_id' => $user->id,
+            'original_filename' => $uploadData['filename'],
+            'configured_disk' => config('filesystems.default'),
+            'file_size' => $file->getSize(),
+            'file_mime' => $file->getMimeType(),
+        ]);
+    }
+
+    /**
+     * Store file based on configured disk.
+     */
+    private function storeFile($file, $user, array $uploadData): array
+    {
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $disk = config('filesystems.default');
+        $date = now();
+
+        if ($disk === 'r2') {
+            return $this->storeFileToR2($file, $user, $uploadData, $filename, $date);
+        }
+
+        return $this->storeFileLocally($file, $user, $uploadData, $filename, $date, $disk);
+    }
+
+    /**
+     * Store file to R2 private bucket.
+     */
+    private function storeFileToR2($file, $user, array $uploadData, string $filename, $date): array
+    {
+        $r2Path = 'uploads/'.$user->id.'/'.$date->format('Y/m/d');
+        $file->storeAs($r2Path, $filename, 'r2_private');
+
+        $fullR2Path = $r2Path.'/'.$filename;
+
+        return array_merge($uploadData, [
+            'r2_upload_path' => $fullR2Path,
+            'uses_r2_storage' => true,
+            'r2_uploaded_at' => now(),
+            'path' => $fullR2Path,
+        ]);
+    }
+
+    /**
+     * Store file locally.
+     */
+    private function storeFileLocally($file, $user, array $uploadData, string $filename, $date, string $disk): array
+    {
+        $storageDisk = $disk === 'local' ? 'private' : $disk;
+        $directory = 'uploads/'.$user->id.'/'.$date->format('Y/m/d');
+        $path = sprintf(
+            'uploads/%s/%s/%s',
+            $user->id,
+            $date->format('Y/m/d'),
+            $filename
+        );
+
+        $file->storeAs($directory, $filename, $storageDisk);
+
+        return array_merge($uploadData, [
+            'path' => $path,
+            'uses_r2_storage' => false,
+        ]);
+    }
+
+    /**
+     * Create upload record.
+     */
+    private function createUploadRecord($user, array $uploadData): Upload
+    {
+        return $user->uploads()->create($uploadData);
+    }
+
+    /**
+     * Dispatch audio processing job.
+     */
+    private function dispatchProcessingJob(Upload $upload): void
+    {
+        \App\Jobs\ProcessAudioUpload::dispatch($upload);
+    }
+
+    /**
+     * Log upload success.
+     */
+    private function logUploadSuccess(Upload $upload): void
+    {
+        Log::info('Upload created', [
+            'id' => $upload->id,
+            'storage' => config('filesystems.default'),
+        ]);
+    }
+
+    /**
+     * Delete all files associated with upload.
+     */
+    private function deleteUploadFiles(Upload $upload): void
+    {
+        $disk = config('filesystems.default');
+
+        if ($upload->usesR2Storage() && $disk === 'r2') {
+            $this->deleteR2Files($upload);
+        } else {
+            $this->deleteLocalFiles($upload, $disk);
+        }
+    }
+
+    /**
+     * Delete R2 files from both private and public buckets.
+     */
+    private function deleteR2Files(Upload $upload): void
+    {
+        // Delete from private bucket
+        $this->deleteFromR2Bucket($upload->r2_upload_path, 'r2_private', "R2 private file not found for upload ID: {$upload->id}");
+        $this->deleteFromR2Bucket($upload->r2_analysis_path, 'r2_private', "R2 analysis file not found for upload ID: {$upload->id}");
+
+        // Delete stems from private bucket
+        if ($upload->hasR2Stems()) {
+            foreach ($upload->r2_stems_paths as $stemPath) {
+                $this->deleteFromR2Bucket($stemPath, 'r2_private');
+            }
+        }
+
+        // Delete from public bucket
+        $this->deleteFromR2Bucket($upload->stream_path, 'r2_public', "R2 public stream file not found for upload ID: {$upload->id}");
+
+        // Delete public stems
+        if ($upload->hasR2Stems()) {
+            foreach ($upload->r2_stems_paths as $stemPath) {
+                $this->deleteFromR2Bucket($stemPath, 'r2_public');
+            }
+        }
+    }
+
+    /**
+     * Delete file from R2 bucket.
+     */
+    private function deleteFromR2Bucket(?string $path, string $disk, ?string $warningMessage = null): void
+    {
+        if (! $path) {
+            return;
+        }
+
+        if (Storage::disk($disk)->exists($path)) {
+            Storage::disk($disk)->delete($path);
+        } elseif ($warningMessage) {
+            Log::warning($warningMessage);
+        }
+    }
+
+    /**
+     * Delete local files.
+     */
+    private function deleteLocalFiles(Upload $upload, string $disk): void
+    {
+        $storageDisk = $disk === 'local' ? 'private' : $disk;
+
+        Log::info('Deleting local files for upload', [
+            'upload_id' => $upload->id,
+            'storage_disk' => $storageDisk,
+            'original_path' => $upload->path,
+            'stream_path' => $upload->stream_path,
+        ]);
+
+        // Delete original file
+        if ($upload->path && Storage::disk($storageDisk)->exists($upload->path)) {
+            Storage::disk($storageDisk)->delete($upload->path);
+            Log::info('Deleted original file', ['path' => $upload->path]);
+        } elseif ($upload->path) {
+            Log::warning("Original file not found for upload ID: {$upload->id}", [
+                'path' => $upload->path,
+                'disk' => $storageDisk,
+            ]);
+        }
+
+        // Delete stream file
+        if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
+            Storage::disk('public')->delete($upload->stream_path);
+            Log::info('Deleted stream file', ['path' => $upload->stream_path]);
+        } elseif ($upload->stream_path) {
+            Log::warning("Stream file not found for upload ID: {$upload->id}", [
+                'stream_path' => $upload->stream_path,
+            ]);
         }
     }
 }

@@ -147,6 +147,12 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     };
 
     const getTempoDownloadUrl = (tempo: any) => {
+        // Use public R2 URL if available (converted OGG file), otherwise use Laravel route
+        if (tempo.storage_type === 'r2' && tempo.public_path) {
+            const r2BaseUrl = import.meta.env.VITE_R2_URL || '';
+            return `${r2BaseUrl}/${tempo.public_path}`;
+        }
+        
         return route('uploads.tempo.download', { 
             upload: uploadData.id, 
             tempo: tempo.id 
@@ -154,10 +160,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     };
 
     const handleDownload = (tempo: any) => {
-        const downloadUrl = route('uploads.tempo.download', { 
-            upload: uploadData.id, 
-            tempo: tempo.id 
-        });
+        const downloadUrl = getTempoDownloadUrl(tempo);
         window.open(downloadUrl, '_blank');
     };
 

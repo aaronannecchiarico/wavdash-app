@@ -24,6 +24,7 @@ class UploadResource extends JsonResource
                     if ($this->usesR2Storage()) {
                         return $this->getStreamPath();
                     }
+
                     return Storage::disk('public')->url($this->stream_path);
                 }),
             'created_at' => $this->created_at,
@@ -67,6 +68,7 @@ class UploadResource extends JsonResource
                         'stem_type' => $stem->stem_type,
                         'stem_type_name' => $stem->getStemTypeName(),
                         'file_path' => $stem->file_path,
+                        'public_path' => $stem->public_path,
                         'storage_type' => $stem->storage_type,
                         'file_size' => $stem->file_size,
                         'formatted_file_size' => $stem->getFormattedFileSize(),
@@ -89,6 +91,7 @@ class UploadResource extends JsonResource
                         'add_reverb' => $tempo->add_reverb,
                         'use_stems' => $tempo->use_stems,
                         'file_path' => $tempo->file_path,
+                        'public_path' => $tempo->public_path,
                         'storage_type' => $tempo->storage_type,
                         'file_size' => $tempo->file_size,
                         'formatted_file_size' => $tempo->getFormattedFileSize(),

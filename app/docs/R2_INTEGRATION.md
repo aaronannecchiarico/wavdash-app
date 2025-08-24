@@ -1,30 +1,42 @@
 # Cloudflare R2 Integration Guide
 
-This document outlines the complete integration between the Laravel Beat Forge application and Cloudflare R2 storage, including the audio analysis microservice integration.
+This document outlines the complete integration between the Laravel Beat Forge application and Cloudflare R2 storage using a **two-bucket architecture** for private and public files, including the audio analysis microservice integration.
 
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│          Laravel App            │    │   Audio Microservice │    │  Cloudflare R2  │
-│                                 │    │      (FastAPI)       │    │                 │
-│ ┌─────────────────────────────┐ │    │ ┌──────────────────┐ │    │ ┌─────────────┐ │
-│ │      Upload Controller      │ │    │ │  Audio Analysis  │ │    │ │ forge-audio │ │
-│ │   (User-organized paths)    │ │    │ │   /extract-      │ │    │ │   bucket    │ │
-│ └─────────────────────────────┘ │    │ │   features       │ │    │ └─────────────┘ │
-│ ┌─────────────────────────────┐ │    │ └──────────────────┘ │    │                 │
-│ │   ProcessAudioUpload Job    │ │    │ ┌──────────────────┐ │    │ User-organized  │
-│ │   (FFmpeg conversion)       │ │    │ │   Callbacks      │ │    │ structure:      │
-│ └─────────────────────────────┘ │    │ │   /callback      │ │    │ /uploads/{uid}/ │
-│ ┌─────────────────────────────┐ │    │ └──────────────────┘ │    │ /{Y/m/d}/       │
-│ │   AudioAnalysisService      │◄──── │                      │    │                 │
-│ │   (Smart routing R2/local)  │ │    │                      │    │                 │
-│ └─────────────────────────────┘ │    │                      │    │                 │
-│ ┌─────────────────────────────┐ │    │                      │    │                 │
-│ │     R2StorageService        │◄──── │                      │◄──── │                 │
-│ │   (Optional migration)      │ │    │                      │    │                 │
-│ └─────────────────────────────┘ │    │                      │    │                 │
-└─────────────────────────────────┘    └──────────────────────┘    └─────────────────┘
+┌─────────────────────────────────┐    ┌──────────────────────┐    ┌─────────────────────────┐
+│          Laravel App            │    │   Audio Microservice │    │    Cloudflare R2        │
+│                                 │    │      (FastAPI)       │    │                         │
+│ ┌─────────────────────────────┐ │    │ ┌──────────────────┐ │    │ ┌─────────────────────┐ │
+│ │      Upload Controller      │ │    │ │  Audio Analysis  │ │    │ │   audio-private     │ │
+│ │   (Saves to private bucket) │ │    │ │   /extract-      │ │    │ │   (Private Access)  │ │
+│ └─────────────────────────────┘ │    │ │   features       │ │    │ │                     │ │
+│ ┌─────────────────────────────┐ │    │ └──────────────────┘ │    │ │ Original uploads:   │ │
+│ │   ProcessAudioUpload Job    │ │    │ ┌──────────────────┐ │    │ │ /uploads/{uid}/     │ │
+│ │   (Converts & publishes)    │ │    │ │   Callbacks      │ │    │ │ /{Y/m/d}/file       │ │
+│ └─────────────────────────────┘ │    │ │   /callback      │ │    │ │                     │ │
+│ ┌─────────────────────────────┐ │    │ └──────────────────┘ │    │ │ Processed files:    │ │
+│ │   AudioAnalysisService      │◄──── │                      │    │ │ /processed/{uid}/   │ │
+│ │   (Smart routing R2/local)  │ │    │                      │    │ │ /{Y/m/d}/file       │ │
+│ └─────────────────────────────┘ │    │                      │    │ │                     │ │
+│ ┌─────────────────────────────┐ │    │                      │    │ │ Stem files:         │ │
+│ │     R2StorageService        │◄──── │                      │◄──── │ /stems/{uid}/       │ │
+│ │   (Dual-bucket support)    │ │    │                      │    │ │ /{Y/m/d}/file       │ │
+│ └─────────────────────────────┘ │    │                      │    │ └─────────────────────┘ │
+│ ┌─────────────────────────────┐ │    │                      │    │ ┌─────────────────────┐ │
+│ │ PublishToPublicBucket Job   │ │    │                      │    │ │   audio-public      │ │
+│ │   (Copies to public bucket) │ │    │                      │    │ │   (Public Access)   │ │
+│ └─────────────────────────────┘ │    │                      │    │ │                     │ │
+└─────────────────────────────────┘    └──────────────────────┘    │ │ Stream files:       │ │
+                                                                   │ │ /stream/{uid}/      │ │
+                                                                   │ │ /{Y/m/d}/file.ogg   │ │
+                                                                   │ │                     │ │
+                                                                   │ │ Public stems:       │ │
+                                                                   │ │ /stems/{uid}/       │ │
+                                                                   │ │ /{Y/m/d}/file.wav   │ │
+                                                                   │ └─────────────────────┘ │
+                                                                   └─────────────────────────┘
 ```
 
 ## 🔧 Configuration
@@ -35,12 +47,18 @@ This document outlines the complete integration between the Laravel Beat Forge a
 # Storage Configuration (set to 'r2' to enable R2 storage)
 FILESYSTEM_DISK=local  # or 'r2' for R2 storage
 
-# Cloudflare R2 Configuration
+# Cloudflare R2 Configuration - Two Bucket Setup
 R2_ACCESS_KEY_ID=your_access_key
 R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET=forge-audio
-R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
-R2_PUBLIC_URL=https://forge-audio.your-account-id.r2.dev
+
+# Private Bucket (for original uploads, processed files, stems - access controlled)
+R2_PRIVATE_BUCKET=audio-private
+R2_PRIVATE_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+
+# Public Bucket (for streaming files - publicly accessible)
+R2_PUBLIC_BUCKET=audio-public
+R2_PUBLIC_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_PUBLIC_URL=https://audio-public.your-account-id.r2.dev
 
 # Audio Analysis Configuration
 AUDIO_ANALYSIS_BASE_URL=http://localhost:8001
@@ -48,19 +66,52 @@ AUDIO_ANALYSIS_ENABLED=true
 AUDIO_ANALYSIS_R2_INTEGRATION_ENABLED=true
 ```
 
+## 🗄️ Two-Bucket Storage Strategy
+
+### Private Bucket (`audio-private`)
+- **Access**: Private, only accessible via API credentials
+- **Purpose**: Store sensitive files that should not be publicly accessible
+- **Contents**:
+  - Original uploaded files: `/uploads/{user_id}/{Y/m/d}/filename`
+  - Processed files: `/processed/{user_id}/{Y/m/d}/filename`
+  - Stem files: `/stems/{user_id}/{Y/m/d}/stem_type.wav`
+  - Analysis data files: `/analysis/{user_id}/{Y/m/d}/analysis.json`
+
+### Public Bucket (`audio-public`)
+- **Access**: Public via r2.dev URL for streaming
+- **Purpose**: Store files that need to be publicly accessible for frontend playback
+- **Contents**:
+  - Streaming files: `/stream/{user_id}/{Y/m/d}/filename.ogg`
+  - Public stems: `/stems/{user_id}/{Y/m/d}/stem_type.wav` (when user chooses to share)
+  - Tempo files: `/tempo/{user_id}/{Y/m/d}/tempo_adjusted.ogg`
+
+### File Flow Between Buckets
+
+```
+Upload → Private Bucket (audio-private)
+       ↓
+   Processing (FFmpeg conversion)
+       ↓
+Stream File → Public Bucket (audio-public) via PublishToPublicBucket Job
+Stems → Stay in Private Bucket (unless user shares)
+```
+
 ### Current Integration Status
 
 **✅ Implemented:**
-- R2 storage configuration via `FILESYSTEM_DISK=r2`
+- Two-bucket R2 storage configuration via `FILESYSTEM_DISK=r2`
+- Private bucket for original uploads, processed files, and stems
+- Public bucket for streaming files and shared content
 - User-organized file structure: `uploads/{user_id}/{Y/m/d}/filename`
-- Audio analysis microservice integration with R2 support
-- Automatic storage detection and smart routing
-- Migration tools for existing local files
+- Audio analysis microservice integration with dual R2 bucket support
+- Automatic storage detection and smart routing between buckets
+- PublishToPublicBucket job for selective file publishing
 
 **🔄 Storage Logic:**
-- **Primary**: Files are stored based on `FILESYSTEM_DISK` setting
+- **Private First**: All uploads go to private bucket initially
+- **Selective Publishing**: Only streaming files are copied to public bucket
 - **Fallback**: R2 failures automatically fall back to local storage during upload
-- **Consistency**: Once a file is in R2, all related processing stays in R2
+- **Consistency**: Once a file is in R2, all related processing stays in R2 with appropriate bucket selection
 
 ### Microservice Configuration
 
@@ -75,23 +126,28 @@ The microservice automatically detects R2 files when Laravel sends the R2 path a
 
 ## 🚀 Current Storage & Processing Flow
 
-### 1. Upload Processing (Current Implementation)
+### 1. Upload Processing (Two-Bucket Implementation)
 
 **When FILESYSTEM_DISK=r2:**
 ```
 User Upload → UploadController.store()
             ↓
-            Store to R2 with user-organized path:
+            Store to Private R2 Bucket (audio-private):
             uploads/{user_id}/{Y/m/d}/filename
             ↓
             ProcessAudioUpload Job:
             - Validate storage compatibility (if analysis enabled)
-            - Download from R2 to temp file
+            - Download from R2 private bucket to temp file
             - Convert with FFmpeg (to OGG)
-            - Upload processed file back to R2:
+            - Save processed file to private bucket:
               processed/{user_id}/{Y/m/d}/filename.ogg
             ↓
-            Update Upload model with R2 paths
+            PublishToPublicBucket Job:
+            - Copy streaming file to Public R2 Bucket (audio-public):
+              stream/{user_id}/{Y/m/d}/filename.ogg
+            - Update Upload model with public stream path
+            ↓
+            Update Upload model with all R2 paths
 ```
 
 **When FILESYSTEM_DISK=local:**
@@ -271,6 +327,27 @@ $r2Service->migrateUpload($upload);              // Migrate existing upload to R
 
 // URL generation
 $r2Service->getPublicUrl($path);                 // Get public R2 URL
+```
+
+### PublishToPublicBucket Job (Two-Bucket Integration)
+
+```php
+use App\Jobs\PublishToPublicBucket;
+
+// Dispatch job to copy streaming file from private to public bucket
+PublishToPublicBucket::dispatch(
+    $upload,                                      // Upload model instance
+    'processed/user/2025/08/22/stream.ogg',      // Private bucket path
+    'stream/user/2025/08/22/stream.ogg',         // Public bucket path
+    'stream'                                     // File type (stream, stem, tempo)
+);
+
+// Job automatically:
+// - Downloads file from private R2 bucket (audio-private)
+// - Uploads file to public R2 bucket (audio-public)
+// - Updates Upload model with public path
+// - Handles different file types (stream, stem, tempo)
+// - Provides comprehensive logging and error handling
 ```
 
 ### Upload Model Helper Methods

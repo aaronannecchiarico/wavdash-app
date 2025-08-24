@@ -15,7 +15,6 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
-
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -74,8 +73,32 @@ return [
             'key' => env('R2_ACCESS_KEY_ID'),
             'secret' => env('R2_SECRET_ACCESS_KEY'),
             'region' => 'auto',
-            'bucket' => env('R2_BUCKET', 'forge-audio'),
-            'endpoint' => env('R2_ENDPOINT'),
+            'bucket' => env('R2_PRIVATE_BUCKET', 'audio-private'),
+            'endpoint' => env('R2_PRIVATE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'r2_private' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_PRIVATE_BUCKET', 'audio-private'),
+            'endpoint' => env('R2_PRIVATE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'r2_public' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_PUBLIC_BUCKET', 'audio-public'),
+            'endpoint' => env('R2_PUBLIC_ENDPOINT'),
             'url' => env('R2_PUBLIC_URL'),
             'use_path_style_endpoint' => true,
             'throw' => false,
