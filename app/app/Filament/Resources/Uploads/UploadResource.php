@@ -46,7 +46,8 @@ class UploadResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\AnalysisRelationManager::class,
+            RelationManagers\TasksRelationManager::class,
         ];
     }
 

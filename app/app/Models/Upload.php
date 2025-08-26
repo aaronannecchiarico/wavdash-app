@@ -190,7 +190,15 @@ class Upload extends Model
             return config('filesystems.disks.r2_public.url').'/'.$this->stream_path;
         }
 
-        return $this->stream_path;
+        return $this->stream_path ? asset('storage/'.$this->stream_path) : null;
+    }
+
+    /**
+     * Get the stream URL (accessor for Filament components).
+     */
+    public function getStreamUrlAttribute(): ?string
+    {
+        return $this->getStreamPath();
     }
 
     /**
