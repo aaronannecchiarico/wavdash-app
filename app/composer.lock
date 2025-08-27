@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1b12bc8a50202b542d00dd970dc50303",
+    "content-hash": "40b25f5ddb312b45a451cfa8cf5f37d5",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -6482,6 +6482,69 @@
                 }
             ],
             "time": "2024-06-11T12:45:25+00:00"
+        },
+        {
+            "name": "resma/filament-awin-theme",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/resmatech/filament-awin-theme.git",
+                "reference": "d2d7979fd0fd197f724fc28b851582db61824fd2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/resmatech/filament-awin-theme/zipball/d2d7979fd0fd197f724fc28b851582db61824fd2",
+                "reference": "d2d7979fd0fd197f724fc28b851582db61824fd2",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "FilamentAwinTheme": "Resma\\FilamentAwinTheme\\Facades\\FilamentAwinTheme"
+                    },
+                    "providers": []
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Resma\\FilamentAwinTheme\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rebwar Mustafa",
+                    "email": "hello@resma.tech",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A modern, responsive, and customizable theme for FilamentPHP, designed to elevate your admin panel with a sleek interface and seamless user experience.",
+            "homepage": "https://github.com/resmatech/filament-awin-theme",
+            "keywords": [
+                "Resma",
+                "filament",
+                "filament-awin-theme",
+                "filamentphp",
+                "laravel",
+                "theme"
+            ],
+            "support": {
+                "issues": "https://github.com/resmatech/filament-awin-theme/issues",
+                "source": "https://github.com/resmatech/filament-awin-theme"
+            },
+            "time": "2025-08-19T07:39:50+00:00"
         },
         {
             "name": "ryangjchandler/blade-capture-directive",
