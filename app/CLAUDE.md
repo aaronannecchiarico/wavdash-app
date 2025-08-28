@@ -47,7 +47,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a Laravel 12 + React + Inertia.js application for audio file management and processing, functioning as a "Beat Forge" platform.
+This is a Laravel 12 + React + Inertia.js application for audio file management and processing, functioning as a "Beat Forge" platform with a **Filament v4 admin panel** for backend administration.
 
 ### Core Components
 
@@ -64,6 +64,13 @@ This is a Laravel 12 + React + Inertia.js application for audio file management 
 - **Audio Playback**: WaveSurfer.js integration for waveform visualization
 - **Styling**: Tailwind CSS with dark mode support
 - **Icons**: Lucide React
+
+**Filament v4 Admin Panel**:
+- **Version**: Filament v4.0.3 - Modern admin panel framework
+- **Purpose**: Backend administration interface for managing users, uploads, contests, analysis tasks
+- **Structure**: Organized with Resources, Pages, Tables, Forms, Infolists, and RelationManagers
+- **Authentication**: Separate admin authentication from main user system
+- **Real-time**: Integration with Laravel Reverb for live updates
 
 ### Audio Processing Flow
 
@@ -90,6 +97,14 @@ This is a Laravel 12 + React + Inertia.js application for audio file management 
 - Policies: `/app/Policies/*`
 - Routes: `/routes/*` (web.php, auth.php, settings.php)
 - Database: `/database/migrations/*`, `/database/factories/*`
+
+**Filament v4 Admin Panel**:
+- Resources: `/app/Filament/Resources/*` (main resource classes)
+- Pages: `/app/Filament/Resources/*/Pages/*` (List, Create, Edit, View pages)  
+- Tables: `/app/Filament/Resources/*/Tables/*` (table definitions)
+- Schemas: `/app/Filament/Resources/*/Schemas/*` (forms and infolists)
+- RelationManagers: `/app/Filament/Resources/*/RelationManagers/*` (relationship tables)
+- Custom Components: `/app/Filament/Infolists/Components/*` (custom infolist entries)
 
 **React/Frontend**:
 - Components: `/resources/js/components/*`
@@ -137,6 +152,38 @@ This is a Laravel 12 + React + Inertia.js application for audio file management 
 - Laravel Reverb configured for WebSocket connections
 - Upload processing status broadcasted via `UploadProcessed` event
 - Frontend listens for real-time updates during audio processing
+
+### Filament v4 Admin Panel Structure & Usage
+- **Purpose**: Complete admin backend for managing users, uploads, contests, and analysis tasks
+- **Authentication**: Separate from main user system, accessed via `/admin` route
+- **File Organization**: Uses modern v4 structure with dedicated directories for each component type
+
+#### Available Admin Resources
+- **Users**: User management with profile information
+- **Uploads**: Audio file management with processing status, analysis data
+- **Contests**: Contest creation and management
+- **Upload Analysis Tasks**: Audio analysis job tracking
+- **Upload Analysis**: Stored analysis results (BPM, key, etc.)  
+- **Upload Stem Tasks**: Audio stem separation job tracking
+- **Upload Tempo Tasks**: Tempo analysis job tracking
+
+#### Filament v4 Component Structure
+Each resource follows the standard Filament v4 pattern:
+- **Resource Class**: Main resource definition (`*Resource.php`)
+- **Pages**: List, Create, Edit, View pages in `/Pages/` subdirectory
+- **Tables**: Table definitions in `/Tables/` subdirectory  
+- **Schemas**: Form and Infolist schemas in `/Schemas/` subdirectory
+- **RelationManagers**: For managing related data in `/RelationManagers/`
+
+#### Custom Components
+- **AudioPlayerEntry**: Custom infolist component for audio playback
+- **ProcessingStatusEntry**: Custom component for upload processing status  
+- **FileSizeEntry**: Custom component for file size display
+
+#### Filament v4 Best Practices for this Project
+- Always use `make:filament-resource` to create new resources
+- Avoid using custom components when possible and opt for built in Filament components
+- Use Filaments HeroIcon class for icons
 
 ## Testing with Inertia.js
 
@@ -576,4 +623,40 @@ export default function Edit() {
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
+
+
+=== filament/v4 rules ===
+
+## Filament v4 Admin Panel
+
+- This project uses **Filament v4.0.3** as the admin panel backend system.
+- Use the `search-docs` tool to get version specific Filament documentation when working with admin features.
+- Always use `php artisan make:filament-resource` and related commands to create new admin functionality.
+
+### Admin Panel Structure
+- **Admin URL**: `/admin` - separate authentication from main user system
+- **Resources**: Located in `app/Filament/Resources/` - manage data models
+- **Component Organization**: Each resource has dedicated subdirectories for Pages, Tables, Schemas, and RelationManagers
+
+### Resource Creation & Management
+- Use `make:filament-resource Model --generate` to scaffold resources with CRUD pages
+- Follow the established pattern: Resource class + Pages + Tables + Schemas
+- **Pages**: List, Create, Edit, View - handle different resource operations
+- **Tables**: Define table columns, filters, actions, bulk operations
+- **Schemas**: Form and Infolist definitions for create/edit and view operations
+- **RelationManagers**: Handle related model data within resources
+
+### Custom Components & Features
+- Custom infolist components in `app/Filament/Infolists/Components/`
+- **AudioPlayerEntry**: For audio playback in admin
+- **ProcessingStatusEntry**: For upload processing status display
+- **FileSizeEntry**: For formatted file size display
+- Use these existing components for consistency
+
+### Best Practices
+- Follow existing directory structure and naming conventions
+- Use QueryBuilder filters for complex data filtering
+- Implement proper authorization with Laravel policies
+- Use RelationManagers for related data management instead of separate resources when appropriate
+- Leverage Filament's built-in features (actions, notifications, modals, infolists) before building custom solutions
 </laravel-boost-guidelines>
