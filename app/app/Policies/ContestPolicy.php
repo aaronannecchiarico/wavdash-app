@@ -2,28 +2,25 @@
 
 namespace App\Policies;
 
-use App\Models\Upload;
+use App\Models\Contest;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UploadPolicy
+class ContestPolicy
 {
-    use HandlesAuthorization;
-
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true; // All authenticated users can view their uploads
+        return true; // Allow admin users to view contests
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Upload $upload): bool
+    public function view(User $user, Contest $contest): bool
     {
-        return true; // Admin users can view all uploads
+        return true; // Allow admin users to view individual contests
     }
 
     /**
@@ -31,23 +28,23 @@ class UploadPolicy
      */
     public function create(User $user): bool
     {
-        return true; // All authenticated users can create uploads
+        return true; // Allow admin users to create contests
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Upload $upload): bool
+    public function update(User $user, Contest $contest): bool
     {
-        return true; // Admin users can update all uploads
+        return true; // Allow admin users to update contests
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Upload $upload): bool
+    public function delete(User $user, Contest $contest): bool
     {
-        return true; // Admin users can delete all uploads
+        return true; // Allow admin users to delete contests
     }
 
     /**
@@ -55,15 +52,15 @@ class UploadPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return true; // Admin users can bulk delete uploads
+        return true; // Allow admin users to bulk delete contests
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Upload $upload): bool
+    public function restore(User $user, Contest $contest): bool
     {
-        return true; // Admin users can restore uploads
+        return true; // Allow admin users to restore contests
     }
 
     /**
@@ -71,15 +68,15 @@ class UploadPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return true; // Admin users can bulk restore uploads
+        return true; // Allow admin users to bulk restore contests
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Upload $upload): bool
+    public function forceDelete(User $user, Contest $contest): bool
     {
-        return true; // Admin users can force delete uploads
+        return true; // Allow admin users to force delete contests
     }
 
     /**
@@ -87,6 +84,6 @@ class UploadPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return true; // Admin users can bulk force delete uploads
+        return true; // Allow admin users to bulk force delete contests
     }
 }

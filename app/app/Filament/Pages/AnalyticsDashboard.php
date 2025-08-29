@@ -163,6 +163,82 @@ class AnalyticsDashboard extends Page implements HasInfolists
             ]);
     }
 
+    public function uploadTrendsInfolist(Schema $schema): Schema
+    {
+        $uploadTrends = $this->getUploadTrends();
+
+        return $schema
+            ->state(['uploadTrends' => $uploadTrends])
+            ->components([
+                Section::make('Monthly Upload Trends')
+                    ->description('Upload activity over the last 12 months')
+                    ->icon('heroicon-o-chart-bar')
+                    ->schema([
+                        TextEntry::make('debug')
+                            ->label('Debug Info')
+                            ->formatStateUsing(function () use ($uploadTrends) {
+                                return 'Upload trends data: ' . count($uploadTrends['labels']) . ' months, ' . array_sum($uploadTrends['data']) . ' total uploads';
+                            }),
+                        TextEntry::make('uploadTrends.chart')
+                            ->label('Chart')
+                            ->formatStateUsing(function () use ($uploadTrends) {
+                                return view('filament.infolists.components.upload-trends-chart', [
+                                    'uploadTrends' => $uploadTrends,
+                                ]);
+                            }),
+                    ]),
+            ]);
+    }
+
+    public function userGrowthInfolist(Schema $schema): Schema
+    {
+        $userGrowth = $this->getUserGrowth();
+
+        return $schema
+            ->state(['userGrowth' => $userGrowth])
+            ->components([
+                Section::make('User Growth')
+                    ->description('Cumulative user registrations over time')
+                    ->icon('heroicon-o-users')
+                    ->schema([
+                        TextEntry::make('userGrowth.chart')
+                            ->label('')
+                            ->formatStateUsing(function () use ($userGrowth) {
+                                return view('filament.infolists.components.user-growth-chart', [
+                                    'userGrowth' => $userGrowth,
+                                ]);
+                            }),
+                    ]),
+            ]);
+    }
+
+    public function genreStatsInfolist(Schema $schema): Schema
+    {
+        $genreStats = $this->getGenreStats();
+
+        // Only show if there's data
+        if (empty($genreStats['labels'])) {
+            return $schema->components([]);
+        }
+
+        return $schema
+            ->state(['genreStats' => $genreStats])
+            ->components([
+                Section::make('Genre Distribution')
+                    ->description('Popular music genres on the platform')
+                    ->icon('heroicon-o-musical-note')
+                    ->schema([
+                        TextEntry::make('genreStats.chart')
+                            ->label('')
+                            ->formatStateUsing(function () use ($genreStats) {
+                                return view('filament.infolists.components.genre-stats-chart', [
+                                    'genreStats' => $genreStats,
+                                ]);
+                            }),
+                    ]),
+            ]);
+    }
+
     private function getGenreStats(): array
     {
         $stats = Upload::query()

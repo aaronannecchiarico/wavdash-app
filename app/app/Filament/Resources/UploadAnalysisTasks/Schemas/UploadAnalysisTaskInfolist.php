@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\UploadAnalysisTasks\Schemas;
 
-use App\Filament\Infolists\Components\ProcessingStatusEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -20,7 +19,25 @@ class UploadAnalysisTaskInfolist
                             ->weight('bold'),
                         TextEntry::make('task_id')
                             ->copyable(),
-                        ProcessingStatusEntry::make('status')
+                        TextEntry::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                            ->color(fn (string $state): string => match ($state) {
+                                'pending' => 'warning',
+                                'processing' => 'info',
+                                'completed' => 'success',
+                                'failed' => 'danger',
+                                'deleted' => 'gray',
+                                default => 'gray',
+                            })
+                            ->icon(fn (string $state): string => match ($state) {
+                                'pending' => 'heroicon-o-clock',
+                                'processing' => 'heroicon-o-arrow-path',
+                                'completed' => 'heroicon-o-check-circle',
+                                'failed' => 'heroicon-o-x-circle',
+                                'deleted' => 'heroicon-o-trash',
+                                default => 'heroicon-o-question-mark-circle',
+                            })
                             ->columnSpanFull(),
                     ]),
 

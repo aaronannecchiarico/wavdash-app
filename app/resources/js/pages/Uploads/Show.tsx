@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AudioPlayer } from '@/components/audio-player';
+import { AudioPlayer } from '@/components/audio-player.tsx';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { UploadProcessingPanel } from '@/components/upload-processing-panel';
 import AppLayout from '@/layouts/app-layout';

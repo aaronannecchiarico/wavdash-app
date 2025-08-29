@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\Uploads\Schemas;
 
 use App\Filament\Infolists\Components\AudioPlayerEntry;
-use App\Filament\Infolists\Components\FileSizeEntry;
-use App\Filament\Infolists\Components\ProcessingStatusEntry;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -21,6 +19,7 @@ class UploadInfolist
                         AudioPlayerEntry::make('id')
                             ->columnSpanFull(),
                     ])
+                    ->columnSpanFull()
                     ->collapsible(),
 
                 Section::make('Basic Information')
@@ -33,20 +32,41 @@ class UploadInfolist
                         TextEntry::make('filename'),
                         TextEntry::make('mime_type')
                             ->label('File Type'),
-                        FileSizeEntry::make('size')
-                            ->label('File Size'),
+                        TextEntry::make('size')
+                            ->label('File Size')
+                            ->formatStateUsing(fn (?int $state): string => $state ? self::formatBytes($state) : 'Unknown'),
                         TextEntry::make('duration_seconds')
                             ->formatStateUsing(fn (?int $state): string => $state ? gmdate('H:i:s', $state) : 'Unknown'
                             )
                             ->label('Duration'),
                     ])
-                    ->columns(2),
+                    ->columns(2)
+                    ->columnSpanFull(),
 
                 Section::make('Processing Status')
                     ->schema([
-                        ProcessingStatusEntry::make('status')
+                        TextEntry::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                            ->color(fn (string $state): string => match ($state) {
+                                'pending' => 'warning',
+                                'processing' => 'info',
+                                'completed' => 'success',
+                                'failed' => 'danger',
+                                'deleted' => 'gray',
+                                default => 'gray',
+                            })
+                            ->icon(fn (string $state): string => match ($state) {
+                                'pending' => 'heroicon-o-clock',
+                                'processing' => 'heroicon-o-arrow-path',
+                                'completed' => 'heroicon-o-check-circle',
+                                'failed' => 'heroicon-o-x-circle',
+                                'deleted' => 'heroicon-o-trash',
+                                default => 'heroicon-o-question-mark-circle',
+                            })
                             ->columnSpanFull(),
                     ])
+                    ->columnSpanFull()
                     ->collapsible(),
 
                 Section::make('Storage Information')
@@ -74,6 +94,7 @@ class UploadInfolist
                             ->visible(fn ($record) => $record->uses_r2_storage && $record->r2_uploaded_at),
                     ])
                     ->columns(2)
+                    ->columnSpanFull()
                     ->collapsible(),
 
                 Section::make('Timestamps')
@@ -86,7 +107,23 @@ class UploadInfolist
                             ->since(),
                     ])
                     ->columns(2)
+                    ->columnSpanFull()
                     ->collapsed(),
             ]);
+    }
+
+    private static function formatBytes(int $bytes, int $precision = 2): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision).' '.$units[$i];
     }
 }

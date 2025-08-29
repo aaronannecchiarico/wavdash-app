@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AudioPlayer } from '@/components/audio-player';
+import { AudioPlayer } from '@/components/audio-player.tsx';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
