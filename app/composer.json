@@ -15,6 +15,7 @@
         "league/flysystem-aws-s3-v3": "^3.29",
         "pbmedia/laravel-ffmpeg": "^8.7",
         "resma/filament-awin-theme": "^1.0",
+        "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.4"
     },
     "require-dev": {
