@@ -78,8 +78,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // For now, allow all users to access the admin panel
-        // In production, you might want to add role-based access control
+        // Check if user has the SuperUser role for admin panel access
+        if ($panel->getId() === 'admin') {
+            return $this->hasRole(config('admin.superuser_role', 'SuperAdmin'));
+        }
+
+        // Allow access to other panels (if any are added in the future)
         return true;
     }
 
