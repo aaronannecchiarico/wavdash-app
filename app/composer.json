@@ -70,7 +70,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php -d memory_limit=256M artisan test"
         ]
     },
     "extra": {

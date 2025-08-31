@@ -307,6 +307,15 @@ class UploadAnalysisControllerTest extends TestCase
     {
         config(['services.audio_analysis.enabled' => true]);
 
+        Http::fake([
+            '*/health' => Http::response(['status' => 'healthy']),
+            '*/task/test-task-123' => Http::response([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully'
+            ])
+        ]);
+
         $task = UploadAnalysisTask::create([
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
@@ -328,6 +337,15 @@ class UploadAnalysisControllerTest extends TestCase
     public function test_can_delete_failed_analysis_task(): void
     {
         config(['services.audio_analysis.enabled' => true]);
+
+        Http::fake([
+            '*/health' => Http::response(['status' => 'healthy']),
+            '*/task/test-task-123' => Http::response([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully'
+            ])
+        ]);
 
         $task = UploadAnalysisTask::create([
             'upload_id' => $this->upload->id,
@@ -403,6 +421,15 @@ class UploadAnalysisControllerTest extends TestCase
     {
         config(['services.audio_analysis.enabled' => true]);
 
+        Http::fake([
+            '*/health' => Http::response(['status' => 'healthy']),
+            '*/task/test-task-123' => Http::response([
+                'task_id' => 'test-task-123',
+                'status' => 'deleted',
+                'message' => 'Task deleted successfully'
+            ])
+        ]);
+
         // Create completed analysis first
         $analysis = UploadAnalysis::create([
             'upload_id' => $this->upload->id,
@@ -421,7 +448,7 @@ class UploadAnalysisControllerTest extends TestCase
             ->delete(route('uploads.analysis.delete-task', $this->upload));
 
         $response->assertRedirect()
-            ->assertSessionHas('success');
+            ->assertSessionHas('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
 
         // Verify analysis data was removed
         $this->assertDatabaseMissing('upload_analyses', ['id' => $analysis->id]);

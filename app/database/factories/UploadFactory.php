@@ -32,7 +32,7 @@ class UploadFactory extends Factory
             'path' => 'uploads/original/'.$filename,
             'stream_path' => null,
             'mime_type' => 'audio/mpeg',
-            'size' => $this->faker->numberBetween(1000000, 10000000),
+            'size' => $this->faker->numberBetween(10000, 100000), // 10KB to 100KB
             'status' => 'pending',
             'duration_seconds' => null,
             'uses_r2_storage' => $usesR2Storage,

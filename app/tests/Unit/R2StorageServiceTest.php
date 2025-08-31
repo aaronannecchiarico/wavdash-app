@@ -53,7 +53,7 @@ class R2StorageServiceTest extends TestCase
     {
         Config::set('filesystems.default', 'local');
         
-        $file = UploadedFile::fake()->create('test.mp3', 1000, 'audio/mpeg');
+        $file = UploadedFile::fake()->create('test.mp3', 10, 'audio/mpeg');
         
         $result = $this->r2Service->uploadFile($file);
 
@@ -66,7 +66,7 @@ class R2StorageServiceTest extends TestCase
         
         Storage::fake('r2');
         
-        $file = UploadedFile::fake()->create('test.mp3', 1000, 'audio/mpeg');
+        $file = UploadedFile::fake()->create('test.mp3', 10, 'audio/mpeg');
         
         $result = $this->r2Service->uploadFile($file, 'uploads');
 

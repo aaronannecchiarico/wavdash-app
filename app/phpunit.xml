@@ -18,6 +18,7 @@
         </include>
     </source>
     <php>
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
@@ -30,5 +31,9 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Default test values for SuperUserSeeder -->
+        <env name="SUPER_USER_NAME" value="Test Super Admin"/>
+        <env name="SUPER_USER_EMAIL" value="admin@test.com"/>
+        <env name="SUPER_USER_PASSWORD" value="secure-password-123"/>
     </php>
 </phpunit>

@@ -23,7 +23,7 @@ class UploadPolicy
      */
     public function view(User $user, Upload $upload): bool
     {
-        return true; // Admin users can view all uploads
+        return $user->id === $upload->user_id;
     }
 
     /**
@@ -39,7 +39,7 @@ class UploadPolicy
      */
     public function update(User $user, Upload $upload): bool
     {
-        return true; // Admin users can update all uploads
+        return $user->id === $upload->user_id;
     }
 
     /**
@@ -47,7 +47,7 @@ class UploadPolicy
      */
     public function delete(User $user, Upload $upload): bool
     {
-        return true; // Admin users can delete all uploads
+        return $user->id === $upload->user_id;
     }
 
     /**

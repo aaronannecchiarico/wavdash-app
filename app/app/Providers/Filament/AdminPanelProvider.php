@@ -152,6 +152,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                'admin.ip',
             ])
             ->authMiddleware([
                 Authenticate::class,

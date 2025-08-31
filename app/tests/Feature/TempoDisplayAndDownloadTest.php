@@ -36,7 +36,7 @@ class TempoDisplayAndDownloadTest extends TestCase
             'preset' => 'nightcore',
             'tempo_factor' => 1.4,
             'final_bpm' => 168.7, // Should be rounded to 169
-            'file_size' => 5242880, // 5MB
+            'file_size' => 1024000, // 1MB instead of 5MB
             'duration' => 129.0, // Adjusted for tempo factor
         ]);
 
@@ -66,7 +66,7 @@ class TempoDisplayAndDownloadTest extends TestCase
             'preset' => 'nightcore',
             'tempo_factor' => 1.4,
             'duration' => 129, // Calculated duration as integer
-            'file_size' => 5242880,
+            'file_size' => 1024000, // 1MB instead of 5MB
         ]);
 
         $response = $this->actingAs($this->user)->get(route('uploads.tempo.show', $this->upload));
@@ -87,7 +87,7 @@ class TempoDisplayAndDownloadTest extends TestCase
         $tempo = UploadTempo::factory()->create([
             'upload_id' => $this->upload->id,
             'preset' => 'sped_up',
-            'file_size' => 5242880, // 5MB
+            'file_size' => 2048000, // 2MB instead of 5MB
         ]);
 
         $response = $this->actingAs($this->user)->get(route('uploads.tempo.show', $this->upload));
@@ -95,8 +95,8 @@ class TempoDisplayAndDownloadTest extends TestCase
         $response->assertSuccessful()
             ->assertInertia(fn ($page) => $page
                 ->has('upload.data.tempos.0', fn ($tempoData) => $tempoData
-                    ->where('file_size', 5242880)
-                    ->where('formatted_file_size', '5 MB')
+                    ->where('file_size', 2048000)
+                    ->where('formatted_file_size', '1.95 MB')
                     ->etc()
                 )
             );
@@ -212,14 +212,15 @@ class TempoDisplayAndDownloadTest extends TestCase
         if (! file_exists(dirname($testFilePath))) {
             mkdir(dirname($testFilePath), 0755, true);
         }
-        file_put_contents($testFilePath, str_repeat('x', 5242880)); // 5MB fake file
+        // Use a much smaller file size to avoid memory exhaustion in tests
+        file_put_contents($testFilePath, str_repeat('x', 1024)); // 1KB fake file instead of 5MB
 
         // Test the logic directly rather than through a full callback
         $filePath = 'private/processed/1/2025/08/18/test_tempo.wav';
         $fullPath = storage_path('app/'.$filePath);
 
         $this->assertTrue(file_exists($fullPath));
-        $this->assertEquals(5242880, filesize($fullPath));
+        $this->assertEquals(1024, filesize($fullPath)); // Updated expected size
 
         // Test duration calculation
         $originalDuration = 180.0;
@@ -237,7 +238,7 @@ class TempoDisplayAndDownloadTest extends TestCase
             [1024, '1 KB'],
             [1048576, '1 MB'],
             [1073741824, '1 GB'],
-            [5242880, '5 MB'],
+            [2048000, '1.95 MB'], // Changed from 5MB to avoid memory issues
             [null, 'Unknown size'],
         ];
 

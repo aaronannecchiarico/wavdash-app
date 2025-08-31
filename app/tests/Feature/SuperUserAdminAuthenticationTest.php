@@ -104,7 +104,7 @@ class SuperUserAdminAuthenticationTest extends TestCase
         });
 
         $this->assertEquals(302, $response->getStatusCode());
-        $this->assertStringContainsString('filament', $response->getTargetUrl());
+        $this->assertStringContainsString('/admin/login', $response->getTargetUrl());
     }
 
     #[Test]
@@ -231,22 +231,11 @@ class SuperUserAdminAuthenticationTest extends TestCase
     #[Test]
     public function super_user_seeder_creates_user_successfully(): void
     {
-        // Mock env function to provide required values
-        $this->app->bind('env', function () {
-            return function ($key, $default = null) {
-                return match ($key) {
-                    'SUPER_USER_NAME' => 'Test Super Admin',
-                    'SUPER_USER_EMAIL' => 'admin@test.com',
-                    'SUPER_USER_PASSWORD' => 'secure-password-123',
-                    default => $default,
-                };
-            };
-        });
-
+        // This test uses the default environment variables from phpunit.xml
         $this->artisan('db:seed', ['--class' => 'SuperUserSeeder'])
             ->assertSuccessful();
 
-        // Verify user was created
+        // Verify user was created using the default phpunit.xml values
         $user = User::where('email', 'admin@test.com')->first();
         $this->assertNotNull($user);
         $this->assertEquals('Test Super Admin', $user->name);
@@ -261,31 +250,19 @@ class SuperUserAdminAuthenticationTest extends TestCase
     #[Test]
     public function super_user_seeder_updates_existing_user(): void
     {
-        // Create existing user first
+        // Create existing user with the same email that's in phpunit.xml
         $existingUser = User::create([
             'name' => 'Old Name',
-            'email' => 'existing@example.com',
+            'email' => 'admin@test.com', // Use the same email from phpunit.xml
             'password' => Hash::make('old-password'),
         ]);
-
-        // Mock env function
-        $this->app->bind('env', function () {
-            return function ($key, $default = null) {
-                return match ($key) {
-                    'SUPER_USER_NAME' => 'Updated Name',
-                    'SUPER_USER_EMAIL' => 'existing@example.com',
-                    'SUPER_USER_PASSWORD' => 'new-password',
-                    default => $default,
-                };
-            };
-        });
 
         $this->artisan('db:seed', ['--class' => 'SuperUserSeeder'])
             ->assertSuccessful();
 
-        $updatedUser = User::where('email', 'existing@example.com')->first();
-        $this->assertEquals('Updated Name', $updatedUser->name);
-        $this->assertTrue(Hash::check('new-password', $updatedUser->password));
+        $updatedUser = User::where('email', 'admin@test.com')->first();
+        $this->assertEquals('Test Super Admin', $updatedUser->name); // Should be updated to phpunit.xml value
+        $this->assertTrue(Hash::check('secure-password-123', $updatedUser->password)); // Should be updated to phpunit.xml value
         $this->assertTrue($updatedUser->hasRole('SuperAdmin'));
     }
 
@@ -294,17 +271,6 @@ class SuperUserAdminAuthenticationTest extends TestCase
     {
         config(['admin.superuser_role' => 'CustomSuperAdmin']);
 
-        // Mock env function
-        $this->app->bind('env', function () {
-            return function ($key, $default = null) {
-                return match ($key) {
-                    'SUPER_USER_EMAIL' => 'custom@example.com',
-                    'SUPER_USER_PASSWORD' => 'password',
-                    default => $default,
-                };
-            };
-        });
-
         $this->artisan('db:seed', ['--class' => 'SuperUserSeeder'])
             ->assertSuccessful();
 
@@ -312,8 +278,9 @@ class SuperUserAdminAuthenticationTest extends TestCase
         $role = Role::where('name', 'CustomSuperAdmin')->first();
         $this->assertNotNull($role);
 
-        // Verify user has the custom role
-        $user = User::where('email', 'custom@example.com')->first();
+        // Verify user has the custom role (will use default email from phpunit.xml)
+        $user = User::where('email', 'admin@test.com')->first();
+        $this->assertNotNull($user);
         $this->assertTrue($user->hasRole('CustomSuperAdmin'));
     }
 }

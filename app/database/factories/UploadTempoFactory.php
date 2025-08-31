@@ -41,7 +41,7 @@ class UploadTempoFactory extends Factory
                          $this->faker->date('Y/m/d').'/'.
                          $this->faker->word().'_tempo_'.$preset.'.wav',
             'storage_type' => $this->faker->randomElement(['local', 'r2']),
-            'file_size' => $this->faker->numberBetween(1000000, 50000000), // 1MB to 50MB
+            'file_size' => $this->faker->numberBetween(10000, 100000), // 10KB to 100KB
             'duration' => $this->faker->randomFloat(1, 30, 600), // 30 seconds to 10 minutes
             'final_bpm' => $this->faker->numberBetween(60, 200),
             'processing_metadata' => [

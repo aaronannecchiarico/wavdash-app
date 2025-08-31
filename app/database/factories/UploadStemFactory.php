@@ -21,7 +21,7 @@ class UploadStemFactory extends Factory
             'stem_type' => fake()->randomElement(['vocals', 'drums', 'bass', 'other']),
             'file_path' => fake()->filePath(),
             'storage_type' => fake()->randomElement(['local', 'r2']),
-            'file_size' => fake()->numberBetween(1000000, 50000000), // 1MB to 50MB
+            'file_size' => fake()->numberBetween(10000, 100000), // 10KB to 100KB
             'duration' => fake()->randomFloat(2, 30, 600), // 30 seconds to 10 minutes
             'metadata' => [
                 'processing_time' => fake()->randomFloat(2, 1, 30),
