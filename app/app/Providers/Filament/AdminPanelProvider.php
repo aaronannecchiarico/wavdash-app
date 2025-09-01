@@ -25,6 +25,12 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // Configure admin session settings before middleware execution
+        config([
+            'session.cookie' => config('admin.session_name', 'admin_session'),
+            'session.lifetime' => config('admin.session_lifetime', 120),
+        ]);
+
         return $panel
             ->default()
             ->id('admin')
@@ -37,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
                     ->recoveryCodeCount(8),
                 EmailAuthentication::make(),
             ])
-            ->strictAuthorization()
+            ->strictAuthorization() // Re-enabled
             ->plugins([
                 FilamentAwinTheme::make(),
             ])
@@ -45,6 +51,9 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([
+                \App\Filament\Resources\FailedJobs\FailedJobResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Dashboard::class,
@@ -145,6 +154,7 @@ class AdminPanelProvider extends PanelProvider
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
+                'admin.ratelimit', // Rate limiting comes early to block requests
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
@@ -153,6 +163,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 'admin.ip',
+                'admin.audit', // Audit logging comes late to capture final response
             ])
             ->authMiddleware([
                 Authenticate::class,

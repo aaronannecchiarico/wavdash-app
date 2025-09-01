@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\FailedJob;
 use App\Models\Upload;
+use App\Policies\FailedJobPolicy;
 use App\Policies\UploadPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Upload::class => UploadPolicy::class,
+        FailedJob::class => FailedJobPolicy::class,
     ];
 
     /**

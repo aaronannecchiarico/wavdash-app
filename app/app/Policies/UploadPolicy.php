@@ -15,7 +15,9 @@ class UploadPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true; // All authenticated users can view their uploads
+        // All authenticated users can view uploads (filtered by individual permissions)
+        // SuperAdmin can see all, regular users see only their own
+        return true;
     }
 
     /**
@@ -23,6 +25,12 @@ class UploadPolicy
      */
     public function view(User $user, Upload $upload): bool
     {
+        // SuperAdmin can view any upload
+        if ($user->hasRole('SuperAdmin')) {
+            return true;
+        }
+        
+        // Regular users can only view their own uploads
         return $user->id === $upload->user_id;
     }
 
@@ -39,6 +47,12 @@ class UploadPolicy
      */
     public function update(User $user, Upload $upload): bool
     {
+        // SuperAdmin can update any upload
+        if ($user->hasRole('SuperAdmin')) {
+            return true;
+        }
+        
+        // Regular users can only update their own uploads
         return $user->id === $upload->user_id;
     }
 
@@ -47,6 +61,12 @@ class UploadPolicy
      */
     public function delete(User $user, Upload $upload): bool
     {
+        // SuperAdmin can delete any upload
+        if ($user->hasRole('SuperAdmin')) {
+            return true;
+        }
+        
+        // Regular users can only delete their own uploads
         return $user->id === $upload->user_id;
     }
 

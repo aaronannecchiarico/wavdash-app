@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AdminAuditLog;
+use App\Http\Middleware\AdminRateLimiting;
 use App\Http\Middleware\EnsureSuperUser;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -29,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin.ip' => RestrictAdminByIP::class,
             'admin.superuser' => EnsureSuperUser::class,
+            'admin.ratelimit' => AdminRateLimiting::class,
+            'admin.audit' => AdminAuditLog::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

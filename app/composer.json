@@ -14,6 +14,7 @@
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.29",
         "pbmedia/laravel-ffmpeg": "^8.7",
+        "phiki/phiki": "^1.1",
         "resma/filament-awin-theme": "^1.0",
         "spatie/laravel-permission": "^6.21",
         "tightenco/ziggy": "^2.4"

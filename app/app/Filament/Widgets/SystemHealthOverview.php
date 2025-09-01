@@ -100,7 +100,7 @@ class SystemHealthOverview extends StatsOverviewWidget
     {
         try {
             DB::connection()->getPdo();
-            $tableCount = collect(DB::select('SHOW TABLES'))->count();
+            $tableCount = $this->getTableCount();
 
             return [
                 'status' => 'Connected',
@@ -111,6 +111,27 @@ class SystemHealthOverview extends StatsOverviewWidget
                 'status' => 'Disconnected',
                 'description' => 'Connection failed',
             ];
+        }
+    }
+
+    private function getTableCount(): int
+    {
+        try {
+            $driver = config('database.connections.'.config('database.default').'.driver');
+
+            if ($driver === 'sqlite') {
+                return collect(DB::select("SELECT name FROM sqlite_master WHERE type='table'"))->count();
+            } elseif (in_array($driver, ['mysql', 'mariadb'])) {
+                return collect(DB::select('SHOW TABLES'))->count();
+            } elseif ($driver === 'pgsql') {
+                return collect(DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'"))->count();
+            }
+
+            // Fallback: try to count from information_schema
+            return collect(DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()'))->count();
+        } catch (\Exception $e) {
+            // If all else fails, just return 0 - at least we know the connection works
+            return 0;
         }
     }
 
