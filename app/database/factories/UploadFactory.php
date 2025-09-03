@@ -24,7 +24,7 @@ class UploadFactory extends Factory
         $usesR2Storage = $defaultDisk === 'r2';
 
         return [
-            'user_id' => \App\Models\User::factory(),
+            // Don't set user_id here - let it be set by the for() relationship
             'title' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->paragraph(),
             'genre' => $this->faker->randomElement(['Hip Hop', 'Electronic', 'Pop', 'Rock', 'Jazz', 'Classical', 'Lo-Fi']),

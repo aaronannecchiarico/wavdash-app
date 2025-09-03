@@ -101,7 +101,7 @@ Follow these patterns to maintain code consistency and quality.
 * **Component Usage:** Prefer built-in Filament components for forms, tables, and infolists. Only create custom components (like `AudioPlayerEntry`) when absolutely necessary.
 * **Available Resources:** The panel manages `Users`, `Uploads`, `Contests`, and various analysis `Tasks`.
 
-### **Testing (Pest & Inertia)**
+### **Testing (PHPUnit & Inertia)**
 
 * **Core Assertion:** The primary tool for testing is `assertInertia`.
 * **Test Structure:**
@@ -138,8 +138,30 @@ Follow these patterns to maintain code consistency and quality.
 
 This project is integrated with Laravel Boost. **Always prioritize Boost tools.**
 
-* **`search-docs`**: Your first step for any question. It provides version-aware documentation for Laravel, Inertia, Filament, etc.
-* **`list-artisan-commands`**: Use this to check the available parameters for any `artisan` command before running it.
-* **`tinker` / `database-query`**: Use for direct debugging and data inspection.
-* **`browser-logs`**: Essential for debugging frontend issues. Check recent logs first.
-* **`get-absolute-url`**: Use to generate correct, shareable URLs for the application.
+| Name                       | Notes                                                                                                          |
+| -------------------------- |----------------------------------------------------------------------------------------------------------------|
+| Application Info           | Read PHP & Laravel versions, database engine, list of ecosystem packages with versions, and Eloquent models    |
+| Browser Logs               | Read logs and errors from the browser                                                                          |
+| Database Connections       | Inspect available database connections, including the default connection                                       |
+| Database Query             | Execute a query against the database                                                                           |
+| Database Schema            | Read the database schema                                                                                       |
+| Get Absolute URL           | Convert relative path URIs to absolute so agents generate valid URLs                                           |
+| Get Config                 | Get a value from the configuration files using "dot" notation                                                  |
+| Last Error                 | Read the last error from the application's log files                                                           |
+| List Artisan Commands      | Inspect the available Artisan commands                                                                         |
+| List Available Config Keys | Inspect the available configuration keys                                                                       |
+| List Available Env Vars    | Inspect the available environment variable keys                                                                |
+| List Routes                | Inspect the application's routes                                                                               |
+| Read Log Entries           | Read the last N log entries                                                                                    |
+| Report Feedback            | Share Boost & Laravel AI feedback with the team, just say "give Boost feedback: x, y, and z"                   |
+| Search Docs                | Query the Laravel hosted documentation API service to retrieve documentation based on installed packages       |
+| Tinker                     | Execute arbitrary code within the context of the application                                                   |
+
+## Tooling for shell interactions 
+
+- Is it about finding FILES? use `fd` 
+- Is it about finding TEXT/strings? use `rg` 
+- Is it about finding CODE STRUCTURE? use `ast-grep` https://ast-grep.github.io/llms.txt 
+- Is it about SELECTING from multiple results? pipe to `zf` 
+- Is it about interacting with JSON? use `jq` 
+- Is it about interacting with YAML or XML? use `yq`

@@ -5,6 +5,8 @@ use App\Models\UploadTempo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -19,6 +21,21 @@ class TempoDisplayAndDownloadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
 
         $this->user = User::factory()->create();
         $this->upload = Upload::factory()->create([
@@ -243,7 +260,11 @@ class TempoDisplayAndDownloadTest extends TestCase
         ];
 
         foreach ($testCases as [$fileSize, $expected]) {
-            $tempo = UploadTempo::factory()->make(['file_size' => $fileSize]);
+            // Use make() without upload_id since we're only testing formatting, not database relations
+            $tempo = UploadTempo::factory()->make([
+                'file_size' => $fileSize,
+                'upload_id' => null, // Override the factory default to avoid creating an Upload
+            ]);
             $this->assertEquals($expected, $tempo->getFormattedFileSize());
         }
     }
@@ -260,7 +281,11 @@ class TempoDisplayAndDownloadTest extends TestCase
         ];
 
         foreach ($testCases as [$duration, $expected]) {
-            $tempo = UploadTempo::factory()->make(['duration' => $duration]);
+            // Use make() without upload_id since we're only testing formatting, not database relations
+            $tempo = UploadTempo::factory()->make([
+                'duration' => $duration,
+                'upload_id' => null, // Override the factory default to avoid creating an Upload
+            ]);
             $this->assertEquals($expected, $tempo->getFormattedDuration());
         }
     }

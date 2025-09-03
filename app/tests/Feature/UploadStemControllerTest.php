@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Events\StemSeparationCompleted;
 use App\Models\Upload;
 use App\Models\UploadStem;
 use App\Models\UploadStemTask;
@@ -10,7 +9,9 @@ use App\Models\User;
 use App\Services\AudioAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -18,7 +19,26 @@ class UploadStemControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+    }
+
     public function test_show_requires_authentication(): void
     {
         $user = User::factory()->create();
@@ -29,7 +49,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    
     public function test_show_returns_proper_inertia_response(): void
     {
         $user = User::factory()->create();
@@ -48,7 +67,6 @@ class UploadStemControllerTest extends TestCase
             );
     }
 
-    
     public function test_show_requires_upload_authorization(): void
     {
         $user1 = User::factory()->create();
@@ -60,7 +78,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    
     public function test_store_requires_authentication(): void
     {
         $user = User::factory()->create();
@@ -71,7 +88,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    
     public function test_store_requires_upload_authorization(): void
     {
         $user1 = User::factory()->create();
@@ -83,7 +99,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    
     public function test_store_fails_when_service_disabled(): void
     {
         Config::set('services.audio_analysis.enabled', false);
@@ -97,7 +112,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('error', 'Audio analysis service is currently disabled.');
     }
 
-    
     public function test_store_fails_when_upload_not_ready(): void
     {
         Config::set('services.audio_analysis.enabled', true);
@@ -108,14 +122,13 @@ class UploadStemControllerTest extends TestCase
 
         // Verify upload status before making request
         $this->assertEquals('processing', $upload->status);
-        
+
         $response = $this->actingAs($user)->post(route('uploads.stems.store', $upload));
 
         $response->assertRedirect()
             ->assertSessionHas('error', 'Upload must be processed before stem separation can begin.');
     }
 
-    
     public function test_store_fails_when_stem_separation_already_in_progress(): void
     {
         Config::set('services.audio_analysis.enabled', true);
@@ -124,7 +137,7 @@ class UploadStemControllerTest extends TestCase
         $upload = Upload::factory()->create(['user_id' => $user->id, 'status' => 'ready']);
         UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mock(AudioAnalysisService::class, function ($mock) {
@@ -137,7 +150,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('error', 'Stem separation is already in progress for this upload.');
     }
 
-    
     public function test_store_fails_when_stems_already_exist(): void
     {
         Config::set('services.audio_analysis.enabled', true);
@@ -156,7 +168,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('error', 'Stem separation already completed for this upload.');
     }
 
-    
     public function test_store_successfully_starts_stem_separation(): void
     {
         Config::set('services.audio_analysis.enabled', true);
@@ -167,7 +178,7 @@ class UploadStemControllerTest extends TestCase
         $mockTask = UploadStemTask::factory()->make([
             'upload_id' => $upload->id,
             'task_id' => 'test-task-123',
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $this->mock(AudioAnalysisService::class, function ($mock) use ($mockTask) {
@@ -181,7 +192,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('success', 'Stem separation started successfully! You will be notified when it completes.');
     }
 
-    
     public function test_destroy_requires_authentication(): void
     {
         $user = User::factory()->create();
@@ -192,7 +202,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    
     public function test_destroy_requires_upload_authorization(): void
     {
         $user1 = User::factory()->create();
@@ -204,17 +213,16 @@ class UploadStemControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    
     public function test_destroy_successfully_deletes_stems_and_task(): void
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $stemTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
-        
+
         $stem1 = UploadStem::factory()->create(['upload_id' => $upload->id, 'stem_type' => 'vocals']);
         $stem2 = UploadStem::factory()->create(['upload_id' => $upload->id, 'stem_type' => 'drums']);
 
@@ -228,15 +236,14 @@ class UploadStemControllerTest extends TestCase
         $this->assertDatabaseMissing('upload_stem_tasks', ['id' => $stemTask->id]);
     }
 
-    
     public function test_destroy_prevents_deletion_when_processing(): void
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $stemTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $response = $this->actingAs($user)->delete(route('uploads.stems.destroy', $upload));
@@ -247,7 +254,6 @@ class UploadStemControllerTest extends TestCase
         $this->assertDatabaseHas('upload_stem_tasks', ['id' => $stemTask->id]);
     }
 
-    
     public function test_delete_task_requires_authentication(): void
     {
         $user = User::factory()->create();
@@ -258,7 +264,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    
     public function test_delete_task_requires_upload_authorization(): void
     {
         $user1 = User::factory()->create();
@@ -270,17 +275,16 @@ class UploadStemControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    
     public function test_delete_task_successfully_cancels_processing_task(): void
     {
         Config::set('services.audio_analysis.enabled', true);
 
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $stemTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mock(AudioAnalysisService::class, function ($mock) {
@@ -294,7 +298,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('success', 'Stem separation task has been cancelled and deleted. You can now start a new separation.');
     }
 
-    
     public function test_download_stem_requires_authentication(): void
     {
         $user = User::factory()->create();
@@ -305,7 +308,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    
     public function test_download_stem_requires_upload_authorization(): void
     {
         $user1 = User::factory()->create();
@@ -317,7 +319,6 @@ class UploadStemControllerTest extends TestCase
         $response->assertForbidden();
     }
 
-    
     public function test_download_stem_returns_error_when_stem_not_found(): void
     {
         $user = User::factory()->create();
@@ -329,7 +330,6 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('error', 'Stem not found.');
     }
 
-    
     public function test_status_returns_json_response(): void
     {
         $user = User::factory()->create();
@@ -338,7 +338,7 @@ class UploadStemControllerTest extends TestCase
             $mock->shouldReceive('getServiceStatus')->andReturn([
                 'enabled' => true,
                 'available' => true,
-                'storage_type' => 'r2'
+                'storage_type' => 'r2',
             ]);
         });
 
@@ -348,7 +348,7 @@ class UploadStemControllerTest extends TestCase
             ->assertJson([
                 'enabled' => true,
                 'available' => true,
-                'storage_type' => 'r2'
+                'storage_type' => 'r2',
             ]);
     }
 }

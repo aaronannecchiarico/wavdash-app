@@ -5,34 +5,22 @@ namespace Tests\Feature;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
+use Tests\Support\OptimizedTestTrait;
 use Tests\TestCase;
 
 class AdminUploadAccessTest extends TestCase
 {
-    use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        
-        // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
-        // Create SuperAdmin role for tests
-        Role::firstOrCreate(['name' => 'SuperAdmin']);
-    }
+    use RefreshDatabase, OptimizedTestTrait;
 
     public function test_super_admin_can_access_upload_list_in_admin_panel(): void
     {
-        // Create a SuperAdmin user
-        $superAdmin = User::factory()->create();
-        $superAdmin->assignRole('SuperAdmin');
+        // Use optimized reusable super admin
+        $superAdmin = $this->getTestSuperAdmin();
+        $regularUser = $this->getTestUser();
 
-        // Create some uploads from different users
-        $regularUser = User::factory()->create();
-        Upload::factory()->create(['user_id' => $regularUser->id]);
-        Upload::factory()->create(['user_id' => $superAdmin->id]);
+        // Create some uploads using the for() method to ensure proper relationships
+        Upload::factory()->for($regularUser)->create();
+        Upload::factory()->for($superAdmin)->create();
 
         // SuperAdmin should be able to access the uploads list
         $response = $this->actingAs($superAdmin)
@@ -43,13 +31,12 @@ class AdminUploadAccessTest extends TestCase
 
     public function test_super_admin_can_view_specific_upload_in_admin_panel(): void
     {
-        // Create a regular user and their upload
-        $regularUser = User::factory()->create();
+        // Use optimized reusable users
+        $regularUser = $this->getTestUser();
+        $superAdmin = $this->getTestSuperAdmin();
+        
+        // Create upload explicitly with the user ID 
         $upload = Upload::factory()->create(['user_id' => $regularUser->id]);
-
-        // Create a SuperAdmin user
-        $superAdmin = User::factory()->create();
-        $superAdmin->assignRole('SuperAdmin');
 
         // SuperAdmin should be able to view the specific upload
         $response = $this->actingAs($superAdmin)
@@ -60,13 +47,12 @@ class AdminUploadAccessTest extends TestCase
 
     public function test_super_admin_can_access_upload_edit_page(): void
     {
-        // Create a regular user and their upload
-        $regularUser = User::factory()->create();
+        // Use optimized reusable users
+        $regularUser = $this->getTestUser();
+        $superAdmin = $this->getTestSuperAdmin();
+        
+        // Create upload explicitly with the user ID 
         $upload = Upload::factory()->create(['user_id' => $regularUser->id]);
-
-        // Create a SuperAdmin user
-        $superAdmin = User::factory()->create();
-        $superAdmin->assignRole('SuperAdmin');
 
         // SuperAdmin should be able to access the edit page
         $response = $this->actingAs($superAdmin)
@@ -77,9 +63,9 @@ class AdminUploadAccessTest extends TestCase
 
     public function test_regular_user_cannot_access_admin_panel_uploads(): void
     {
-        // Create a regular user and their upload
-        $regularUser = User::factory()->create();
-        $upload = Upload::factory()->create(['user_id' => $regularUser->id]);
+        // Use optimized reusable user
+        $regularUser = $this->getTestUser();
+        Upload::factory()->create(['user_id' => $regularUser->id]);
 
         // Regular user should not be able to access admin panel uploads
         $response = $this->actingAs($regularUser)

@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Tests\Support\OptimizedTestTrait;
 use Tests\TestCase;
 
 class StorageValidationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, OptimizedTestTrait;
 
     protected function setUp(): void
     {
@@ -28,7 +30,7 @@ class StorageValidationTest extends TestCase
 
     public function test_storage_validation_passes_when_types_match_r2()
     {
-        $user = User::factory()->create();
+        $user = $this->getTestUser();
         $upload = Upload::factory()->for($user)->create([
             'uses_r2_storage' => true,
             'r2_upload_path' => 'private/uploads/1/2025/08/21/test.mp3',
@@ -36,9 +38,9 @@ class StorageValidationTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // Mock microservice response for R2 storage
+        // Use correct HTTP URL pattern for the mock
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => true,
                 'storage_type' => 'r2',
                 'message' => 'R2 storage is enabled and ready',
@@ -66,7 +68,7 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice response for local storage
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => true,
                 'storage_type' => 'local',
                 'message' => 'Local storage is enabled and ready',
@@ -95,7 +97,7 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice response with different storage type
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => true,
                 'storage_type' => 'local',
                 'message' => 'Local storage is enabled and ready',
@@ -124,7 +126,7 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice response with storage disabled
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => false,
                 'storage_type' => 'r2',
                 'message' => 'R2 storage is disabled',
@@ -153,7 +155,7 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice failure
         Http::fake([
-            'localhost:8001/storage/status' => Http::response('Service unavailable', 503),
+            'http://localhost:8001/storage/status' => Http::response('Service unavailable', 503),
         ]);
 
         $audioAnalysisService = app(AudioAnalysisService::class);
@@ -182,24 +184,63 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice response
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => true,
                 'storage_type' => 'r2',
                 'message' => 'R2 storage is enabled and ready',
             ], 200),
         ]);
 
+        // Mock Storage operations to simulate file existence
+        Storage::fake('r2');
+        Storage::fake('r2_stream');
+        Storage::fake('r2_private');
+
+        // Put file in r2_private using the r2_upload_path (which is what the job expects)
+        Storage::disk('r2_private')->put($upload->r2_upload_path, 'fake audio content');
+
+        // Store the expected filename for cleanup
+        $createdFiles = [];
+
+        // Mock FFMpeg facade to avoid actual audio processing
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromFilesystem')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('open')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('getDurationInSeconds')
+            ->andReturn(180.5);
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('export')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('toDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('inFormat')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('save')
+            ->andReturnUsing(function ($filename) use (&$createdFiles) {
+                // Create a temporary file with the expected name
+                $tempPath = sys_get_temp_dir().'/'.$filename;
+                file_put_contents($tempPath, 'fake ogg content');
+                $createdFiles[] = $tempPath;
+
+                return true;
+            });
+
         // Capture log messages
         Log::spy();
 
-        // Execute the job directly to test validation
-        $job = new ProcessAudioUpload($upload);
-
-        // We expect this to fail due to missing file, but we want to verify validation runs
         try {
+            // Execute the job directly to test validation
+            $job = new ProcessAudioUpload($upload);
             $job->handle();
-        } catch (\Exception $e) {
-            // Expected to fail due to missing actual file, that's okay
+        } finally {
+            // Clean up any created files
+            foreach ($createdFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
 
         // Verify storage validation was logged
@@ -227,24 +268,63 @@ class StorageValidationTest extends TestCase
 
         // Mock microservice response with mismatch
         Http::fake([
-            'localhost:8001/storage/status' => Http::response([
+            'http://localhost:8001/storage/status' => Http::response([
                 'enabled' => true,
                 'storage_type' => 'local',
                 'message' => 'Local storage is enabled and ready',
             ], 200),
         ]);
 
+        // Mock Storage operations to simulate file existence
+        Storage::fake('r2');
+        Storage::fake('r2_stream');
+        Storage::fake('r2_private');
+
+        // Put file in r2_private using the r2_upload_path (which is what the job expects)
+        Storage::disk('r2_private')->put($upload->r2_upload_path, 'fake audio content');
+
+        // Store the expected filename for cleanup
+        $createdFiles = [];
+
+        // Mock FFMpeg facade to avoid actual audio processing
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromFilesystem')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('open')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('getDurationInSeconds')
+            ->andReturn(180.5);
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('export')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('toDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('inFormat')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('save')
+            ->andReturnUsing(function ($filename) use (&$createdFiles) {
+                // Create a temporary file with the expected name
+                $tempPath = sys_get_temp_dir().'/'.$filename;
+                file_put_contents($tempPath, 'fake ogg content');
+                $createdFiles[] = $tempPath;
+
+                return true;
+            });
+
         // Capture log messages
         Log::spy();
 
-        // Execute the job directly to test validation
-        $job = new ProcessAudioUpload($upload);
-
-        // We expect this to fail due to missing file, but we want to verify validation runs
         try {
+            // Execute the job directly to test validation
+            $job = new ProcessAudioUpload($upload);
             $job->handle();
-        } catch (\Exception $e) {
-            // Expected to fail due to missing actual file, that's okay
+        } finally {
+            // Clean up any created files
+            foreach ($createdFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
 
         // Verify storage validation failure was logged
@@ -275,17 +355,56 @@ class StorageValidationTest extends TestCase
 
         // Don't mock any HTTP calls - validation should be skipped
 
+        // Mock Storage operations to simulate file existence
+        Storage::fake('r2');
+        Storage::fake('r2_stream');
+        Storage::fake('r2_private');
+
+        // Put file in r2_private using the r2_upload_path (which is what the job expects)
+        Storage::disk('r2_private')->put($upload->r2_upload_path, 'fake audio content');
+
+        // Store the expected filename for cleanup
+        $createdFiles = [];
+
+        // Mock FFMpeg facade to avoid actual audio processing
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('fromFilesystem')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('open')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('getDurationInSeconds')
+            ->andReturn(180.5);
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('export')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('toDisk')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('inFormat')
+            ->andReturnSelf();
+        \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('save')
+            ->andReturnUsing(function ($filename) use (&$createdFiles) {
+                // Create a temporary file with the expected name
+                $tempPath = sys_get_temp_dir().'/'.$filename;
+                file_put_contents($tempPath, 'fake ogg content');
+                $createdFiles[] = $tempPath;
+
+                return true;
+            });
+
         // Capture log messages
         Log::spy();
 
-        // Execute the job directly
-        $job = new ProcessAudioUpload($upload);
-
-        // We expect this to fail due to missing file, but we want to verify validation is skipped
         try {
+            // Execute the job directly
+            $job = new ProcessAudioUpload($upload);
             $job->handle();
-        } catch (\Exception $e) {
-            // Expected to fail due to missing actual file, that's okay
+        } finally {
+            // Clean up any created files
+            foreach ($createdFiles as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
         }
 
         // Verify no storage validation logs occurred

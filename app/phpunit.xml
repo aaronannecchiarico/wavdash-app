@@ -17,6 +17,12 @@
             <directory>app</directory>
         </include>
     </source>
+    <extensions>
+        <bootstrap class="Tests\Support\SpeedTrapExtension">
+            <parameter name="slowThreshold" value="1000"/>
+            <parameter name="reportLength" value="10"/>
+        </bootstrap>
+    </extensions>
     <php>
         <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>

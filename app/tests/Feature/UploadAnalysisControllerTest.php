@@ -8,6 +8,8 @@ use App\Models\UploadAnalysisTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -16,16 +18,32 @@ class UploadAnalysisControllerTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Upload $upload;
 
     protected function setUp(): void
     {
         parent::setUp();
 
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+
         $this->user = User::factory()->create();
         $this->upload = Upload::factory()->create([
             'user_id' => $this->user->id,
-            'status' => 'ready'
+            'status' => 'ready',
         ]);
     }
 
@@ -38,7 +56,7 @@ class UploadAnalysisControllerTest extends TestCase
             ->assertJsonStructure([
                 'enabled',
                 'available',
-                'base_url'
+                'base_url',
             ]);
     }
 
@@ -186,7 +204,7 @@ class UploadAnalysisControllerTest extends TestCase
         // Create similar uploads for comparison
         $similarUpload = Upload::factory()->create([
             'user_id' => $this->user->id,
-            'status' => 'ready'
+            'status' => 'ready',
         ]);
 
         UploadAnalysis::create([
@@ -280,8 +298,8 @@ class UploadAnalysisControllerTest extends TestCase
             '*/task/test-task-123' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
-                'message' => 'Task deleted successfully'
-            ])
+                'message' => 'Task deleted successfully',
+            ]),
         ]);
 
         $task = UploadAnalysisTask::create([
@@ -312,8 +330,8 @@ class UploadAnalysisControllerTest extends TestCase
             '*/task/test-task-123' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
-                'message' => 'Task deleted successfully'
-            ])
+                'message' => 'Task deleted successfully',
+            ]),
         ]);
 
         $task = UploadAnalysisTask::create([
@@ -343,8 +361,8 @@ class UploadAnalysisControllerTest extends TestCase
             '*/task/test-task-123' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
-                'message' => 'Task deleted successfully'
-            ])
+                'message' => 'Task deleted successfully',
+            ]),
         ]);
 
         $task = UploadAnalysisTask::create([
@@ -426,8 +444,8 @@ class UploadAnalysisControllerTest extends TestCase
             '*/task/test-task-123' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
-                'message' => 'Task deleted successfully'
-            ])
+                'message' => 'Task deleted successfully',
+            ]),
         ]);
 
         // Create completed analysis first

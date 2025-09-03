@@ -8,11 +8,34 @@ use App\Models\UploadAnalysisTask;
 use App\Models\User;
 use App\Services\AudioAnalysisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AudioAnalysisTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+    }
 
     public function test_upload_can_have_analysis_task(): void
     {

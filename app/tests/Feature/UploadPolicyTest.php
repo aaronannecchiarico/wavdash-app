@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -15,10 +18,25 @@ class UploadPolicyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         // Create SuperAdmin role for tests
         Role::firstOrCreate(['name' => 'SuperAdmin']);
     }
@@ -42,20 +60,20 @@ class UploadPolicyTest extends TestCase
         // Create two regular users
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         // Create uploads for each user
         $upload1 = Upload::factory()->create(['user_id' => $user1->id]);
         $upload2 = Upload::factory()->create(['user_id' => $user2->id]);
 
         // User1 can view their own upload
         $this->assertTrue($user1->can('view', $upload1));
-        
+
         // User1 cannot view User2's upload
         $this->assertFalse($user1->can('view', $upload2));
-        
+
         // User2 can view their own upload
         $this->assertTrue($user2->can('view', $upload2));
-        
+
         // User2 cannot view User1's upload
         $this->assertFalse($user2->can('view', $upload1));
     }
@@ -110,13 +128,13 @@ class UploadPolicyTest extends TestCase
         // Create two regular users
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $upload1 = Upload::factory()->create(['user_id' => $user1->id]);
         $upload2 = Upload::factory()->create(['user_id' => $user2->id]);
 
         // User1 cannot update User2's upload
         $this->assertFalse($user1->can('update', $upload2));
-        
+
         // User2 cannot update User1's upload
         $this->assertFalse($user2->can('update', $upload1));
     }
@@ -126,13 +144,13 @@ class UploadPolicyTest extends TestCase
         // Create two regular users
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
-        
+
         $upload1 = Upload::factory()->create(['user_id' => $user1->id]);
         $upload2 = Upload::factory()->create(['user_id' => $user2->id]);
 
         // User1 cannot delete User2's upload
         $this->assertFalse($user1->can('delete', $upload2));
-        
+
         // User2 cannot delete User1's upload
         $this->assertFalse($user2->can('delete', $upload1));
     }

@@ -5,6 +5,9 @@ namespace Tests\Feature\Http\Controllers;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,6 +18,26 @@ use Tests\TestCase;
 final class UploadControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+    }
 
     #[Test]
     public function index_requires_authentication()
@@ -183,7 +206,7 @@ final class UploadControllerTest extends TestCase
                 ->component('uploads/show')
                 ->has('upload.data', fn (Assert $upload) => $upload
                     ->has('stream_url')
-                    ->where('stream_url', 'http://localhost/storage/uploads/stream/1/2025/08/13/test-file.ogg')
+                    ->where('stream_url', '/storage/uploads/stream/1/2025/08/13/test-file.ogg')
                     ->etc()
                 )
             );

@@ -6,11 +6,34 @@ use App\Models\Upload;
 use App\Models\UploadStemTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UploadStemTaskTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+    }
 
     public function test_it_can_be_created_with_required_fields(): void
     {
@@ -80,15 +103,15 @@ class UploadStemTaskTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $completedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
-        
+
         $pendingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $this->assertTrue($completedTask->isCompleted());
@@ -99,15 +122,15 @@ class UploadStemTaskTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $failedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'failed'
+            'status' => 'failed',
         ]);
-        
+
         $pendingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $this->assertTrue($failedTask->hasFailed());
@@ -118,20 +141,20 @@ class UploadStemTaskTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $processingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
-        
+
         $pendingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
-        
+
         $completedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $this->assertTrue($processingTask->isProcessing());
@@ -143,15 +166,15 @@ class UploadStemTaskTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $deletedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'deleted'
+            'status' => 'deleted',
         ]);
-        
+
         $pendingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
 
         $this->assertTrue($deletedTask->isDeleted());
@@ -162,25 +185,25 @@ class UploadStemTaskTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $pendingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'pending'
+            'status' => 'pending',
         ]);
-        
+
         $processingTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
-        
+
         $failedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'failed'
+            'status' => 'failed',
         ]);
-        
+
         $completedTask = UploadStemTask::factory()->create([
             'upload_id' => $upload->id,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $this->assertTrue($pendingTask->canBeDeleted());
