@@ -1,66 +1,29 @@
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Music, PartyPopper } from 'lucide-react';
-import AppLogo from './app-logo';
+import { LayoutGrid, Music, PartyPopper } from 'lucide-react';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Contests',
-        href: '/contests',
-        icon: PartyPopper,
-    },
-    {
-        title: 'Music Library',
-        href: '/uploads',
-        icon: Music,
-    },
+// Brutalist sidebar items with color assignments
+const sidebarItems = [
+    { label: 'DASHBOARD', icon: LayoutGrid, href: '/dashboard', color: 'bg-[var(--neo-green)]' },
+    { label: 'MY TRACKS', icon: Music, href: '/uploads', color: 'bg-[var(--neo-pink)]' },
+    { label: 'CONTESTS', icon: PartyPopper, href: '/contests', color: 'bg-[var(--neo-blue)]' },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
-
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
-
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
+        <aside className="w-64 bg-[var(--neo-black)] neo-border-r">
+            <div className="p-4 space-y-2">
+                {sidebarItems.map((item) => (
+                    <Link 
+                        key={item.label}
+                        href={item.href}
+                        className={`${item.color} text-[var(--neo-black)] font-black uppercase tracking-wide neo-shadow hover:neo-shadow-hover hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-3 p-4 block`}
+                    >
+                        <item.icon className="w-5 h-5" />
+                        {item.label}
+                    </Link>
+                ))}
+            </div>
+        </aside>
     );
 }
