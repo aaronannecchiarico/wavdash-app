@@ -231,31 +231,39 @@
 /* Neobrutalist utility classes */
 @layer utilities {
     .neo-border { 
-        border: var(--neo-border-width) solid currentColor; 
+        border: 3px solid currentColor; 
     }
     
     .neo-border-t { 
-        border-top: var(--neo-border-width) solid currentColor; 
+        border-top: 3px solid currentColor; 
     }
     
     .neo-border-b { 
-        border-bottom: var(--neo-border-width) solid currentColor; 
+        border-bottom: 3px solid currentColor; 
     }
     
     .neo-border-l { 
-        border-left: var(--neo-border-width) solid currentColor; 
+        border-left: 3px solid currentColor; 
     }
     
     .neo-border-r { 
-        border-right: var(--neo-border-width) solid currentColor; 
+        border-right: 3px solid currentColor; 
     }
     
     .neo-shadow { 
-        box-shadow: var(--neo-shadow); 
+        box-shadow: 4px 4px 0px #000000; 
+    }
+    
+    .dark .neo-shadow { 
+        box-shadow: 4px 4px 0px #FFFFFF; 
     }
     
     .neo-shadow-hover { 
-        box-shadow: var(--neo-shadow-hover); 
+        box-shadow: 2px 2px 0px #000000; 
+    }
+    
+    .dark .neo-shadow-hover { 
+        box-shadow: 2px 2px 0px #FFFFFF; 
     }
     
     .neo-transition { 
@@ -264,28 +272,80 @@
 
     /* Component-specific overrides */
     .neo-button {
-        @apply neo-border neo-shadow neo-transition font-bold uppercase tracking-wider;
+        @apply font-bold uppercase tracking-wider;
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 0;
     }
     
+    .dark .neo-button {
+        box-shadow: 4px 4px 0px #FFFFFF;
+    }
+    
     .neo-button:hover {
-        @apply neo-shadow-hover;
+        box-shadow: 2px 2px 0px #000000;
         transform: translate(2px, 2px);
+    }
+    
+    .dark .neo-button:hover {
+        box-shadow: 2px 2px 0px #FFFFFF;
     }
 
     .neo-card {
-        @apply neo-border neo-shadow;
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
         border-radius: 0;
+    }
+    
+    .dark .neo-card {
+        box-shadow: 4px 4px 0px #FFFFFF;
     }
 
     .neo-input {
-        @apply neo-border neo-shadow-hover font-mono;
+        @apply font-mono;
+        border: 3px solid currentColor;
+        box-shadow: 2px 2px 0px #000000;
         border-radius: 0;
+    }
+    
+    .dark .neo-input {
+        box-shadow: 2px 2px 0px #FFFFFF;
     }
 
     .neo-input:focus {
         box-shadow: none;
         transform: translate(1px, 1px);
+    }
+
+    .neo-slider {
+        border: 3px solid currentColor;
+    }
+    
+    .neo-slider [data-orientation="horizontal"] {
+        height: 8px;
+    }
+    
+    .neo-slider [role="slider"] {
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
+        background-color: #00EB90;
+        width: 16px;
+        height: 16px;
+        border-radius: 0;
+    }
+    
+    .dark .neo-slider [role="slider"] {
+        box-shadow: 4px 4px 0px #FFFFFF;
+    }
+    
+    .neo-slider [role="slider"]:hover {
+        box-shadow: 2px 2px 0px #000000;
+        transform: translate(-1px, -1px);
+    }
+    
+    .dark .neo-slider [role="slider"]:hover {
+        box-shadow: 2px 2px 0px #FFFFFF;
     }
 }
 

@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { SoundcloudWaveform } from '@/components/soundcloud-waveform';
-import { Loader2, PauseIcon, PlayIcon, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, PauseIcon, PlayIcon } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type WaveSurfer from 'wavesurfer.js';
 import type { UploadAnalysis } from '@/types';
@@ -66,15 +65,6 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
         });
     }, [uploadId]);
 
-    const getStemIcon = (stemType: string) => {
-        switch (stemType) {
-            case 'vocals': return '🎤';
-            case 'drums': return '🥁';
-            case 'bass': return '🎸';
-            case 'other': return '🎹';
-            default: return '🎵';
-        }
-    };
 
     const updatePlayerState = (stemType: string, updates: Partial<StemPlayerState>) => {
         setPlayers(prev => ({
@@ -228,66 +218,78 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
 
     const allLoaded = stems.every(stem => !players[stem.stem_type]?.isLoading);
 
+    // Brutalist color assignments for stems
+    const stemColors = [
+        'bg-[var(--neo-green)]',
+        'bg-[var(--neo-pink)]', 
+        'bg-[var(--neo-yellow)]',
+        'bg-[var(--neo-blue)]'
+    ];
+
     return (
-        <Card className="bg-slate-50 dark:bg-gray-900 border-slate-200 dark:border-gray-700">
-            <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
-                    🎵 Stem Player
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <div className="neo-border neo-shadow bg-[var(--neo-bg-primary)] dark:bg-[var(--neo-black)]">
+            <div className="bg-[var(--neo-black)] p-4 neo-border-b">
+                <h2 className="text-xl font-black uppercase tracking-wider text-[var(--neo-white)]">
+                    STEM TRACKS
+                </h2>
+            </div>
+            <div className="p-6 space-y-4">
                 {/* Global Controls */}
-                <div className="flex items-center gap-4 pb-4 border-b border-slate-200 dark:border-gray-700">
+                <div className="flex items-center gap-4 pb-4 neo-border-b">
                     <Button
                         onClick={handleGlobalPlayPause}
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 rounded-full bg-slate-900 hover:bg-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700 border-slate-300 dark:border-gray-600 text-white"
+                        variant="default"
+                        size="lg"
+                        className="w-12 h-12 bg-[var(--neo-green)] hover:bg-[var(--neo-pink)] neo-shadow hover:neo-shadow-hover hover:translate-x-1 hover:translate-y-1"
                         disabled={!allLoaded}
                     >
                         {!allLoaded ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <Loader2 className="h-6 w-6 animate-spin text-[var(--neo-black)]" />
                         ) : globalPlaying ? (
-                            <PauseIcon className="h-5 w-5" />
+                            <PauseIcon className="h-6 w-6 text-[var(--neo-black)]" />
                         ) : (
-                            <PlayIcon className="h-5 w-5" />
+                            <PlayIcon className="h-6 w-6 text-[var(--neo-black)]" />
                         )}
                     </Button>
                     
                     {/* Global Progress Slider */}
                     <div className="flex items-center gap-3 flex-1">
-                        <span className="text-xs text-slate-600 dark:text-gray-400 min-w-[40px]">
+                        <Button variant="accent" size="sm" className="font-mono text-[var(--neo-black)] min-w-[50px]">
                             {formatTime(currentTime)}
-                        </span>
-                        <div className="flex-1">
+                        </Button>
+                        <div className="flex-1 neo-border neo-shadow-hover bg-[var(--neo-blue)]/20 p-2">
                             <Slider
                                 value={[currentTime]}
                                 onValueChange={handleProgressChange}
                                 onValueCommit={handleProgressCommit}
                                 max={duration || 100}
                                 step={0.1}
-                                className="w-full"
+                                className="w-full neo-slider"
                                 disabled={!allLoaded || duration === 0}
                             />
                         </div>
-                        <span className="text-xs text-slate-600 dark:text-gray-400 min-w-[40px] text-right">
+                        <Button variant="secondary" size="sm" className="font-mono text-[var(--neo-white)] min-w-[50px]">
                             {formatTime(duration)}
-                        </span>
+                        </Button>
                     </div>
                     
                     {/* Track Info */}
                     {analysis && (
-                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider">
                             {analysis.musical_key && (
                                 <>
-                                    <span>KEY</span>
-                                    <span className="bg-slate-200 dark:bg-gray-700 px-2 py-1 rounded text-slate-900 dark:text-white">{analysis.musical_key}</span>
+                                    <span className="text-[var(--neo-text-primary)]">KEY</span>
+                                    <div className="neo-border bg-[var(--neo-green)] px-2 py-1 text-[var(--neo-black)]">
+                                        {analysis.musical_key}
+                                    </div>
                                 </>
                             )}
                             {analysis.bpm && (
                                 <>
-                                    <span>BPM</span>
-                                    <span className="bg-slate-200 dark:bg-gray-700 px-2 py-1 rounded text-slate-900 dark:text-white">{analysis.bpm}</span>
+                                    <span className="text-[var(--neo-text-primary)]">BPM</span>
+                                    <div className="neo-border bg-[var(--neo-pink)] px-2 py-1 text-[var(--neo-white)]">
+                                        {analysis.bpm}
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -295,8 +297,8 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
                 </div>
                 
                 {/* Stem Tracks */}
-                <div className="space-y-2">
-                    {stems.map((stem) => {
+                <div className="space-y-4">
+                    {stems.map((stem, index) => {
                         const player = players[stem.stem_type] || { 
                             wavesurfer: null, 
                             isLoading: true, 
@@ -304,79 +306,71 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
                             isMuted: false 
                         };
                         
-                        const getStemColor = (stemType: string) => {
-                            switch (stemType) {
-                                case 'vocals': return 'bg-blue-500/20 dark:bg-blue-500/20';
-                                case 'drums': return 'bg-red-500/20 dark:bg-red-500/20';
-                                case 'bass': return 'bg-yellow-500/20 dark:bg-yellow-500/20';
-                                case 'other': return 'bg-green-500/20 dark:bg-green-500/20';
-                                default: return 'bg-purple-500/20 dark:bg-purple-500/20';
-                            }
-                        };
+                        const stemColor = stemColors[index % stemColors.length];
                         
                         return (
-                            <div key={stem.id} className="flex items-center gap-3 py-2">
-                                {/* Track Label */}
-                                <div className="flex items-center gap-2 w-20">
-                                    <span className="text-sm">{getStemIcon(stem.stem_type)}</span>
-                                    <span className="text-sm font-medium text-slate-700 dark:text-gray-300 capitalize">
-                                        {stem.stem_type}
-                                    </span>
-                                </div>
-                                
-                                {/* Volume Controls */}
-                                <div className="flex items-center gap-2 w-24">
-                                    <Button
-                                        onClick={() => handleMuteToggle(stem.stem_type)}
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300"
-                                        disabled={player.isLoading}
-                                    >
-                                        {player.isMuted ? (
-                                            <VolumeX className="h-3 w-3" />
-                                        ) : (
-                                            <Volume2 className="h-3 w-3" />
-                                        )}
-                                    </Button>
-                                    <span className="text-xs text-slate-600 dark:text-gray-400 w-8 text-center">
-                                        {player.volume}
-                                    </span>
-                                </div>
-                                
-                                {/* Compact Waveform */}
-                                <div className="flex-1 h-12 relative">
-                                    <div className={`absolute inset-0 ${getStemColor(stem.stem_type)} rounded`}></div>
-                                    <div className="absolute inset-0 overflow-hidden rounded" style={{ height: '48px' }}>
-                                        <SoundcloudWaveform
-                                            url={getStemUrl(stem)}
-                                            onReady={(ws) => handleWavesurferReady(stem.stem_type, ws)}
-                                            onPlay={() => handleStemPlay(stem.stem_type)}
-                                            onPause={() => handleStemPause(stem.stem_type)}
-                                            onFinish={() => setGlobalPlaying(false)}
-                                            onSeek={(time) => handleStemSeek(stem.stem_type, time)}
-                                            height={48}
-                                            compact={true}
-                                        />
+                            <div key={stem.id} className={`neo-border neo-shadow p-4 ${stemColor}`}>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="font-black uppercase tracking-wider text-[var(--neo-black)]">
+                                        {stem.stem_type.replace('_', ' ')}
+                                    </h4>
+                                    <div className="flex space-x-2">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="text-[var(--neo-black)] border-[var(--neo-black)] neo-border hover:bg-[var(--neo-black)] hover:text-[var(--neo-white)] font-black uppercase"
+                                            disabled={player.isLoading}
+                                        >
+                                            SOLO
+                                        </Button>
+                                        <Button 
+                                            onClick={() => handleMuteToggle(stem.stem_type)}
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="text-[var(--neo-black)] border-[var(--neo-black)] neo-border hover:bg-[var(--neo-black)] hover:text-[var(--neo-white)] font-black uppercase"
+                                            disabled={player.isLoading}
+                                        >
+                                            {player.isMuted ? 'UNMUTE' : 'MUTE'}
+                                        </Button>
                                     </div>
                                 </div>
                                 
-                                {/* Volume Slider */}
-                                <div className="w-16">
-                                    <Slider
-                                        value={[player.volume]}
-                                        onValueChange={(value) => handleVolumeChange(stem.stem_type, value)}
-                                        max={100}
-                                        step={1}
-                                        className="w-full"
-                                        disabled={player.isLoading}
+                                {/* Individual waveform */}
+                                <div className="neo-border bg-[var(--neo-black)]/10 p-2 mb-3">
+                                    <SoundcloudWaveform
+                                        url={getStemUrl(stem)}
+                                        onReady={(ws) => handleWavesurferReady(stem.stem_type, ws)}
+                                        onPlay={() => handleStemPlay(stem.stem_type)}
+                                        onPause={() => handleStemPause(stem.stem_type)}
+                                        onFinish={() => setGlobalPlaying(false)}
+                                        onSeek={(time) => handleStemSeek(stem.stem_type, time)}
+                                        height={60}
+                                        compact={false}
                                     />
+                                </div>
+                                
+                                {/* Volume control */}
+                                <div className="flex items-center space-x-4">
+                                    <span className="font-mono text-sm text-[var(--neo-black)] font-bold">VOL</span>
+                                    <div className="flex-1 neo-border neo-shadow-hover bg-[var(--neo-white)] p-1">
+                                        <Slider
+                                            value={[player.volume]}
+                                            onValueChange={(value) => handleVolumeChange(stem.stem_type, value)}
+                                            max={100}
+                                            step={1}
+                                            className="w-full neo-slider"
+                                            disabled={player.isLoading}
+                                        />
+                                    </div>
+                                    <span className="font-mono text-sm text-[var(--neo-black)] w-10 text-right font-bold">
+                                        {player.volume}%
+                                    </span>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
