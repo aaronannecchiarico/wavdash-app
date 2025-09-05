@@ -1,5 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/neo/button';
+import { Badge } from '@/components/ui/neo/badge';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
 import { AudioPlayer } from '@/components/audio-player.tsx';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { UploadProcessingPanel } from '@/components/upload-processing-panel';
@@ -29,93 +30,142 @@ export default function Show({ upload }: Props) {
         setDeleteDialogOpen(true);
     };
 
+    const getStatusColorNeo = (status: string) => {
+        switch (status) {
+            case 'ready':
+                return 'bg-chart-1'; // neo-green
+            case 'processing':
+                return 'bg-chart-3'; // neo-yellow  
+            case 'failed':
+                return 'bg-red-500';
+            default:
+                return 'bg-chart-4'; // neo-blue
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={uploadData.title} />
 
-            {/* Desktop: Two-column layout, Mobile: Single column */}
             <div className="py-8 px-4 sm:px-6 lg:pl-6 lg:pr-8">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-16">
-                    {/* Left Column - Primary Content (Desktop: 3/5 width, Mobile: Full width) */}
-                    <div className="lg:col-span-3 lg:pr-8">
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle>{uploadData.title}</CardTitle>
-                                        <CardDescription>
-                                            Uploaded {formatDistance(new Date(uploadData.created_at), new Date(), { addSuffix: true })}
-                                        </CardDescription>
+                <div className="space-y-8">
+                    {/* Upload header with color block */}
+                    <section className="border-2 border-border p-8 transition-all hover:translate-x-1 hover:translate-y-1 bg-chart-2" style={{ boxShadow: 'var(--shadow)' }}>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h1 className="text-3xl font-heading font-black uppercase tracking-wider text-main-foreground mb-2">
+                                    {uploadData.title}
+                                </h1>
+                                <p className="text-lg font-base font-bold text-main-foreground opacity-80">
+                                    UPLOADED {formatDistance(new Date(uploadData.created_at), new Date(), { addSuffix: true }).toUpperCase()}
+                                </p>
+                            </div>
+                            <Badge className={`${getStatusColorNeo(uploadData.status)} font-heading font-black uppercase tracking-wider`}>
+                                {uploadData.status.toUpperCase()}
+                            </Badge>
+                        </div>
+                    </section>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-16">
+                        {/* Left Column - Primary Content */}
+                        <div className="lg:col-span-3 lg:pr-8">
+                            <Card className="transition-all hover:translate-x-1 hover:translate-y-1">
+                                <CardHeader className="bg-secondary-background">
+                                    <CardTitle className="font-heading font-black uppercase tracking-wider text-main-foreground">
+                                        TRACK DETAILS
+                                    </CardTitle>
+                                </CardHeader>
+
+                                <CardContent className="space-y-6">
+                                    {uploadData.description && (
+                                        <div className="border-2 border-border bg-background p-4">
+                                            <h3 className="mb-2 text-sm font-heading font-black uppercase tracking-wider text-foreground">DESCRIPTION</h3>
+                                            <p className="font-base font-bold text-foreground">{uploadData.description}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="border-2 border-border bg-background p-4">
+                                        <h3 className="mb-4 text-sm font-heading font-black uppercase tracking-wider text-foreground">FILE DETAILS</h3>
+                                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div className="border-2 border-border bg-chart-1 p-3">
+                                                <dt className="text-xs font-heading font-black uppercase text-main-foreground">FILENAME</dt>
+                                                <dd className="mt-1 font-base font-bold text-main-foreground">{uploadData.filename}</dd>
+                                            </div>
+                                            <div className="border-2 border-border bg-chart-2 p-3">
+                                                <dt className="text-xs font-heading font-black uppercase text-main-foreground">TYPE</dt>
+                                                <dd className="mt-1 font-base font-bold text-main-foreground">{uploadData.mime_type}</dd>
+                                            </div>
+                                            <div className="border-2 border-border bg-chart-3 p-3">
+                                                <dt className="text-xs font-heading font-black uppercase text-main-foreground">SIZE</dt>
+                                                <dd className="mt-1 font-base font-bold text-main-foreground">{formatFileSize(uploadData.size)}</dd>
+                                            </div>
+                                            <div className="border-2 border-border bg-chart-4 p-3">
+                                                <dt className="text-xs font-heading font-black uppercase text-main-foreground">LAST UPDATED</dt>
+                                                <dd className="mt-1 font-base font-bold text-main-foreground">
+                                                    {formatDistance(new Date(uploadData.updated_at), new Date(), { addSuffix: true }).toUpperCase()}
+                                                </dd>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(uploadData.status)}`}>
-                                        {uploadData.status.charAt(0).toUpperCase() + uploadData.status.slice(1)}
-                                    </span>
-                                </div>
-                            </CardHeader>
 
-                            <CardContent className="space-y-6">
-                                {uploadData.description && (
-                                    <div>
-                                        <h3 className="mb-2 text-sm font-medium text-foreground/80 dark:text-foreground/90">Description</h3>
-                                        <p className="text-foreground/70 dark:text-foreground/80">{uploadData.description}</p>
+                                    {uploadData.status === 'ready' && uploadData.stream_url && (
+                                        <div className="border-2 border-border bg-background p-4">
+                                            <h3 className="mb-4 text-sm font-heading font-black uppercase tracking-wider text-foreground">MAIN TRACK</h3>
+                                            <AudioPlayer
+                                                url={uploadData.stream_url}
+                                                title="MAIN TRACK"
+                                                className="mb-4"
+                                            />
+                                        </div>
+                                    )}
+                                </CardContent>
+
+                                <CardFooter className="bg-border border-t-2 border-border flex flex-wrap gap-4 justify-between">
+                                    <div className="text-xs font-base text-foreground uppercase">
+                                        ACTIONS
                                     </div>
-                                )}
+                                    <div className="flex gap-2">
+                                        <Link href={route('uploads.edit', uploadData.id)}>
+                                            <Button variant="neutral" className="font-heading font-black uppercase tracking-wider">
+                                                <PencilIcon className="mr-2 h-4 w-4" />
+                                                EDIT TRACK
+                                            </Button>
+                                        </Link>
 
-                                <div>
-                                    <h3 className="mb-2 text-sm font-medium text-foreground/80 dark:text-foreground/90">File Details</h3>
-                                    <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
-                                        <div className="sm:col-span-1">
-                                            <dt className="text-sm font-medium text-muted-foreground">Filename</dt>
-                                            <dd className="mt-1 text-sm text-foreground">{uploadData.filename}</dd>
-                                        </div>
-                                        <div className="sm:col-span-1">
-                                            <dt className="text-sm font-medium text-muted-foreground">Type</dt>
-                                            <dd className="mt-1 text-sm text-foreground">{uploadData.mime_type}</dd>
-                                        </div>
-                                        <div className="sm:col-span-1">
-                                            <dt className="text-sm font-medium text-muted-foreground">Size</dt>
-                                            <dd className="mt-1 text-sm text-foreground">{formatFileSize(uploadData.size)}</dd>
-                                        </div>
-                                        <div className="sm:col-span-1">
-                                            <dt className="text-sm font-medium text-muted-foreground">Last Updated</dt>
-                                            <dd className="mt-1 text-sm text-foreground">
-                                                {formatDistance(new Date(uploadData.updated_at), new Date(), { addSuffix: true })}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                </div>
-
-                                {uploadData.status === 'ready' && uploadData.stream_url && (
-                                    <div>
-                                        <h3 className="mb-2 text-sm font-medium text-foreground/80 dark:text-foreground/90">Audio Preview</h3>
-                                        <AudioPlayer
-                                            url={uploadData.stream_url}
-                                            title="Preview"
-                                            className="mb-4"
-                                        />
+                                        <Button 
+                                            className="bg-red-500 text-white font-heading font-black uppercase tracking-wider hover:bg-red-600" 
+                                            onClick={handleDeleteClick}
+                                        >
+                                            <TrashIcon className="mr-2 h-4 w-4" />
+                                            DESTROY
+                                        </Button>
                                     </div>
-                                )}
-                            </CardContent>
+                                </CardFooter>
+                            </Card>
 
-                            <CardFooter className="flex flex-wrap gap-2 justify-end">
-                                <Link href={route('uploads.edit', uploadData.id)}>
-                                    <Button variant="outline">
-                                        <PencilIcon className="mr-2 h-4 w-4" />
-                                        Edit
-                                    </Button>
-                                </Link>
-
-                                <Button variant="destructive" onClick={handleDeleteClick}>
-                                    <TrashIcon className="mr-2 h-4 w-4" />
-                                    Delete
+                            {/* Action buttons */}
+                            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Button className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
+                                    ANALYZE TRACK
                                 </Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
+                                <Button variant="neutral" className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
+                                    EXTRACT STEMS
+                                </Button>
+                                <Button variant="neutral" className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
+                                    TEMPO SHIFT
+                                </Button>
+                            </section>
+                        </div>
 
-                    {/* Right Column - Processing Panel (Desktop: 2/5 width, Mobile: Full width below left column) */}
-                    <div className="lg:col-span-2 lg:pl-8">
-                        <UploadProcessingPanel upload={uploadData} />
+                        {/* Right Column - Processing Panel */}
+                        <div className="lg:col-span-2 lg:pl-8">
+                            <div className="border-2 border-border bg-background p-6 transition-all hover:translate-x-1 hover:translate-y-1" style={{ boxShadow: 'var(--shadow)' }}>
+                                <h2 className="text-2xl font-heading font-black uppercase tracking-wide mb-6 text-foreground">
+                                    PROCESSING OPTIONS
+                                </h2>
+                                <UploadProcessingPanel upload={uploadData} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

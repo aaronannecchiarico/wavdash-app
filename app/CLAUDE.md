@@ -94,6 +94,15 @@ Follow these patterns to maintain code consistency and quality.
     * Use the `useForm()` hook from `@inertiajs/react` to manage form state and submissions.
 * **File Naming:** Use `kebab-case.tsx` for React components and hooks (e.g., `audio-player.tsx`).
 
+### **Neobrutalism Component Library**
+
+* **Primary UI Library:** For the neobrutalist redesign, use components from https://neobrutalism.dev
+* **Component Location:** Neobrutalism components are installed in `/resources/js/components/ui/neo/`
+* **Installation:** Use `npx shadcn@latest add https://neobrutalism.dev/r/[component].json` to install components
+* **CSS Variables Only:** Neobrutalism components use CSS variables, not utility classes
+* **Styling System:** Uses custom CSS variables defined in `resources/css/app.css` adapted to Beat Forge brand colors
+* **Preferred Usage:** For redesign work, prefer neobrutalism components over standard shadcn/ui components
+
 ### **Filament v4 Admin Panel**
 
 * **Location:** The admin panel is accessed at the `/admin` route and has its own authentication.

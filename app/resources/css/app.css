@@ -92,6 +92,31 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@theme inline {
+    --color-main: var(--main);
+    --color-background: var(--background);
+    --color-secondary-background: var(--secondary-background);
+    --color-foreground: var(--foreground);
+    --color-main-foreground: var(--main-foreground);
+    --color-border: var(--border);
+    --color-overlay: var(--overlay);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --spacing-boxShadowX: 4px;
+    --spacing-boxShadowY: 4px;
+    --spacing-reverseBoxShadowX: -4px;
+    --spacing-reverseBoxShadowY: -4px;
+    --radius-base: 0px;
+    --shadow-shadow: var(--shadow);
+    --font-weight-base: 500;
+    --font-weight-heading: 900;
+}
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -111,7 +136,7 @@
 }
 
 :root {
-    /* Neobrutalist Color Palette */
+    /* Beat Forge Brand Colors - Neobrutalist Palette */
     --neo-white: #FFFFFF;
     --neo-green: #00EB90;
     --neo-pink: #FF73A9;
@@ -119,46 +144,52 @@
     --neo-blue: #3F5EF4;
     --neo-black: #000000;
 
-    /* Light Mode Assignments */
-    --neo-bg-primary: var(--neo-white);
-    --neo-bg-secondary: var(--neo-yellow);
+    /* Neobrutalism.dev CSS Variables - Adapted to Beat Forge Colors */
+    --background: var(--neo-white);
+    --secondary-background: var(--neo-yellow);
+    --foreground: var(--neo-black);
+    --main-foreground: var(--neo-black);
+    --main: var(--neo-green);
+    --border: var(--neo-black);
+    --ring: var(--neo-black);
+    --overlay: oklch(0% 0 0 / 0.8);
+    --shadow: 4px 4px 0px 0px var(--border);
+    --chart-1: var(--neo-green);
+    --chart-2: var(--neo-pink);
+    --chart-3: var(--neo-yellow);
+    --chart-4: var(--neo-blue);
+    --chart-5: var(--neo-black);
+    --chart-active-dot: var(--neo-black);
+
+    /* Legacy neo variables for backward compatibility */
+    --neo-bg-primary: var(--background);
+    --neo-bg-secondary: var(--secondary-background);
     --neo-accent-1: var(--neo-green);
     --neo-accent-2: var(--neo-pink);
     --neo-accent-3: var(--neo-blue);
-    --neo-text-primary: var(--neo-black);
-
-    /* Neobrutalist Design Constants */
+    --neo-text-primary: var(--foreground);
     --neo-border-width: 3px;
     --neo-shadow-offset: 4px;
     --neo-border-radius: 0px;
-    --neo-shadow: var(--neo-shadow-offset) var(--neo-shadow-offset) 0px var(--neo-black);
-    --neo-shadow-hover: calc(var(--neo-shadow-offset) / 2) calc(var(--neo-shadow-offset) / 2) 0px var(--neo-black);
+    --neo-shadow: var(--shadow);
+    --neo-shadow-hover: 2px 2px 0px var(--border);
 
-    /* Override existing shadcn variables with neobrutalist colors */
-    --background: var(--neo-bg-primary);
-    --foreground: var(--neo-text-primary);
-    --card: var(--neo-bg-primary);
-    --card-foreground: var(--neo-text-primary);
-    --popover: var(--neo-bg-primary);
-    --popover-foreground: var(--neo-text-primary);
-    --primary: var(--neo-accent-1);
-    --primary-foreground: var(--neo-black);
-    --secondary: var(--neo-accent-2);
+    /* shadcn/ui compatibility */
+    --card: var(--background);
+    --card-foreground: var(--foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: var(--neo-pink);
     --secondary-foreground: var(--neo-white);
-    --muted: var(--neo-bg-secondary);
-    --muted-foreground: var(--neo-black);
-    --accent: var(--neo-accent-3);
+    --muted: var(--secondary-background);
+    --muted-foreground: var(--foreground);
+    --accent: var(--neo-blue);
     --accent-foreground: var(--neo-white);
     --destructive: #EF4444;
     --destructive-foreground: var(--neo-white);
-    --border: var(--neo-black);
-    --input: var(--neo-black);
-    --ring: var(--neo-accent-1);
-    --chart-1: var(--neo-green);
-    --chart-2: var(--neo-pink);
-    --chart-3: var(--neo-blue);
-    --chart-4: var(--neo-yellow);
-    --chart-5: var(--neo-black);
+    --input: var(--border);
     --radius: 0px;
     --sidebar: var(--neo-black);
     --sidebar-foreground: var(--neo-white);
@@ -167,47 +198,52 @@
     --sidebar-accent: var(--neo-green);
     --sidebar-accent-foreground: var(--neo-black);
     --sidebar-border: var(--neo-white);
-    --sidebar-ring: var(--neo-accent-1);
+    --sidebar-ring: var(--neo-green);
 }
 
 .dark {
-    /* Dark Mode Assignments */
-    --neo-bg-primary: var(--neo-black);
-    --neo-bg-secondary: var(--neo-blue);
-    --neo-accent-1: var(--neo-green);
-    --neo-accent-2: var(--neo-pink);
-    --neo-accent-3: var(--neo-yellow);
-    --neo-text-primary: var(--neo-white);
-
-    /* Dark mode shadows use white instead of black */
-    --neo-shadow: var(--neo-shadow-offset) var(--neo-shadow-offset) 0px var(--neo-white);
-    --neo-shadow-hover: calc(var(--neo-shadow-offset) / 2) calc(var(--neo-shadow-offset) / 2) 0px var(--neo-white);
-
-    /* Override existing variables for dark mode */
-    --background: var(--neo-bg-primary);
-    --foreground: var(--neo-text-primary);
-    --card: var(--neo-bg-primary);
-    --card-foreground: var(--neo-text-primary);
-    --popover: var(--neo-bg-primary);
-    --popover-foreground: var(--neo-text-primary);
-    --primary: var(--neo-accent-1);
-    --primary-foreground: var(--neo-black);
-    --secondary: var(--neo-accent-2);
-    --secondary-foreground: var(--neo-black);
-    --muted: var(--neo-bg-secondary);
-    --muted-foreground: var(--neo-white);
-    --accent: var(--neo-accent-3);
-    --accent-foreground: var(--neo-black);
-    --destructive: #EF4444;
-    --destructive-foreground: var(--neo-white);
+    /* Neobrutalism.dev Dark Mode - Adapted to Beat Forge Colors */
+    --background: var(--neo-black);
+    --secondary-background: var(--neo-blue);
+    --foreground: var(--neo-white);
+    --main-foreground: var(--neo-black);
+    --main: var(--neo-green);
     --border: var(--neo-white);
-    --input: var(--neo-white);
-    --ring: var(--neo-accent-1);
+    --ring: var(--neo-white);
+    --shadow: 4px 4px 0px 0px var(--border);
     --chart-1: var(--neo-green);
     --chart-2: var(--neo-pink);
     --chart-3: var(--neo-yellow);
     --chart-4: var(--neo-blue);
     --chart-5: var(--neo-white);
+    --chart-active-dot: var(--neo-white);
+
+    /* Legacy neo variables for backward compatibility */
+    --neo-bg-primary: var(--background);
+    --neo-bg-secondary: var(--secondary-background);
+    --neo-accent-1: var(--neo-green);
+    --neo-accent-2: var(--neo-pink);
+    --neo-accent-3: var(--neo-yellow);
+    --neo-text-primary: var(--foreground);
+    --neo-shadow: var(--shadow);
+    --neo-shadow-hover: 2px 2px 0px var(--border);
+
+    /* shadcn/ui compatibility */
+    --card: var(--background);
+    --card-foreground: var(--foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: var(--neo-pink);
+    --secondary-foreground: var(--neo-black);
+    --muted: var(--secondary-background);
+    --muted-foreground: var(--foreground);
+    --accent: var(--neo-yellow);
+    --accent-foreground: var(--neo-black);
+    --destructive: #EF4444;
+    --destructive-foreground: var(--neo-white);
+    --input: var(--border);
     --sidebar: var(--neo-black);
     --sidebar-foreground: var(--neo-white);
     --sidebar-primary: var(--neo-white);
@@ -215,7 +251,7 @@
     --sidebar-accent: var(--neo-green);
     --sidebar-accent-foreground: var(--neo-black);
     --sidebar-border: var(--neo-white);
-    --sidebar-ring: var(--neo-accent-1);
+    --sidebar-ring: var(--neo-green);
 }
 
 @layer base {
@@ -224,7 +260,11 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground font-base;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-heading;
     }
 }
 
