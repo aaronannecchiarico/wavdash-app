@@ -1,12 +1,11 @@
 import { Button } from '@/components/ui/neo/button';
 import { Badge } from '@/components/ui/neo/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
 import { AudioPlayer } from '@/components/audio-player.tsx';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { UploadProcessingPanel } from '@/components/upload-processing-panel';
 import AppLayout from '@/layouts/app-layout';
 import { formatFileSize } from '@/lib/formatters';
-import { getStatusColor } from '@/lib/upload-helpers';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistance } from 'date-fns';
@@ -142,19 +141,6 @@ export default function Show({ upload }: Props) {
                                     </div>
                                 </CardFooter>
                             </Card>
-
-                            {/* Action buttons */}
-                            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Button className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
-                                    ANALYZE TRACK
-                                </Button>
-                                <Button variant="neutral" className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
-                                    EXTRACT STEMS
-                                </Button>
-                                <Button variant="neutral" className="h-16 flex-col gap-1.5 font-heading font-black uppercase tracking-wider">
-                                    TEMPO SHIFT
-                                </Button>
-                            </section>
                         </div>
 
                         {/* Right Column - Processing Panel */}

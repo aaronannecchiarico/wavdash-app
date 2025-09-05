@@ -202,7 +202,7 @@
 }
 
 .dark {
-    /* Neobrutalism.dev Dark Mode - Adapted to Beat Forge Colors */
+    /* Enhanced Dark Mode Variables for Better Contrast - Phase 7 Implementation */
     --background: var(--neo-black);
     --secondary-background: var(--neo-blue);
     --foreground: var(--neo-white);
@@ -210,6 +210,7 @@
     --main: var(--neo-green);
     --border: var(--neo-white);
     --ring: var(--neo-white);
+    --overlay: oklch(0% 0 0 / 0.9);
     --shadow: 4px 4px 0px 0px var(--border);
     --chart-1: var(--neo-green);
     --chart-2: var(--neo-pink);
@@ -218,7 +219,7 @@
     --chart-5: var(--neo-white);
     --chart-active-dot: var(--neo-white);
 
-    /* Legacy neo variables for backward compatibility */
+    /* Enhanced neo variables for better dark mode readability */
     --neo-bg-primary: var(--background);
     --neo-bg-secondary: var(--secondary-background);
     --neo-accent-1: var(--neo-green);
@@ -228,7 +229,7 @@
     --neo-shadow: var(--shadow);
     --neo-shadow-hover: 2px 2px 0px var(--border);
 
-    /* shadcn/ui compatibility */
+    /* Enhanced shadcn/ui compatibility for dark mode */
     --card: var(--background);
     --card-foreground: var(--foreground);
     --popover: var(--background);
@@ -386,6 +387,63 @@
     
     .dark .neo-slider [role="slider"]:hover {
         box-shadow: 2px 2px 0px #FFFFFF;
+    }
+}
+
+/* Enhanced Dark Mode Component Adjustments - Phase 7 Implementation */
+@layer utilities {
+    /* Dark mode specific component adjustments for better readability */
+    .dark .neo-border { 
+        border-color: var(--neo-white); 
+    }
+    
+    .dark .neo-button { 
+        color: var(--neo-white); 
+    }
+    
+    .dark .neo-card { 
+        background: var(--neo-black); 
+        color: var(--neo-white);
+    }
+
+    /* Enhanced text contrast in dark mode */
+    .dark .text-muted-foreground {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Dark mode form elements */
+    .dark .neo-input {
+        background-color: var(--neo-black);
+        color: var(--neo-white);
+        border-color: var(--neo-white);
+    }
+
+    .dark .neo-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Enhanced button variants for dark mode */
+    .dark .neo-button[data-variant="outline"] {
+        background-color: transparent;
+        border-color: var(--neo-white);
+        color: var(--neo-white);
+    }
+
+    .dark .neo-button[data-variant="outline"]:hover {
+        background-color: var(--neo-white);
+        color: var(--neo-black);
+    }
+
+    /* Dark mode specific shadow adjustments */
+    .dark .neo-shadow,
+    .dark .neo-card,
+    .dark .neo-button {
+        box-shadow: 4px 4px 0px var(--neo-white);
+    }
+
+    .dark .neo-shadow-hover:hover,
+    .dark .neo-button:hover {
+        box-shadow: 2px 2px 0px var(--neo-white);
     }
 }
 
