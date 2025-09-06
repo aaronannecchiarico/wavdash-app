@@ -1,6 +1,6 @@
 import { MusicCard } from '@/components/music-library-card';
 import { MusicLibraryControls } from '@/components/music-library-controls';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/neo/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -67,23 +67,23 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Music Library" />
             <div className="p-4 sm:p-6 lg:p-8">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-6 flex items-center justify-between">
                     <MusicLibraryControls filters={filters} filterOptions={filterOptions} />
                     <Link href={route('uploads.create')}>
-                        <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">
+                        <Button>
                             <PlusIcon className="mr-2 h-4 w-4" />
                             Create Upload
                         </Button>
                     </Link>
                 </div>
-                <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
+                <div className="flex h-full flex-1 flex-col gap-4 pb-8">
                     {uploads.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-white to-blue-100 dark:from-slate-800/50 dark:to-blue-900/30">
-                                <Music className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center bg-secondary-background border-2 border-border">
+                                <Music className="h-8 w-8" style={{ color: 'var(--neo-blue)' }} />
                             </div>
-                            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">No music files found</h3>
-                            <p className="max-w-sm text-gray-500 dark:text-gray-400">
+                            <h3 className="mb-2 text-lg font-heading text-foreground">No music files found</h3>
+                            <p className="max-w-sm font-base text-foreground opacity-75">
                                 {hasFilters
                                     ? 'Your search returned no results. Try adjusting your filters.'
                                     : "You haven't uploaded any audio files yet. Upload some tracks to get started."}
@@ -91,7 +91,7 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
                             {!hasFilters && (
                                 <div className="mt-6">
                                     <Link href={route('uploads.create')}>
-                                        <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">
+                                        <Button>
                                             <PlusIcon className="mr-2 h-5 w-5" />
                                             Upload Your First Beat
                                         </Button>
@@ -101,8 +101,8 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* Grid */}
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {/* Grid - Bigger cards with better spacing */}
+                            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                                 {uploads.data.map((upload, index) => (
                                     <MusicCard key={upload.id} upload={upload} isLast={index === uploads.data.length - 1} />
                                 ))}

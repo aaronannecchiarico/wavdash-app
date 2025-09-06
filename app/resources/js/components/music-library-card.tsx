@@ -1,6 +1,6 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/neo/badge';
+import { Button } from '@/components/ui/neo/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/neo/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { formatFileSize, formatDuration, formatDate } from '@/lib/formatters';
@@ -31,21 +31,21 @@ export const MusicCard = ({
         <>
             <Card
                 ref={isLast ? lastElementRef : null}
-                className="group cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-slate-700/20 dark:border-slate-800"
+                className="group cursor-pointer neo-transition hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none"
                 onClick={handleCardClick}
             >
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 p-4">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-xs dark:border-gray-600 dark:text-gray-300">
+                        <Badge variant="neutral" className="text-xs font-base">
                             {getAudioFormat(upload.mime_type)}
                         </Badge>
-                        <Badge className={getStatusColor(upload.status)}>{upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}</Badge>
+                        <Badge variant="default">{upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}</Badge>
                     </div>
                     <div className="opacity-0 transition-opacity group-hover:opacity-100">
                         <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                <Button variant="neutral" size="icon" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -55,12 +55,12 @@ export const MusicCard = ({
                                         <BarChart3 className="mr-2 h-4 w-4" />
                                         Audio Analysis
                                         {upload.has_analysis && (
-                                            <Badge variant="secondary" className="ml-auto text-xs">
+                                            <Badge variant="default" className="ml-auto text-xs">
                                                 Done
                                             </Badge>
                                         )}
                                         {upload.is_analysis_in_progress && (
-                                            <Badge variant="outline" className="ml-auto text-xs">
+                                            <Badge variant="neutral" className="ml-auto text-xs">
                                                 Processing
                                             </Badge>
                                         )}
@@ -71,12 +71,12 @@ export const MusicCard = ({
                                         <Scissors className="mr-2 h-4 w-4" />
                                         Stem Separation
                                         {upload.has_stems && (
-                                            <Badge variant="secondary" className="ml-auto text-xs">
+                                            <Badge variant="default" className="ml-auto text-xs">
                                                 Done
                                             </Badge>
                                         )}
                                         {upload.is_stem_separation_in_progress && (
-                                            <Badge variant="outline" className="ml-auto text-xs">
+                                            <Badge variant="neutral" className="ml-auto text-xs">
                                                 Processing
                                             </Badge>
                                         )}
@@ -87,12 +87,12 @@ export const MusicCard = ({
                                         <Gauge className="mr-2 h-4 w-4" />
                                         Tempo Effects
                                         {upload.has_tempos && (
-                                            <Badge variant="secondary" className="ml-auto text-xs">
+                                            <Badge variant="default" className="ml-auto text-xs">
                                                 Done
                                             </Badge>
                                         )}
                                         {upload.is_tempo_processing_in_progress && (
-                                            <Badge variant="outline" className="ml-auto text-xs">
+                                            <Badge variant="neutral" className="ml-auto text-xs">
                                                 Processing
                                             </Badge>
                                         )}
@@ -128,19 +128,19 @@ export const MusicCard = ({
                 </div>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6 p-6">
                 {/* Music Visualization */}
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-white to-blue-100 dark:from-slate-800/80 dark:to-blue-950/90 border dark:border-slate-700/50">
+                <div className="flex aspect-square items-center justify-center overflow-hidden bg-[var(--neo-bg-secondary)] border-2 border-border">
                     <div className="flex flex-col items-center justify-center">
-                        <Music className="mb-2 h-12 w-12 text-blue-500 dark:text-blue-400" />
                         <div className="flex items-center space-x-1">
                             {[1, 2, 3, 4, 5].map((i) => (
                                 <div
                                     key={i}
-                                    className={`w-1 animate-pulse rounded-full bg-blue-400/70 dark:bg-blue-500/70`}
+                                    className={`w-1.5 animate-pulse`}
                                     style={{
-                                        height: `${15 + Math.floor(Math.random() * 20)}px`,
+                                        height: `${20 + Math.floor(Math.random() * 25)}px`,
                                         animationDelay: `${i * 0.1}s`,
+                                        backgroundColor: 'var(--neo-white)',
                                     }}
                                 ></div>
                             ))}
@@ -150,70 +150,70 @@ export const MusicCard = ({
 
                 {/* Music Info */}
                 <div className="space-y-2">
-                    <h3 className="line-clamp-1 text-lg leading-tight font-semibold dark:text-white">{upload.title}</h3>
-                    {upload.artist && <p className="line-clamp-1 text-sm font-medium text-gray-600 dark:text-gray-300">by {upload.artist}</p>}
-                    {upload.description && <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">{upload.description}</p>}
+                    <h3 className="line-clamp-1 text-lg leading-tight font-heading text-foreground">{upload.title}</h3>
+                    {upload.artist && <p className="line-clamp-1 text-sm font-base text-foreground">by {upload.artist}</p>}
+                    {upload.description && <p className="line-clamp-2 text-xs font-base text-foreground opacity-75">{upload.description}</p>}
                 </div>
 
                 {/* Technical Details */}
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="grid grid-cols-2 gap-2 text-xs font-base text-foreground opacity-75">
                     {upload.duration && (
                         <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <Clock className="h-3 w-3 text-foreground" />
                             <span>{formatDuration(upload.duration)}</span>
                         </div>
                     )}
                     <div className="flex items-center space-x-1">
-                        <Volume2 className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                        <Volume2 className="h-3 w-3 text-foreground" />
                         <span>{formatFileSize(upload.size)}</span>
                     </div>
                     {upload.bitrate && (
                         <div className="flex items-center space-x-1">
-                            <span className="text-xs text-gray-400 dark:text-gray-500">♪</span>
+                            <span className="text-xs text-foreground">♪</span>
                             <span>{upload.bitrate} kbps</span>
                         </div>
                     )}
                     {upload.genre && (
                         <div className="flex items-center space-x-1">
-                            <span className="text-xs text-gray-400 dark:text-gray-500">#</span>
+                            <span className="text-xs text-foreground">#</span>
                             <span className="truncate">{upload.genre}</span>
                         </div>
                     )}
                 </div>
             </CardContent>
 
-            <CardFooter className="pt-0">
+            <CardFooter className="pt-0 p-6">
                 <div className="flex w-full flex-col space-y-3">
                     {/* Status badges */}
                     <div className="flex flex-wrap gap-1">
                         {upload.has_analysis && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="default" className="text-xs font-base">
                                 <BarChart3 className="mr-1 h-3 w-3" />
                                 Analysis
                             </Badge>
                         )}
                         {upload.has_stems && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="default" className="text-xs font-base">
                                 <Scissors className="mr-1 h-3 w-3" />
                                 Stems
                             </Badge>
                         )}
                         {upload.has_tempos && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="default" className="text-xs font-base">
                                 <Gauge className="mr-1 h-3 w-3" />
                                 Tempo Effects
                             </Badge>
                         )}
                     </div>
-                    
+
                     {/* User and date info */}
-                    <div className="flex w-full items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex w-full items-center justify-between text-xs font-base text-foreground opacity-75">
                         <div className="flex items-center space-x-1">
-                            <User className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <User className="h-3 w-3 text-foreground" />
                             <span className="truncate">{upload.user.name}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                            <Calendar className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <Calendar className="h-3 w-3 text-foreground" />
                             <span>{formatDate(upload.created_at)}</span>
                         </div>
                     </div>
