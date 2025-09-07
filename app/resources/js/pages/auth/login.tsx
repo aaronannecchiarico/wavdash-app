@@ -1,14 +1,13 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
+import { Button } from '@/components/ui/neo/button';
+import { BrutalistInput } from '@/components/brutalist-input';
+import { BrutalistLabel } from '@/components/brutalist-label';
+import { BrutalistCheckbox } from '@/components/brutalist-checkbox';
+import BrutalistAuthLayout from '@/layouts/brutalist-auth-layout';
 
 type LoginForm = {
     email: string;
@@ -36,14 +35,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <BrutalistAuthLayout title="LOGIN TO THE FORGE" description="ENTER YOUR CREDENTIALS TO ACCESS THE BEATS">
             <Head title="Log in" />
 
-            <form className="flex flex-col gap-6" onSubmit={submit}>
-                <div className="grid gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
-                        <Input
+            <form className="space-y-6" onSubmit={submit}>
+                <div className="space-y-4">
+                    <div>
+                        <BrutalistLabel htmlFor="email">EMAIL ADDRESS</BrutalistLabel>
+                        <BrutalistInput
                             id="email"
                             type="email"
                             required
@@ -52,21 +51,26 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@example.com"
+                            placeholder="EMAIL@EXAMPLE.COM"
+                            hasError={!!errors.email}
                         />
                         <InputError message={errors.email} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <div className="flex items-center">
-                            <Label htmlFor="password">Password</Label>
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <BrutalistLabel htmlFor="password">PASSWORD</BrutalistLabel>
                             {canResetPassword && (
-                                <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    Forgot password?
-                                </TextLink>
+                                <Link 
+                                    href={route('password.request')} 
+                                    className="font-heading font-black text-xs uppercase tracking-wide text-foreground/70 hover:text-foreground transition-colors"
+                                    tabIndex={5}
+                                >
+                                    FORGOT PASSWORD?
+                                </Link>
                             )}
                         </div>
-                        <Input
+                        <BrutalistInput
                             id="password"
                             type="password"
                             required
@@ -74,37 +78,53 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Password"
+                            placeholder="PASSWORD"
+                            hasError={!!errors.password}
                         />
                         <InputError message={errors.password} />
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                        <Checkbox
+                    <div className="pt-2">
+                        <BrutalistCheckbox
                             id="remember"
                             name="remember"
                             checked={data.remember}
                             onClick={() => setData('remember', !data.remember)}
                             tabIndex={3}
+                            label="REMEMBER ME"
                         />
-                        <Label htmlFor="remember">Remember me</Label>
                     </div>
 
-                    <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Log in
+                    <Button 
+                        type="submit" 
+                        className="w-full bg-chart-1 text-main-foreground hover:bg-chart-2 font-heading font-black uppercase tracking-widest h-12" 
+                        tabIndex={4} 
+                        disabled={processing}
+                    >
+                        {processing && <LoaderCircle className="h-4 w-4 animate-spin mr-2" />}
+                        {processing ? 'LOGGING IN...' : 'LOGIN TO FORGE'}
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-muted-foreground">
-                    Don't have an account?{' '}
-                    <TextLink href={route('register')} tabIndex={5}>
-                        Sign up
-                    </TextLink>
+                <div className="text-center border-t-2 border-border pt-6">
+                    <span className="font-base font-bold text-foreground/70 text-sm uppercase tracking-wide">
+                        DON'T HAVE AN ACCOUNT?{' '}
+                    </span>
+                    <Link 
+                        href={route('register')} 
+                        className="font-heading font-black text-sm uppercase tracking-wide text-chart-1 hover:text-chart-2 transition-colors"
+                        tabIndex={6}
+                    >
+                        SIGN UP
+                    </Link>
                 </div>
             </form>
 
-            {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
-        </AuthLayout>
+            {status && (
+                <div className="border-2 border-chart-1 bg-chart-1/20 p-3 text-center">
+                    <span className="font-base font-bold text-foreground text-sm uppercase">{status}</span>
+                </div>
+            )}
+        </BrutalistAuthLayout>
     );
 }

@@ -1,13 +1,12 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AuthLayout from '@/layouts/auth-layout';
+import { Button } from '@/components/ui/neo/button';
+import { BrutalistInput } from '@/components/brutalist-input';
+import { BrutalistLabel } from '@/components/brutalist-label';
+import BrutalistAuthLayout from '@/layouts/brutalist-auth-layout';
 
 type RegisterForm = {
     name: string;
@@ -32,13 +31,13 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <BrutalistAuthLayout title="JOIN THE FORGE" description="CREATE YOUR ACCOUNT TO START DESTROYING BEATS">
             <Head title="Register" />
-            <form className="flex flex-col gap-6" onSubmit={submit}>
-                <div className="grid gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input
+            <form className="space-y-6" onSubmit={submit}>
+                <div className="space-y-4">
+                    <div>
+                        <BrutalistLabel htmlFor="name">FULL NAME</BrutalistLabel>
+                        <BrutalistInput
                             id="name"
                             type="text"
                             required
@@ -48,14 +47,15 @@ export default function Register() {
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             disabled={processing}
-                            placeholder="Full name"
+                            placeholder="YOUR FULL NAME"
+                            hasError={!!errors.name}
                         />
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.name} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
-                        <Input
+                    <div>
+                        <BrutalistLabel htmlFor="email">EMAIL ADDRESS</BrutalistLabel>
+                        <BrutalistInput
                             id="email"
                             type="email"
                             required
@@ -64,14 +64,15 @@ export default function Register() {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             disabled={processing}
-                            placeholder="email@example.com"
+                            placeholder="EMAIL@EXAMPLE.COM"
+                            hasError={!!errors.email}
                         />
                         <InputError message={errors.email} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
+                    <div>
+                        <BrutalistLabel htmlFor="password">PASSWORD</BrutalistLabel>
+                        <BrutalistInput
                             id="password"
                             type="password"
                             required
@@ -80,14 +81,15 @@ export default function Register() {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             disabled={processing}
-                            placeholder="Password"
+                            placeholder="CREATE A STRONG PASSWORD"
+                            hasError={!!errors.password}
                         />
                         <InputError message={errors.password} />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
-                        <Input
+                    <div>
+                        <BrutalistLabel htmlFor="password_confirmation">CONFIRM PASSWORD</BrutalistLabel>
+                        <BrutalistInput
                             id="password_confirmation"
                             type="password"
                             required
@@ -96,24 +98,36 @@ export default function Register() {
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             disabled={processing}
-                            placeholder="Confirm password"
+                            placeholder="CONFIRM YOUR PASSWORD"
+                            hasError={!!errors.password_confirmation}
                         />
                         <InputError message={errors.password_confirmation} />
                     </div>
 
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Create account
+                    <Button 
+                        type="submit" 
+                        className="w-full bg-chart-2 text-main-foreground hover:bg-chart-1 font-heading font-black uppercase tracking-widest h-12 mt-6" 
+                        tabIndex={5} 
+                        disabled={processing}
+                    >
+                        {processing && <LoaderCircle className="h-4 w-4 animate-spin mr-2" />}
+                        {processing ? 'CREATING ACCOUNT...' : 'CREATE FORGE ACCOUNT'}
                     </Button>
                 </div>
 
-                <div className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
-                    <TextLink href={route('login')} tabIndex={6}>
-                        Log in
-                    </TextLink>
+                <div className="text-center border-t-2 border-border pt-6">
+                    <span className="font-base font-bold text-foreground/70 text-sm uppercase tracking-wide">
+                        ALREADY HAVE AN ACCOUNT?{' '}
+                    </span>
+                    <Link 
+                        href={route('login')} 
+                        className="font-heading font-black text-sm uppercase tracking-wide text-chart-1 hover:text-chart-2 transition-colors"
+                        tabIndex={6}
+                    >
+                        LOG IN
+                    </Link>
                 </div>
             </form>
-        </AuthLayout>
+        </BrutalistAuthLayout>
     );
 }
