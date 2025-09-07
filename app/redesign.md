@@ -837,6 +837,8 @@ export function NeoThemeToggle() {
 - [ ] Audio player controls maintain functionality with new styling
 - [ ] Form inputs have proper focus states and validation styling
 - [ ] Loading states use consistent neobrutalist indicators
+- [ ] The app has proper readability and usage in mobile responsive tests
+- [ ] Ensure components adhere to the brand colors
 
 ### 8.2 Performance Optimization
 - Optimize font loading with `font-display: swap`

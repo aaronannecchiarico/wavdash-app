@@ -271,44 +271,44 @@
 
 /* Neobrutalist utility classes */
 @layer utilities {
-    .neo-border { 
-        border: 3px solid currentColor; 
+    .neo-border {
+        border: 3px solid currentColor;
     }
-    
-    .neo-border-t { 
-        border-top: 3px solid currentColor; 
+
+    .neo-border-t {
+        border-top: 3px solid currentColor;
     }
-    
-    .neo-border-b { 
-        border-bottom: 3px solid currentColor; 
+
+    .neo-border-b {
+        border-bottom: 3px solid currentColor;
     }
-    
-    .neo-border-l { 
-        border-left: 3px solid currentColor; 
+
+    .neo-border-l {
+        border-left: 3px solid currentColor;
     }
-    
-    .neo-border-r { 
-        border-right: 3px solid currentColor; 
+
+    .neo-border-r {
+        border-right: 3px solid currentColor;
     }
-    
-    .neo-shadow { 
-        box-shadow: 4px 4px 0px #000000; 
+
+    .neo-shadow {
+        box-shadow: 4px 4px 0px #000000;
     }
-    
-    .dark .neo-shadow { 
-        box-shadow: 4px 4px 0px #FFFFFF; 
+
+    .dark .neo-shadow {
+        box-shadow: 4px 4px 0px #FFFFFF;
     }
-    
-    .neo-shadow-hover { 
-        box-shadow: 2px 2px 0px #000000; 
+
+    .neo-shadow-hover {
+        box-shadow: 2px 2px 0px #000000;
     }
-    
-    .dark .neo-shadow-hover { 
-        box-shadow: 2px 2px 0px #FFFFFF; 
+
+    .dark .neo-shadow-hover {
+        box-shadow: 2px 2px 0px #FFFFFF;
     }
-    
-    .neo-transition { 
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+
+    .neo-transition {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Component-specific overrides */
@@ -319,16 +319,16 @@
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 0;
     }
-    
+
     .dark .neo-button {
         box-shadow: 4px 4px 0px #FFFFFF;
     }
-    
+
     .neo-button:hover {
         box-shadow: 2px 2px 0px #000000;
         transform: translate(2px, 2px);
     }
-    
+
     .dark .neo-button:hover {
         box-shadow: 2px 2px 0px #FFFFFF;
     }
@@ -338,7 +338,7 @@
         box-shadow: 4px 4px 0px #000000;
         border-radius: 0;
     }
-    
+
     .dark .neo-card {
         box-shadow: 4px 4px 0px #FFFFFF;
     }
@@ -349,7 +349,7 @@
         box-shadow: 2px 2px 0px #000000;
         border-radius: 0;
     }
-    
+
     .dark .neo-input {
         box-shadow: 2px 2px 0px #FFFFFF;
     }
@@ -362,11 +362,11 @@
     .neo-slider {
         border: 3px solid currentColor;
     }
-    
+
     .neo-slider [data-orientation="horizontal"] {
         height: 8px;
     }
-    
+
     .neo-slider [role="slider"] {
         border: 3px solid currentColor;
         box-shadow: 4px 4px 0px #000000;
@@ -375,16 +375,16 @@
         height: 16px;
         border-radius: 0;
     }
-    
+
     .dark .neo-slider [role="slider"] {
         box-shadow: 4px 4px 0px #FFFFFF;
     }
-    
+
     .neo-slider [role="slider"]:hover {
         box-shadow: 2px 2px 0px #000000;
         transform: translate(-1px, -1px);
     }
-    
+
     .dark .neo-slider [role="slider"]:hover {
         box-shadow: 2px 2px 0px #FFFFFF;
     }
@@ -393,16 +393,16 @@
 /* Enhanced Dark Mode Component Adjustments - Phase 7 Implementation */
 @layer utilities {
     /* Dark mode specific component adjustments for better readability */
-    .dark .neo-border { 
-        border-color: var(--neo-white); 
+    .dark .neo-border {
+        border-color: var(--neo-white);
     }
-    
-    .dark .neo-button { 
-        color: var(--neo-white); 
+
+    .dark .neo-button {
+        color: var(--neo-white);
     }
-    
-    .dark .neo-card { 
-        background: var(--neo-black); 
+
+    .dark .neo-card {
+        background: var(--neo-black);
         color: var(--neo-white);
     }
 

@@ -100,7 +100,7 @@ export default function Analysis({ upload, analysis_service }: Props) {
                             </div>
                         ) : (
                             <div className="text-center py-8">
-                                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-blue-500" />
+                                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-chart-4" />
                                 <p className="mb-4 text-muted-foreground">No analysis has been performed yet.</p>
                                 <Button onClick={handleStartAnalysis} disabled={processing}>
                                     <Zap className="h-4 w-4 mr-2" />
@@ -128,7 +128,7 @@ export default function Analysis({ upload, analysis_service }: Props) {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-center py-8">
                             <div className="flex flex-col items-center space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-chart-4"></div>
                                 <div className="text-center">
                                     <p className="text-sm font-medium">Processing audio...</p>
                                     <p className="text-xs text-muted-foreground">
@@ -152,7 +152,7 @@ export default function Analysis({ upload, analysis_service }: Props) {
             return (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-600">
+                        <CardTitle className="flex items-center gap-2 text-chart-2">
                             <Music className="h-5 w-5" />
                             Analysis Failed
                         </CardTitle>
@@ -161,8 +161,8 @@ export default function Analysis({ upload, analysis_service }: Props) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-sm text-red-700">
+                        <div className="p-4 bg-chart-2/10 border border-chart-2/20 rounded-lg">
+                            <p className="text-sm text-chart-2">
                                 {uploadData.analysis_task.error_message || 'An unknown error occurred during analysis.'}
                             </p>
                         </div>
@@ -194,143 +194,174 @@ export default function Analysis({ upload, analysis_service }: Props) {
 
         return (
             <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <BarChart3 className="h-5 w-5" />
-                                    Analysis Results
-                                </CardTitle>
-                                <CardDescription>
-                                    Completed {new Date(analysis.created_at).toLocaleString()}
-                                </CardDescription>
-                            </div>
-                            <div className="flex gap-2">
-                                <Link href={route('uploads.analysis.similar', { upload: uploadData.id })}>
-                                    <Button variant="outline" size="sm">
-                                        <Users className="h-4 w-4 mr-2" />
-                                        Find Similar
-                                    </Button>
-                                </Link>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleDeleteAnalysis}
-                                    disabled={processing}
-                                >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
+                {/* Brutalist Analysis Results Header */}
+                <div className="neo-border neo-shadow bg-neo-black p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-wider text-neo-white">
+                                ANALYSIS RESULTS
+                            </h2>
+                            <p className="font-bold text-chart-1 dark:text-chart-1">
+                                COMPLETED {new Date(analysis.created_at).toLocaleString().toUpperCase()}
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Link href={route('uploads.analysis.similar', { upload: uploadData.id })}>
+                                <Button variant="outline" size="sm" className="neo-shadow font-black uppercase">
+                                    <Users className="h-4 w-4 mr-2" />
+                                    FIND SIMILAR
                                 </Button>
-                            </div>
+                            </Link>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="neo-shadow font-black uppercase border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                                onClick={handleDeleteAnalysis}
+                                disabled={processing}
+                            >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                DESTROY
+                            </Button>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Musical Key */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">Musical Key</h4>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant={analysis.reliability?.has_reliable_key ? 'default' : 'secondary'}>
-                                        {analysis.musical_key || 'Unknown'}
-                                    </Badge>
-                                    {analysis.key_confidence && (
-                                        <span className="text-sm text-muted-foreground">
-                                            {Math.round(analysis.key_confidence * 100)}% confidence
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                    </div>
+                </div>
 
-                            {/* BPM */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">BPM</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl font-mono">{analysis.bpm || 'N/A'}</span>
-                                    {analysis.categories?.bpm && (
-                                        <Badge variant="outline">{analysis.categories.bpm}</Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Loudness */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">Loudness</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-mono">
-                                        {analysis.loudness_db ? `${analysis.loudness_db.toFixed(1)} dB` : 'N/A'}
-                                    </span>
-                                    {analysis.categories?.loudness && (
-                                        <Badge variant="outline">{analysis.categories.loudness}</Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Dynamic Range */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">Dynamic Range</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-mono">
-                                        {analysis.dynamic_range_db ? `${analysis.dynamic_range_db.toFixed(1)} dB` : 'N/A'}
-                                    </span>
-                                    {analysis.categories?.dynamic_range && (
-                                        <Badge variant="outline">{analysis.categories.dynamic_range}</Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Brightness */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">Brightness</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-mono">
-                                        {analysis.brightness ? `${Math.round(analysis.brightness)} Hz` : 'N/A'}
-                                    </span>
-                                    {analysis.categories?.brightness && (
-                                        <Badge variant="outline">{analysis.categories.brightness}</Badge>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Beat Regularity */}
-                            <div className="space-y-2">
-                                <h4 className="font-semibold">Beat Regularity</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-mono">
-                                        {analysis.beat_regularity ? `${Math.round(analysis.beat_regularity * 100)}%` : 'N/A'}
+                {/* Brutalist Analysis Metrics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Musical Key Display - Chart Color 1 (Green) */}
+                    <div className="neo-border neo-shadow bg-chart-1 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-black mb-2">MUSICAL KEY</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-3xl font-black font-mono text-neo-black">
+                                {analysis.musical_key || 'N/A'}
+                            </span>
+                            {analysis.key_confidence && (
+                                <div className="neo-border bg-neo-black text-neo-white px-2 py-1">
+                                    <span className="font-mono text-xs">
+                                        {Math.round(analysis.key_confidence * 100)}% CONF
                                     </span>
                                 </div>
-                            </div>
+                            )}
                         </div>
+                    </div>
 
-                        {/* Additional Info */}
-                        {(analysis.timbral_complexity || analysis.key_changes || analysis.analysis_duration) && (
-                            <div className="mt-6 pt-6 border-t">
-                                <h4 className="font-semibold mb-3">Additional Information</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                                    {analysis.timbral_complexity && (
-                                        <div>
-                                            <span className="font-medium">Timbral Complexity:</span>{' '}
-                                            {analysis.timbral_complexity.toFixed(2)}
-                                        </div>
-                                    )}
-                                    {analysis.key_changes && (
-                                        <div>
-                                            <span className="font-medium">Key Changes:</span>{' '}
-                                            {analysis.key_changes}
-                                        </div>
-                                    )}
-                                    {analysis.analysis_duration && (
-                                        <div>
-                                            <span className="font-medium">Processing Time:</span>{' '}
-                                            {analysis.analysis_duration.toFixed(1)}s
-                                        </div>
-                                    )}
+                    {/* BPM Display - Chart Color 2 (Pink) */}
+                    <div className="neo-border neo-shadow bg-chart-2 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-white mb-2">BPM</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-3xl font-black font-mono text-neo-white">
+                                {analysis.bpm || 'N/A'}
+                            </span>
+                            {analysis.categories?.bpm && (
+                                <div className="neo-border bg-neo-black text-neo-white px-2 py-1">
+                                    <span className="font-black text-xs uppercase">
+                                        {analysis.categories.bpm}
+                                    </span>
                                 </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Loudness Display - Chart Color 4 (Blue) */}
+                    <div className="neo-border neo-shadow bg-chart-4 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-white mb-2">LOUDNESS</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black font-mono text-neo-white">
+                                {analysis.loudness_db ? `${analysis.loudness_db.toFixed(1)}` : 'N/A'}
+                            </span>
+                            <span className="text-sm font-bold text-neo-white">dB</span>
+                            {analysis.categories?.loudness && (
+                                <div className="neo-border bg-neo-black text-neo-white px-2 py-1">
+                                    <span className="font-black text-xs uppercase">
+                                        {analysis.categories.loudness}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Dynamic Range - Chart Color 3 (Yellow) */}
+                    <div className="neo-border neo-shadow bg-chart-3 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-black mb-2">DYNAMIC RANGE</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black font-mono text-neo-black">
+                                {analysis.dynamic_range_db ? `${analysis.dynamic_range_db.toFixed(1)}` : 'N/A'}
+                            </span>
+                            <span className="text-sm font-bold text-neo-black">dB</span>
+                            {analysis.categories?.dynamic_range && (
+                                <div className="neo-border bg-neo-black text-neo-white px-2 py-1">
+                                    <span className="font-black text-xs uppercase">
+                                        {analysis.categories.dynamic_range}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Brightness - Chart Color 1 (Green) */}
+                    <div className="neo-border neo-shadow bg-chart-1 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-black mb-2">BRIGHTNESS</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black font-mono text-neo-black">
+                                {analysis.brightness ? `${Math.round(analysis.brightness)}` : 'N/A'}
+                            </span>
+                            <span className="text-sm font-bold text-neo-black">Hz</span>
+                            {analysis.categories?.brightness && (
+                                <div className="neo-border bg-neo-black text-neo-white px-2 py-1">
+                                    <span className="font-black text-xs uppercase">
+                                        {analysis.categories.brightness}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Beat Regularity - Chart Color 2 (Pink) */}
+                    <div className="neo-border neo-shadow bg-chart-2 p-4">
+                        <h4 className="font-black uppercase tracking-wide text-neo-white mb-2">BEAT REGULARITY</h4>
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black font-mono text-neo-white">
+                                {analysis.beat_regularity ? `${Math.round(analysis.beat_regularity * 100)}` : 'N/A'}
+                            </span>
+                            <span className="text-sm font-bold text-neo-white">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Additional Info - Brutalist Style */}
+                {(analysis.timbral_complexity || analysis.key_changes || analysis.analysis_duration) && (
+                    <div className="neo-border neo-shadow bg-neo-black p-6">
+                        <h4 className="font-black uppercase tracking-wide text-neo-white mb-4 neo-border-b pb-2">
+                            TECHNICAL DATA
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {analysis.timbral_complexity && (
+                                <div className="neo-border bg-chart-3 p-3">
+                                    <span className="block font-black text-xs uppercase text-neo-black">TIMBRAL COMPLEXITY</span>
+                                    <span className="text-lg font-black font-mono text-neo-black">
+                                        {analysis.timbral_complexity.toFixed(2)}
+                                    </span>
+                                </div>
+                            )}
+                            {analysis.key_changes && (
+                                <div className="neo-border bg-chart-1 p-3">
+                                    <span className="block font-black text-xs uppercase text-neo-black">KEY CHANGES</span>
+                                    <span className="text-lg font-black font-mono text-neo-black">
+                                        {analysis.key_changes}
+                                    </span>
+                                </div>
+                            )}
+                            {analysis.analysis_duration && (
+                                <div className="neo-border bg-chart-4 p-3">
+                                    <span className="block font-black text-xs uppercase text-neo-white">PROCESSING TIME</span>
+                                    <span className="text-lg font-black font-mono text-neo-white">
+                                        {analysis.analysis_duration.toFixed(1)}s
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };

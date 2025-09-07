@@ -1,7 +1,5 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BrutalistStatusBadge } from '@/components/brutalist-status-badge';
+import { Button } from '@/components/ui/neo/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { PaginatedData, User, type BreadcrumbItem } from '@/types';
@@ -43,16 +41,18 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const Pagination: React.FC<{ links: PaginationLink[] }> = ({ links }) => (
-    <nav className="mt-4 flex justify-center">
+    <nav className="mt-6 flex justify-center gap-2">
         {links.map((link) => (
             <Link
                 key={link.label}
                 href={link.url ?? ''}
                 preserveScroll
                 className={cn(
-                    'flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium',
-                    link.active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent',
-                    !link.url && 'cursor-not-allowed text-muted-foreground',
+                    'neo-border px-3 py-2 text-xs font-black uppercase tracking-wide neo-transition',
+                    link.active 
+                        ? 'bg-neo-black text-neo-white' 
+                        : 'bg-neo-white text-neo-black hover:bg-neo-green hover:translate-x-1 hover:translate-y-1',
+                    !link.url && 'cursor-not-allowed opacity-50',
                 )}
                 dangerouslySetInnerHTML={{ __html: link.label }}
             />
@@ -67,58 +67,67 @@ const ContestIndex: React.FC<Props> = ({ contests }) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contests" />
 
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Contests</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Participants</TableHead>
-                                    <TableHead>Ends On</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+                {/* Neobrutalist Contest Table */}
+                <div className="neo-border neo-shadow bg-neo-white dark:bg-neo-black">
+                    <div className="bg-neo-black p-4 neo-border-b">
+                        <h2 className="text-xl font-black uppercase tracking-wider text-neo-white">
+                            BEAT BATTLES
+                        </h2>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-neo-yellow neo-border-b">
+                                <tr>
+                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">CONTEST</th>
+                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">STATUS</th>
+                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">FIGHTERS</th>
+                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">DEADLINE</th>
+                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {data.map((contest) => (
-                                    <TableRow key={contest.id}>
-                                        <TableCell className="font-medium">{contest.name}</TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    contest.status === 'Active'
-                                                        ? 'default'
-                                                        : contest.status === 'Finished'
-                                                          ? 'destructive'
-                                                          : 'secondary'
-                                                }
+                                    <tr key={contest.id} className="neo-border-b hover:bg-neo-green/10">
+                                        <td className="p-4 font-bold text-neo-black dark:text-neo-white">
+                                            {contest.name.toUpperCase()}
+                                        </td>
+                                        <td className="p-4">
+                                            <BrutalistStatusBadge status={contest.status} />
+                                        </td>
+                                        <td className="p-4 font-mono font-bold text-neo-black dark:text-neo-white">
+                                            {contest.contest_users_count} PLAYERS
+                                        </td>
+                                        <td className="p-4 font-mono font-bold text-neo-black dark:text-neo-white">
+                                            {new Date(contest.end_date).toLocaleDateString().toUpperCase()}
+                                        </td>
+                                        <td className="p-4">
+                                            <Button 
+                                                variant="accent" 
+                                                size="sm"
+                                                className="font-black uppercase neo-shadow"
+                                                asChild
                                             >
-                                                {contest.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{contest.contest_users_count}</TableCell>
-                                        <TableCell>{new Date(contest.end_date).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button asChild>
-                                                <Link href={`/contests/${contest.id}`}>View</Link>
+                                                <Link href={`/contests/${contest.id}`}>ENTER</Link>
                                             </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                        </td>
+                                    </tr>
                                 ))}
-                            </TableBody>
-                        </Table>
-                        <div className="mt-4 flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {meta.from} to {meta.to} of {meta.total} results
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {/* Brutalist Pagination Footer */}
+                    <div className="neo-border-t bg-neo-pink p-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm font-bold text-neo-white">
+                                SHOWING {meta.from} TO {meta.to} OF {meta.total} RESULTS
                             </p>
                             <Pagination links={meta.links} />
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </AppLayout>
     );
