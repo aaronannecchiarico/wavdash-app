@@ -1,9 +1,9 @@
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/neo/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
+import { Input } from '@/components/ui/neo/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
+import { NeoProgressBar } from '@/components/ui/neo/progress-bar';
 import { Textarea } from '@/components/ui/textarea';
 import { type Upload as UploadType } from '@/types';
 import { useAudioFileHandler } from '@/hooks/useAudioFileHandler';
@@ -79,23 +79,46 @@ export function MusicLibraryUploadForm({
         <Card>
             <form onSubmit={onSubmit}>
                 <CardHeader>
-                        <CardTitle>{mode === 'create' ? 'Upload Audio' : 'Edit Audio'}</CardTitle>
-                    <CardDescription>
+                        <CardTitle className="font-heading font-black uppercase tracking-widest text-foreground">
+                            {mode === 'create' ? 'Upload Audio' : 'Edit Audio'}
+                        </CardTitle>
+                    <CardDescription className="font-bold text-foreground uppercase">
                         {mode === 'create' ? 'Upload an audio file to use in beats and contests.' : 'Update the details for this audio file.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
-                        <Label htmlFor="audio_file">Audio File {mode === 'create' && <span className="text-destructive">*</span>}</Label>
+                        <Label htmlFor="audio_file" className="font-heading font-black uppercase tracking-wide text-foreground">
+                            Audio File {mode === 'create' && <span className="text-red-500">*</span>}
+                        </Label>
                         <div
-                            className={`flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-6 hover:bg-muted/50 dark:hover:bg-slate-800/70 transition-colors duration-200 ${errors.audio_file ? 'border-destructive' : 'dark:border-slate-700'}`}
+                            className={`border-2 border-border bg-chart-3 p-8 cursor-pointer hover:bg-chart-2 transition-all ${errors.audio_file ? 'border-red-500' : ''}`}
+                            style={{ boxShadow: 'var(--shadow)' }}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Upload className="mb-3 h-10 w-10 text-muted-foreground dark:text-slate-400" />
-                            <p className="mb-2 text-sm text-muted-foreground">
-                                <span className="font-semibold dark:text-slate-300">Click to upload</span> or drag and drop
-                            </p>
-                            <p className="text-xs text-muted-foreground">MP3, WAV, AIFF or FLAC (max. 50MB)</p>
+                            <div className="text-center space-y-4">
+                                <div className="w-24 h-24 mx-auto bg-main-foreground border-2 border-border flex items-center justify-center">
+                                    <Upload className="h-12 w-12 text-secondary-background" />
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-2xl font-heading font-black uppercase tracking-widest text-main-foreground mb-2">
+                                        DROP YOUR BEATS
+                                    </h3>
+                                    <p className="font-bold text-main-foreground">
+                                        MP3, WAV, AIFF, FLAC • MAX 50MB
+                                    </p>
+                                </div>
+                                
+                                {errors.audio_file && (
+                                    <div className="border-2 border-border bg-red-500 p-3" style={{ boxShadow: 'var(--shadow)' }}>
+                                        <p className="font-heading font-black text-white uppercase">
+                                            {errors.audio_file}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            
                             <input
                                 id="audio_file"
                                 ref={fileInputRef}
@@ -111,31 +134,31 @@ export function MusicLibraryUploadForm({
 
                     {(isProcessingFile || fileMetadata) && (
                         <div className="space-y-2">
-                            <Label>File Details</Label>
-                            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-muted/50 dark:bg-slate-900/40 p-4">
+                            <Label className="font-heading font-black uppercase tracking-wide text-foreground">File Details</Label>
+                            <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
                                 {isProcessingFile ? (
-                                    <div className="flex items-center text-sm text-muted-foreground">
+                                    <div className="flex items-center text-sm text-secondary-background">
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processing file...
+                                        <span className="font-bold uppercase">Processing file...</span>
                                     </div>
                                 ) : (
                                     fileMetadata && (
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                            <div className="col-span-2 flex items-center space-x-2 font-medium">
-                                                <Music className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                                                <span className="truncate">{fileMetadata.name}</span>
+                                            <div className="col-span-2 flex items-center space-x-2 font-heading font-black">
+                                                <Music className="h-4 w-4 text-chart-1" />
+                                                <span className="truncate text-secondary-background uppercase">{fileMetadata.name}</span>
                                             </div>
                                             <div>
-                                                <strong className="font-semibold">Size:</strong>{' '}
-                                                <span className="text-muted-foreground">{fileMetadata.size}</span>
+                                                <strong className="font-heading font-black text-secondary-background">SIZE:</strong>{' '}
+                                                <span className="text-secondary-background font-mono">{fileMetadata.size}</span>
                                             </div>
                                             <div>
-                                                <strong className="font-semibold">Duration:</strong>{' '}
-                                                <span className="text-muted-foreground">{fileMetadata.duration}</span>
+                                                <strong className="font-heading font-black text-secondary-background">DURATION:</strong>{' '}
+                                                <span className="text-secondary-background font-mono">{fileMetadata.duration}</span>
                                             </div>
                                             <div className="col-span-2">
-                                                <strong className="font-semibold">Type:</strong>{' '}
-                                                <span className="text-muted-foreground">{fileMetadata.type}</span>
+                                                <strong className="font-heading font-black text-secondary-background">TYPE:</strong>{' '}
+                                                <span className="text-secondary-background font-mono">{fileMetadata.type}</span>
                                             </div>
                                         </div>
                                     )
@@ -145,15 +168,15 @@ export function MusicLibraryUploadForm({
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="title">
-                            Title <span className="text-destructive">*</span>
+                        <Label htmlFor="title" className="font-heading font-black uppercase tracking-wide text-foreground">
+                            Title <span className="text-red-500">*</span>
                         </Label>
                         <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} disabled={processing} />
                         <InputError message={errors.title} />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="description">Description (optional)</Label>
+                        <Label htmlFor="description" className="font-heading font-black uppercase tracking-wide text-foreground">Description (Optional)</Label>
                         <Textarea
                             id="description"
                             value={data.description}
@@ -166,23 +189,33 @@ export function MusicLibraryUploadForm({
                 </CardContent>
                 {processing && uploadProgress > 0 && (
                     <div className="px-6 pb-4">
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm text-muted-foreground">
-                                <span className="flex items-center">
-                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                    Uploading...
+                        <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="font-heading font-black text-secondary-background uppercase flex items-center">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Uploading
                                 </span>
-                                <span className="font-medium text-foreground">{uploadProgress}%</span>
+                                <span className="font-mono text-chart-1">{uploadProgress}%</span>
                             </div>
-                            <Progress value={uploadProgress} className="h-2" />
+                            <NeoProgressBar value={uploadProgress} color="bg-chart-1" />
                         </div>
                     </div>
                 )}
                 <CardFooter className="flex justify-end space-x-4 px-6 py-4">
-                    <Button type="button" variant="outline" onClick={() => window.history.back()} disabled={processing} className="px-6 py-2">
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => window.history.back()} 
+                        disabled={processing} 
+                        className="px-6 py-2 font-heading font-black uppercase tracking-wider"
+                    >
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)} className="px-6 py-2">
+                    <Button 
+                        type="submit" 
+                        disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)} 
+                        className="px-6 py-2 font-heading font-black uppercase tracking-wider"
+                    >
                         {processing && uploadProgress === 0 && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {processing ? 'Uploading...' : mode === 'create' ? 'Upload' : 'Save Changes'}
                     </Button>

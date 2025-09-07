@@ -1,6 +1,6 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/neo/badge';
+import { Button } from '@/components/ui/neo/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neo/card';
 import { Upload } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BarChart3, Gauge, Play, Scissors } from 'lucide-react';
@@ -56,8 +56,8 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
     return (
         <div className="space-y-4">
             <div className="mb-6">
-                <h2 className="text-lg font-semibold text-foreground mb-2">Processing & Analysis</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="text-lg font-heading font-black uppercase tracking-widest text-foreground mb-2">Processing & Analysis</h2>
+                <p className="text-sm font-bold text-foreground uppercase">
                     Enhance your track with advanced audio processing features
                 </p>
             </div>
@@ -65,115 +65,107 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
             {sections.map((section) => {
                 const Icon = section.icon;
                 
+                const getStatusColor = () => {
+                    if (section.hasResults) return 'bg-chart-1'
+                    if (section.isProcessing) return 'bg-chart-3'
+                    return 'bg-chart-2'
+                };
+                
+                const getStatusText = () => {
+                    if (section.hasResults) return 'COMPLETE'
+                    if (section.isProcessing) return 'PROCESSING'
+                    return 'AVAILABLE'
+                };
+                
                 return (
-                    <Card key={section.id} className="relative">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                    <CardTitle className="text-base">{section.title}</CardTitle>
+                    <div key={section.id} className={`border-2 border-border p-6 ${getStatusColor()}`} style={{ boxShadow: 'var(--shadow)' }}>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-main-foreground border-2 border-border flex items-center justify-center">
+                                    <Icon className="h-6 w-6 text-secondary-background" />
                                 </div>
-                                {section.hasResults && (
-                                    <Badge variant="secondary" className="text-xs">
-                                        Complete
-                                    </Badge>
-                                )}
-                                {section.isProcessing && (
-                                    <Badge variant="outline" className="text-xs">
-                                        Processing
-                                    </Badge>
-                                )}
+                                <div>
+                                    <h3 className="font-heading font-black uppercase tracking-wide text-main-foreground">
+                                        {section.title}
+                                    </h3>
+                                    <p className="font-bold text-main-foreground text-sm">
+                                        {section.description.toUpperCase()}
+                                    </p>
+                                </div>
                             </div>
-                            <CardDescription className="text-sm">
-                                {section.description}
-                            </CardDescription>
-                        </CardHeader>
+                            
+                            <div className="border-2 border-border bg-main-foreground px-3 py-1">
+                                <span className="font-heading font-black text-xs text-secondary-background">
+                                    {getStatusText()}
+                                </span>
+                            </div>
+                        </div>
                         
-                        <CardContent>
-                            {section.hasResults && section.resultSummary ? (
-                                <div className="space-y-3">
-                                    <div className="text-sm">
-                                        {section.id === 'analysis' && section.resultSummary && (
-                                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                                {section.resultSummary.key && (
-                                                    <div>
-                                                        <span className="font-medium">Key:</span> {section.resultSummary.key}
-                                                    </div>
-                                                )}
-                                                {section.resultSummary.bpm && (
-                                                    <div>
-                                                        <span className="font-medium">BPM:</span> {Math.round(section.resultSummary.bpm)}
-                                                    </div>
-                                                )}
-                                                {section.resultSummary.loudness && (
-                                                    <div className="col-span-2">
-                                                        <span className="font-medium">Loudness:</span> {section.resultSummary.loudness}
-                                                    </div>
-                                                )}
+                        {section.isProcessing && (
+                            <div className="mb-4">
+                                <div className="flex items-center space-x-2">
+                                    <div className="animate-spin w-4 h-4 border-2 border-main-foreground border-t-transparent rounded-full" />
+                                    <span className="font-bold text-main-foreground">PROCESSING...</span>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {section.hasResults && section.resultSummary && (
+                            <div className="mb-4 space-y-2">
+                                {section.id === 'analysis' && (
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        {section.resultSummary.key && (
+                                            <div>
+                                                <span className="font-heading font-black text-main-foreground">KEY:</span> <span className="font-mono text-main-foreground">{section.resultSummary.key}</span>
                                             </div>
                                         )}
-                                        
-                                        {section.id === 'stems' && section.resultSummary && (
-                                            <div className="space-y-1 text-xs">
-                                                <div>
-                                                    <span className="font-medium">Stems:</span> {section.resultSummary.count} tracks
-                                                </div>
-                                                <div className="text-muted-foreground">
-                                                    {section.resultSummary.types}
-                                                </div>
+                                        {section.resultSummary.bpm && (
+                                            <div>
+                                                <span className="font-heading font-black text-main-foreground">BPM:</span> <span className="font-mono text-main-foreground">{Math.round(section.resultSummary.bpm)}</span>
                                             </div>
                                         )}
-                                        
-                                        {section.id === 'tempo' && section.resultSummary && (
-                                            <div className="space-y-1 text-xs">
-                                                <div className="flex items-center justify-between">
-                                                    <span>
-                                                        <span className="font-medium">Variations:</span> {section.resultSummary.count} files
-                                                    </span>
-                                                    <Link href={route(section.route, upload.id)} className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
-                                                        View All
-                                                    </Link>
-                                                </div>
-                                                <div className="text-muted-foreground">
-                                                    {section.resultSummary.variations}
-                                                </div>
+                                        {section.resultSummary.loudness && (
+                                            <div className="col-span-2">
+                                                <span className="font-heading font-black text-main-foreground">LOUDNESS:</span> <span className="font-mono text-main-foreground">{section.resultSummary.loudness}</span>
                                             </div>
                                         )}
                                     </div>
-                                    
-                                    <Link href={route(section.route, upload.id)}>
-                                        <Button variant="outline" size="sm" className="w-full">
-                                            <Play className="mr-2 h-3 w-3" />
-                                            View Details
-                                        </Button>
-                                    </Link>
-                                </div>
-                            ) : section.isProcessing ? (
-                                <div className="space-y-3">
-                                    <p className="text-sm text-muted-foreground">
-                                        Processing in progress...
-                                    </p>
-                                    <Link href={route(section.route, upload.id)}>
-                                        <Button variant="outline" size="sm" className="w-full" disabled>
-                                            View Progress
-                                        </Button>
-                                    </Link>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <p className="text-sm text-muted-foreground">
-                                        This feature has not been run yet.
-                                    </p>
-                                    <Link href={route(section.route, upload.id)}>
-                                        <Button variant="default" size="sm" className="w-full">
-                                            <Icon className="mr-2 h-3 w-3" />
-                                            Create {section.title}
-                                        </Button>
-                                    </Link>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                )}
+                                
+                                {section.id === 'stems' && (
+                                    <div className="space-y-1 text-xs">
+                                        <div>
+                                            <span className="font-heading font-black text-main-foreground">STEMS:</span> <span className="font-mono text-main-foreground">{section.resultSummary.count} tracks</span>
+                                        </div>
+                                        <div className="font-mono text-main-foreground text-xs">
+                                            {section.resultSummary.types}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {section.id === 'tempo' && (
+                                    <div className="space-y-1 text-xs">
+                                        <div>
+                                            <span className="font-heading font-black text-main-foreground">VARIATIONS:</span> <span className="font-mono text-main-foreground">{section.resultSummary.count} files</span>
+                                        </div>
+                                        <div className="font-mono text-main-foreground text-xs">
+                                            {section.resultSummary.variations}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        <Button 
+                            variant="outline" 
+                            className="w-full font-heading font-black uppercase border-main-foreground text-main-foreground hover:bg-main-foreground hover:text-secondary-background"
+                            asChild
+                        >
+                            <Link href={route(section.route, upload.id)}>
+                                {section.hasResults ? 'VIEW RESULTS' : 'START PROCESS'}
+                            </Link>
+                        </Button>
+                    </div>
                 );
             })}
         </div>
