@@ -4,7 +4,7 @@ import { createInertiaApp, usePage } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
-import { Toaster } from './components/ui/sonner';
+import { BrutalistToaster } from './components/ui/neo/toaster';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useEffect } from 'react';
@@ -40,7 +40,7 @@ createInertiaApp({
         root.render(
             <>
                 <App {...props} />
-                <Toaster position="top-center" richColors closeButton />
+                <BrutalistToaster position="top-right" richColors={false} closeButton={false} />
             </>
         );
     },

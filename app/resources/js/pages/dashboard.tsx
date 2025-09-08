@@ -9,6 +9,7 @@ import { formatDistance } from 'date-fns';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Music, Scissors, BarChart3, Clock, Gauge, Upload as UploadIcon, CheckCircle } from 'lucide-react';
+import { useBrutalistToast } from '@/hooks/use-brutalist-toast';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -24,6 +25,8 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ recentUploads }: DashboardProps) {
+    const toast = useBrutalistToast();
+
     const handleStemSelection = (upload: Upload) => {
         router.post(`/uploads/${upload.id}/stems`, {}, {
             onSuccess: () => {
@@ -39,6 +42,38 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
             }
         });
     };
+
+    const testToasts = () => {
+        toast.success({
+            title: 'Beat Processing Complete',
+            description: 'Your track has been successfully analyzed and is ready for destruction',
+            action: {
+                label: 'View Results',
+                onClick: () => console.log('View results clicked')
+            }
+        });
+    };
+
+    const testErrorToast = () => {
+        toast.error({
+            title: 'Upload Failed',
+            description: 'Could not process your audio file. Please check format and try again.',
+        });
+    };
+
+    const testWarningToast = () => {
+        toast.warning({
+            title: 'Audio Quality Warning',
+            description: 'Low bitrate detected. Results may be suboptimal.',
+        });
+    };
+
+    const testInfoToast = () => {
+        toast.info({
+            title: 'Processing Started',
+            description: 'Your beat is being analyzed. This may take a few minutes.',
+        });
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
@@ -51,6 +86,43 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                     <p className="text-lg font-base font-bold text-main-foreground">
                         {recentUploads.data.length} TRACKS READY TO DESTROY
                     </p>
+                </section>
+
+                {/* TEMPORARY: Toast Test Section - Remove after testing */}
+                <section className="border-2 border-border bg-background p-6" style={{ boxShadow: 'var(--shadow)' }}>
+                    <h2 className="text-xl font-heading font-black uppercase tracking-wide text-foreground mb-4">
+                        Phase 14: Toast System Test
+                    </h2>
+                    <div className="flex flex-wrap gap-4">
+                        <Button 
+                            variant="default" 
+                            onClick={testToasts}
+                            className="bg-chart-1 text-main-foreground font-heading font-black uppercase"
+                        >
+                            Success Toast
+                        </Button>
+                        <Button 
+                            variant="secondary" 
+                            onClick={testErrorToast}
+                            className="bg-red-500 text-main-foreground font-heading font-black uppercase"
+                        >
+                            Error Toast
+                        </Button>
+                        <Button 
+                            variant="default" 
+                            onClick={testWarningToast}
+                            className="bg-chart-3 text-main-foreground font-heading font-black uppercase"
+                        >
+                            Warning Toast
+                        </Button>
+                        <Button 
+                            variant="default" 
+                            onClick={testInfoToast}
+                            className="bg-chart-4 text-main-foreground font-heading font-black uppercase"
+                        >
+                            Info Toast
+                        </Button>
+                    </div>
                 </section>
 
                 {/* Stats grid with color blocks */}

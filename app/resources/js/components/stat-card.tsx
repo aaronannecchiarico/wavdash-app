@@ -16,7 +16,7 @@ export function StatCard({ title, value, color = 'bg-main', icon, className }: S
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {icon && (
-              <div className="w-12 h-12 bg-border border-2 border-border flex items-center justify-center">
+              <div className="w-12 h-12 flex items-center justify-center">
                 {icon}
               </div>
             )}
