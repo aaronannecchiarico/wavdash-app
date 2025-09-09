@@ -68,8 +68,10 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
             <Head title="Music Library" />
             <div className="p-4 sm:p-6 lg:p-8">
                 <div className="mb-6 flex items-center justify-between">
-                    <MusicLibraryControls filters={filters} filterOptions={filterOptions} />
-                    <Link href={route('uploads.create')}>
+                    {uploads.data.length > 0 && (
+                        <MusicLibraryControls filters={filters} filterOptions={filterOptions} />
+                    )}
+                    <Link href={route('uploads.create')} className={uploads.data.length === 0 ? 'ml-auto' : ''}>
                         <Button>
                             <PlusIcon className="mr-2 h-4 w-4" />
                             Create Upload
@@ -80,7 +82,7 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
                     {uploads.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                             <div className="mb-4 flex h-16 w-16 items-center justify-center bg-secondary-background border-2 border-border">
-                                <Music className="h-8 w-8" style={{ color: 'var(--neo-blue)' }} />
+                                <Music className="h-8 w-8 text-foreground" />
                             </div>
                             <h3 className="mb-2 text-lg font-heading text-foreground">No music files found</h3>
                             <p className="max-w-sm font-base text-foreground opacity-75">

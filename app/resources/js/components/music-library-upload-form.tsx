@@ -92,7 +92,7 @@ export function MusicLibraryUploadForm({
                             Audio File {mode === 'create' && <span className="text-red-500">*</span>}
                         </Label>
                         <div
-                            className={`border-2 border-border bg-chart-3 p-8 cursor-pointer hover:bg-chart-2 transition-all ${errors.audio_file ? 'border-red-500' : ''}`}
+                            className={`border-2 border-border bg-chart-3 dark:bg-chart-1 p-8 cursor-pointer hover:bg-chart-2 dark:hover:bg-chart-2 transition-all ${errors.audio_file ? 'border-red-500' : ''}`}
                             style={{ boxShadow: 'var(--shadow)' }}
                             onClick={() => fileInputRef.current?.click()}
                         >

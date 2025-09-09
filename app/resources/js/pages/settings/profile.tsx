@@ -141,11 +141,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                     {/* Danger Zone */}
                     <div className="border-t-2 border-border pt-8">
-                        <div className="border-2 border-red-500 bg-red-50 p-6">
-                            <h3 className="text-lg font-heading font-black uppercase tracking-widest text-red-800 mb-2">
+                        <div className="border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-6">
+                            <h3 className="text-lg font-heading font-black uppercase tracking-widest text-red-800 dark:text-red-200 mb-2">
                                 DANGER ZONE
                             </h3>
-                            <p className="font-base font-bold text-red-700 text-sm uppercase tracking-wide mb-4">
+                            <p className="font-base font-bold text-red-700 dark:text-red-300 text-sm uppercase tracking-wide mb-4">
                                 DELETE YOUR ACCOUNT PERMANENTLY
                             </p>
                             <DeleteUser />
