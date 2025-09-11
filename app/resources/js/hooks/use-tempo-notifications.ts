@@ -1,4 +1,5 @@
 import { useEcho } from '@/components/echo-provider';
+import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -10,11 +11,11 @@ interface TempoProcessingCompletedEvent {
     has_tempos: boolean;
     error_message?: string;
     tempo_url: string;
-    processing_options?: any;
+    processing_options?: { preset?: string };
 }
 
 export function useTempoNotifications() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const { echo } = useEcho();
 
     useEffect(() => {
@@ -23,12 +24,12 @@ export function useTempoNotifications() {
 
             const listener = (e: TempoProcessingCompletedEvent) => {
                 console.log('Tempo processing completion event received:', e);
-                
+
                 if (e.status === 'completed' && e.has_tempos) {
-                    const presetName = e.processing_options?.preset ? 
-                        e.processing_options.preset.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 
-                        'Custom';
-                    
+                    const presetName = e.processing_options?.preset
+                        ? e.processing_options.preset.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
+                        : 'Custom';
+
                     toast.success('Tempo processing completed successfully!', {
                         description: `Your ${presetName} tempo effect is now ready to play and download.`,
                         action: {

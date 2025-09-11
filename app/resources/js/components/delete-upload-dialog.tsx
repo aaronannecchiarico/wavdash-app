@@ -1,16 +1,9 @@
-import { useState, FormEventHandler, MouseEvent } from 'react';
-import { useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle
-} from '@/components/ui/dialog';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Upload } from '@/types';
+import { useForm } from '@inertiajs/react';
+import { Loader2, Trash2 } from 'lucide-react';
+import { FormEventHandler, MouseEvent } from 'react';
 
 interface DeleteUploadDialogProps {
     upload: Upload;
@@ -19,12 +12,7 @@ interface DeleteUploadDialogProps {
 }
 
 export function DeleteUploadDialog({ upload, isOpen, onOpenChange }: DeleteUploadDialogProps) {
-    const {
-        delete: destroy,
-        processing,
-        reset,
-        clearErrors,
-    } = useForm();
+    const { delete: destroy, processing, reset, clearErrors } = useForm();
 
     const closeDeleteModal = () => {
         clearErrors();
@@ -48,21 +36,24 @@ export function DeleteUploadDialog({ upload, isOpen, onOpenChange }: DeleteUploa
                     <Trash2 className="mr-2 h-5 w-5 text-red-500 dark:text-red-400" />
                     Are you sure you want to delete this upload?
                 </DialogTitle>
-                <DialogDescription>
-                    Once this upload is deleted, it will be permanently gone. This action cannot be undone.
-                </DialogDescription>
+                <DialogDescription>Once this upload is deleted, it will be permanently gone. This action cannot be undone.</DialogDescription>
                 <form onSubmit={deleteUpload} className="pt-4">
                     <DialogFooter className="gap-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="secondary" onClick={closeDeleteModal}>
+                            <Button type="button" variant="neutral" onClick={closeDeleteModal}>
                                 Cancel
                             </Button>
                         </DialogClose>
 
-                        <Button variant="destructive" disabled={processing}>
-                            {processing ?
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Deleting...</> :
-                                'Delete Upload'}
+                        <Button variant="reverse" disabled={processing}>
+                            {processing ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Deleting...
+                                </>
+                            ) : (
+                                'Delete Upload'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useWavesurfer } from '@wavesurfer/react';
-import type WaveSurfer from 'wavesurfer.js';
 import { formatDuration } from '@/lib/formatters';
+import { useWavesurfer } from '@wavesurfer/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type WaveSurfer from 'wavesurfer.js';
 
 interface SoundcloudWaveformProps {
     url: string;
@@ -14,16 +14,7 @@ interface SoundcloudWaveformProps {
     compact?: boolean;
 }
 
-export function SoundcloudWaveform({
-    url,
-    onReady,
-    onPlay,
-    onPause,
-    onFinish,
-    onSeek,
-    height = 75,
-    compact = false,
-}: SoundcloudWaveformProps) {
+export function SoundcloudWaveform({ url, onReady, onPlay, onPause, onFinish, onSeek, height = 75, compact = false }: SoundcloudWaveformProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const hoverRef = useRef<HTMLDivElement>(null);
     const [duration, setDuration] = useState<number>(0);
@@ -106,12 +97,12 @@ export function SoundcloudWaveform({
 
     // Track previous currentTime to detect seeks
     const prevCurrentTimeRef = useRef<number>(0);
-    
+
     // Detect seeks by monitoring currentTime changes
     useEffect(() => {
         if (currentTime !== undefined && currentTime !== prevCurrentTimeRef.current) {
             const timeDifference = Math.abs(currentTime - prevCurrentTimeRef.current);
-            
+
             // If the time jumps significantly (more than 1 second) and we're not playing,
             // or if it's a large jump while playing (indicating a seek rather than normal playback)
             if (timeDifference > 1 || (!isPlaying && timeDifference > 0.1)) {
@@ -119,7 +110,7 @@ export function SoundcloudWaveform({
                     onSeek(currentTime);
                 }
             }
-            
+
             prevCurrentTimeRef.current = currentTime;
         }
     }, [currentTime, isPlaying, onSeek]);
@@ -161,7 +152,7 @@ export function SoundcloudWaveform({
         return () => {
             subscriptions.forEach((unsub) => unsub());
         };
-    }, [wavesurfer, onReady, onPlay, onPause, onFinish, onSeek]);
+    }, [wavesurfer, onReady, onPlay, onPause, onFinish, onSeek, isPlaying]);
 
     // Handle hover effect
     useEffect(() => {
@@ -191,15 +182,11 @@ export function SoundcloudWaveform({
     }, [wavesurfer]);
 
     return (
-        <div className="relative w-full soundcloud-waveform group">
-            <div
-                ref={containerRef}
-                onClick={handleInteraction}
-                className="cursor-pointer relative"
-            >
+        <div className="soundcloud-waveform group relative w-full">
+            <div ref={containerRef} onClick={handleInteraction} className="relative cursor-pointer">
                 <div
                     ref={hoverRef}
-                    className="absolute left-0 top-0 z-10 pointer-events-none h-full w-0 mix-blend-overlay bg-white/50 dark:bg-white/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    className="pointer-events-none absolute top-0 left-0 z-10 h-full w-0 bg-white/50 opacity-0 mix-blend-overlay transition-opacity duration-200 group-hover:opacity-100 dark:bg-white/30"
                 />
             </div>
 

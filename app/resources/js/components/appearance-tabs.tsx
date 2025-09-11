@@ -19,14 +19,14 @@ export default function AppearanceToggleTab({ className = '', ...props }: HTMLAt
                     key={value}
                     onClick={() => updateAppearance(value)}
                     className={cn(
-                        'flex items-center gap-3 px-6 py-4 font-black uppercase tracking-wide transition-all border-2 border-border',
+                        'flex items-center gap-3 border-2 border-border px-6 py-4 font-black tracking-wide uppercase transition-all',
                         appearance === value
-                            ? `${color} text-[var(--main-foreground)] neo-shadow`
-                            : 'bg-background text-foreground hover:neo-shadow-hover hover:translate-x-1 hover:translate-y-1',
+                            ? `${color} neo-shadow text-[var(--main-foreground)]`
+                            : 'hover:neo-shadow-hover bg-background text-foreground hover:translate-x-1 hover:translate-y-1',
                     )}
-                    style={{ 
+                    style={{
                         boxShadow: appearance === value ? 'var(--shadow)' : 'none',
-                        borderRadius: '0px' 
+                        borderRadius: '0px',
                     }}
                 >
                     <Icon className="h-5 w-5" />

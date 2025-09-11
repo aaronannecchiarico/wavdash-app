@@ -41,7 +41,7 @@ export default function DeleteUser() {
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="destructive">Delete account</Button>
+                        <Button variant="reverse">Delete account</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
@@ -71,12 +71,12 @@ export default function DeleteUser() {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary" onClick={closeModal}>
+                                    <Button variant="neutral" onClick={closeModal}>
                                         Cancel
                                     </Button>
                                 </DialogClose>
 
-                                <Button variant="destructive" disabled={processing} asChild>
+                                <Button variant="reverse" disabled={processing} asChild>
                                     <button type="submit">Delete account</button>
                                 </Button>
                             </DialogFooter>

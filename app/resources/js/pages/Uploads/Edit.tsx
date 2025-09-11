@@ -50,12 +50,8 @@ export default function Edit({ upload }: EditUploadProps) {
     };
 
     const breadcrumbs: BreadcrumbItem[] = (() => {
-        const baseBreadcrumbs = generateDynamicBreadcrumbs(
-            'Edit',
-            route('uploads.edit', uploadData.id),
-            'Edit this track'
-        );
-        
+        const baseBreadcrumbs = generateDynamicBreadcrumbs('Edit', route('uploads.edit', uploadData.id), 'Edit this track');
+
         // Insert the track title between parent and current page
         return [
             baseBreadcrumbs[0], // Parent (Dashboard or Music Library)

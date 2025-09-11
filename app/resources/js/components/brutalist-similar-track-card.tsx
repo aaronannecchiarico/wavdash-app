@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/neo/badge';
 import { Button } from '@/components/ui/neo/button';
-import { formatFileSize, formatDuration } from '@/lib/formatters';
+import { formatDuration, formatFileSize } from '@/lib/formatters';
 import { getAudioFormat } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
 import { Link, router } from '@inertiajs/react';
@@ -13,45 +13,33 @@ interface BrutalistSimilarTrackCardProps {
 
 export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTrackCardProps) => {
     // Cycle through brand colors based on index
-    const colorClasses = [
-        'bg-neo-green text-neo-black',
-        'bg-neo-pink text-neo-white',
-        'bg-neo-blue text-neo-white',
-        'bg-neo-yellow text-neo-black',
-    ];
+    const colorClasses = ['bg-neo-green text-neo-black', 'bg-neo-pink text-neo-white', 'bg-neo-blue text-neo-white', 'bg-neo-yellow text-neo-black'];
     const colorClass = colorClasses[index % colorClasses.length];
 
     const handleCardClick = () => {
-        const uploadId = upload?.id || upload?.data?.id;
-        if (uploadId) {
-            router.visit(route('uploads.show', { upload: uploadId }));
+        if (upload.id) {
+            router.visit(route('uploads.show', { upload: upload.id }));
         }
     };
 
     return (
-        <div 
-            className={`neo-border neo-shadow ${colorClass} p-4 cursor-pointer neo-transition hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none group`}
+        <div
+            className={`neo-border neo-shadow ${colorClass} neo-transition group cursor-pointer p-4 hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none`}
             onClick={handleCardClick}
         >
             {/* Header with title */}
             <div className="mb-4">
-                <h4 className="font-black uppercase tracking-wide text-sm line-clamp-2 mb-2">
-                    {upload.title}
-                </h4>
-                {upload.artist && (
-                    <p className="font-bold text-xs opacity-75 line-clamp-1">
-                        BY {upload.artist.toUpperCase()}
-                    </p>
-                )}
+                <h4 className="mb-2 line-clamp-2 text-sm font-black tracking-wide uppercase">{upload.title}</h4>
+                {upload.artist && <p className="line-clamp-1 text-xs font-bold opacity-75">BY {upload.artist.toUpperCase()}</p>}
             </div>
 
             {/* Audio Visualization */}
-            <div className="neo-border bg-neo-black p-3 mb-4">
+            <div className="neo-border bg-neo-black mb-4 p-3">
                 <div className="flex items-center justify-center space-x-1">
                     {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                         <div
                             key={i}
-                            className="w-1 bg-neo-white animate-pulse"
+                            className="bg-neo-white w-1 animate-pulse"
                             style={{
                                 height: `${15 + Math.floor(Math.random() * 20)}px`,
                                 animationDelay: `${i * 0.15}s`,
@@ -67,16 +55,12 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
                     <div className="flex flex-wrap gap-1">
                         {upload.analysis.musical_key && (
                             <div className="neo-border bg-neo-black px-2 py-1">
-                                <span className="text-xs font-black text-neo-white">
-                                    {upload.analysis.musical_key}
-                                </span>
+                                <span className="text-neo-white text-xs font-black">{upload.analysis.musical_key}</span>
                             </div>
                         )}
                         {upload.analysis.bpm && (
                             <div className="neo-border bg-neo-black px-2 py-1">
-                                <span className="text-xs font-black text-neo-white">
-                                    {upload.analysis.bpm}BPM
-                                </span>
+                                <span className="text-neo-white text-xs font-black">{upload.analysis.bpm}BPM</span>
                             </div>
                         )}
                     </div>
@@ -84,11 +68,11 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
             )}
 
             {/* Technical Details */}
-            <div className="space-y-2 mb-4">
+            <div className="mb-4 space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold">
                     <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span>{formatDuration(upload.duration)}</span>
+                        <span>{upload.duration ? formatDuration(upload.duration) : '0:00'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <Volume2 className="h-3 w-3" />
@@ -101,7 +85,7 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
                     </Badge>
                     {upload.has_analysis && (
                         <Badge variant="neutral" className="text-xs font-bold">
-                            <BarChart3 className="h-3 w-3 mr-1" />
+                            <BarChart3 className="mr-1 h-3 w-3" />
                             ANALYZED
                         </Badge>
                     )}
@@ -110,25 +94,25 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
 
             {/* Action Button */}
             <div className="flex gap-2">
-                {(upload?.id || upload?.data?.id) && (
-                    <Link href={route('uploads.show', { upload: upload?.id || upload?.data?.id })} className="flex-1">
-                        <Button 
-                            variant="neutral" 
-                            size="sm" 
-                            className="w-full font-black uppercase text-xs neo-transition group-hover:translate-x-1 group-hover:translate-y-1"
+                {upload.id && (
+                    <Link href={route('uploads.show', { upload: upload.id })} className="flex-1">
+                        <Button
+                            variant="neutral"
+                            size="sm"
+                            className="neo-transition w-full text-xs font-black uppercase group-hover:translate-x-1 group-hover:translate-y-1"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <Music className="h-3 w-3 mr-1" />
+                            <Music className="mr-1 h-3 w-3" />
                             PLAY
                         </Button>
                     </Link>
                 )}
-                {upload.has_analysis && (upload?.id || upload?.data?.id) && (
-                    <Link href={route('uploads.analysis.show', { upload: upload?.id || upload?.data?.id })}>
-                        <Button 
-                            variant="neutral" 
-                            size="sm" 
-                            className="font-black uppercase text-xs neo-transition group-hover:translate-x-1 group-hover:translate-y-1"
+                {upload.has_analysis && upload.id && (
+                    <Link href={route('uploads.analysis.show', { upload: upload.id })}>
+                        <Button
+                            variant="neutral"
+                            size="sm"
+                            className="neo-transition text-xs font-black uppercase group-hover:translate-x-1 group-hover:translate-y-1"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <BarChart3 className="h-3 w-3" />

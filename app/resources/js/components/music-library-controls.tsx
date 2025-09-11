@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -6,9 +7,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Filter, ArrowUpDown, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { router } from '@inertiajs/react';
+import { ArrowUpDown, Check, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useCallback } from 'react';
 
 interface MusicLibraryControlsProps {
@@ -36,55 +36,65 @@ const sortOptions = [
 ];
 
 export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryControlsProps) {
-    const handleFilterChange = useCallback((key: keyof typeof filters, value: string | null) => {
-        const newFilters: Partial<typeof filters> = { ...filters };
-        if (value) {
-            newFilters[key] = value;
-        } else {
-            delete newFilters[key];
-        }
-        router.get(route('uploads.index'), newFilters, { preserveState: true, replace: true });
-    }, [filters]);
+    const handleFilterChange = useCallback(
+        (key: keyof typeof filters, value: string | null) => {
+            const newFilters: Partial<typeof filters> = { ...filters };
+            if (value) {
+                newFilters[key] = value;
+            } else {
+                delete newFilters[key];
+            }
+            router.get(route('uploads.index'), newFilters, { preserveState: true, replace: true });
+        },
+        [filters],
+    );
 
-    const handleSortChange = useCallback((value: string) => {
-        const currentSort = filters.sort || 'updated_at';
-        const currentDirection = filters.direction || 'desc';
-        let newDirection = 'desc';
+    const handleSortChange = useCallback(
+        (value: string) => {
+            const currentSort = filters.sort || 'updated_at';
+            const currentDirection = filters.direction || 'desc';
+            let newDirection = 'desc';
 
-        if (currentSort === value) {
-            newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
-        }
+            if (currentSort === value) {
+                newDirection = currentDirection === 'desc' ? 'asc' : 'desc';
+            }
 
-        router.get(route('uploads.index'), { ...filters, sort: value, direction: newDirection }, { preserveState: true, replace: true });
-    }, [filters]);
+            router.get(route('uploads.index'), { ...filters, sort: value, direction: newDirection }, { preserveState: true, replace: true });
+        },
+        [filters],
+    );
 
-    const activeFilterCount = [filters.status, filters.type, filters.analysis_status, filters.stems_status, filters.tempo_status].filter(Boolean).length;
+    const activeFilterCount = [filters.status, filters.type, filters.analysis_status, filters.stems_status, filters.tempo_status].filter(
+        Boolean,
+    ).length;
 
     return (
         <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex items-center gap-2">
+                        <Button variant="neutral" className="flex items-center gap-2">
                             <Filter className="h-4 w-4" />
                             <span>Filter</span>
-                            {activeFilterCount > 0 && <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
-                                {activeFilterCount}
-                            </span>}
+                            {activeFilterCount > 0 && (
+                                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                                    {activeFilterCount}
+                                </span>
+                            )}
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56">
                         <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleFilterChange('status', null)}>
-                            <div className="flex items-center justify-between w-full">
+                            <div className="flex w-full items-center justify-between">
                                 All Statuses
                                 {!filters.status && <Check className="h-4 w-4 text-blue-600" />}
                             </div>
                         </DropdownMenuItem>
                         {filterOptions.statuses.map((status) => (
                             <DropdownMenuItem key={status} onClick={() => handleFilterChange('status', status)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     {status.charAt(0).toUpperCase() + status.slice(1)}
                                     {filters.status === status && <Check className="h-4 w-4 text-blue-600" />}
                                 </div>
@@ -94,14 +104,14 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleFilterChange('type', null)}>
-                            <div className="flex items-center justify-between w-full">
+                            <div className="flex w-full items-center justify-between">
                                 All Types
                                 {!filters.type && <Check className="h-4 w-4 text-blue-600" />}
                             </div>
                         </DropdownMenuItem>
                         {filterOptions.types.map((type) => (
                             <DropdownMenuItem key={type} onClick={() => handleFilterChange('type', type)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     {type.toUpperCase()}
                                     {filters.type === type && <Check className="h-4 w-4 text-blue-600" />}
                                 </div>
@@ -111,14 +121,14 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         <DropdownMenuLabel>Analysis Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleFilterChange('analysis_status', null)}>
-                            <div className="flex items-center justify-between w-full">
+                            <div className="flex w-full items-center justify-between">
                                 All Analysis
                                 {!filters.analysis_status && <Check className="h-4 w-4 text-blue-600" />}
                             </div>
                         </DropdownMenuItem>
                         {Object.entries(filterOptions.processingStatuses).map(([key, label]) => (
                             <DropdownMenuItem key={key} onClick={() => handleFilterChange('analysis_status', key)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     {label}
                                     {filters.analysis_status === key && <Check className="h-4 w-4 text-blue-600" />}
                                 </div>
@@ -128,14 +138,14 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         <DropdownMenuLabel>Stems Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleFilterChange('stems_status', null)}>
-                            <div className="flex items-center justify-between w-full">
+                            <div className="flex w-full items-center justify-between">
                                 All Stems
                                 {!filters.stems_status && <Check className="h-4 w-4 text-blue-600" />}
                             </div>
                         </DropdownMenuItem>
                         {Object.entries(filterOptions.processingStatuses).map(([key, label]) => (
                             <DropdownMenuItem key={key} onClick={() => handleFilterChange('stems_status', key)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     {label}
                                     {filters.stems_status === key && <Check className="h-4 w-4 text-blue-600" />}
                                 </div>
@@ -145,14 +155,14 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         <DropdownMenuLabel>Tempo Effects Status</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleFilterChange('tempo_status', null)}>
-                            <div className="flex items-center justify-between w-full">
+                            <div className="flex w-full items-center justify-between">
                                 All Tempo Effects
                                 {!filters.tempo_status && <Check className="h-4 w-4 text-blue-600" />}
                             </div>
                         </DropdownMenuItem>
                         {Object.entries(filterOptions.processingStatuses).map(([key, label]) => (
                             <DropdownMenuItem key={key} onClick={() => handleFilterChange('tempo_status', key)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     {label}
                                     {filters.tempo_status === key && <Check className="h-4 w-4 text-blue-600" />}
                                 </div>
@@ -163,13 +173,11 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
+                    <Button variant="neutral" className="flex items-center gap-2">
                         <ArrowUpDown className="h-4 w-4" />
                         <span>Sort</span>
                         {filters.sort && filters.sort !== 'updated_at' && (
-                            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
-                                1
-                            </span>
+                            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">1</span>
                         )}
                     </Button>
                 </DropdownMenuTrigger>
@@ -178,10 +186,10 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         const currentSort = filters.sort || 'updated_at';
                         const currentDirection = filters.direction || 'desc';
                         const isActive = currentSort === option.value;
-                        
+
                         return (
                             <DropdownMenuItem key={option.value} onClick={() => handleSortChange(option.value)}>
-                                <div className="flex items-center justify-between w-full">
+                                <div className="flex w-full items-center justify-between">
                                     <span>{option.label}</span>
                                     {isActive && (
                                         <div className="flex items-center">

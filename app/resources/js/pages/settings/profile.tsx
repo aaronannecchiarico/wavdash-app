@@ -1,14 +1,14 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { CheckCircle, Save } from 'lucide-react';
 import { FormEventHandler } from 'react';
-import { Save, CheckCircle } from 'lucide-react';
 
+import { BrutalistInput } from '@/components/brutalist-input';
+import { BrutalistLabel } from '@/components/brutalist-label';
 import DeleteUser from '@/components/delete-user';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/neo/button';
-import { BrutalistInput } from '@/components/brutalist-input';
-import { BrutalistLabel } from '@/components/brutalist-label';
 import AppLayout from '@/layouts/app-layout';
 import BrutalistSettingsLayout from '@/layouts/brutalist-settings-layout';
 
@@ -48,12 +48,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                 <div className="space-y-8">
                     {/* Header */}
                     <div className="border-b-2 border-border pb-6">
-                        <h2 className="text-xl font-heading font-black uppercase tracking-widest text-foreground mb-2">
-                            PROFILE INFORMATION
-                        </h2>
-                        <p className="font-base font-bold text-foreground/70 uppercase tracking-wide text-sm">
-                            UPDATE YOUR NAME AND EMAIL ADDRESS
-                        </p>
+                        <h2 className="mb-2 font-heading text-xl font-black tracking-widest text-foreground uppercase">PROFILE INFORMATION</h2>
+                        <p className="text-sm font-base font-bold tracking-wide text-foreground/70 uppercase">UPDATE YOUR NAME AND EMAIL ADDRESS</p>
                     </div>
 
                     <form onSubmit={submit} className="space-y-6">
@@ -88,16 +84,14 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div className="border-2 border-red-500 bg-red-50 p-4">
-                                <p className="font-base font-bold text-red-800 text-sm uppercase tracking-wide mb-2">
-                                    EMAIL NOT VERIFIED
-                                </p>
-                                <p className="font-base font-bold text-red-700 text-sm mb-3">
+                                <p className="mb-2 text-sm font-base font-bold tracking-wide text-red-800 uppercase">EMAIL NOT VERIFIED</p>
+                                <p className="mb-3 text-sm font-base font-bold text-red-700">
                                     Your email address is unverified.{' '}
                                     <Link
                                         href={route('verification.send')}
                                         method="post"
                                         as="button"
-                                        className="font-heading font-black uppercase tracking-wide text-red-800 hover:text-red-900 underline"
+                                        className="font-heading font-black tracking-wide text-red-800 uppercase underline hover:text-red-900"
                                     >
                                         CLICK TO RESEND VERIFICATION EMAIL
                                     </Link>
@@ -105,7 +99,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                                 {status === 'verification-link-sent' && (
                                     <div className="border-2 border-green-500 bg-green-50 p-3">
-                                        <span className="font-base font-bold text-green-800 text-sm uppercase">
+                                        <span className="text-sm font-base font-bold text-green-800 uppercase">
                                             VERIFICATION EMAIL SENT TO YOUR ADDRESS
                                         </span>
                                     </div>
@@ -114,11 +108,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="flex items-center gap-4 pt-4">
-                            <Button 
+                            <Button
                                 disabled={processing}
-                                className="bg-chart-1 text-main-foreground hover:bg-chart-2 font-heading font-black uppercase tracking-widest px-6"
+                                className="bg-chart-1 px-6 font-heading font-black tracking-widest text-main-foreground uppercase hover:bg-chart-2"
                             >
-                                <Save className="h-4 w-4 mr-2" />
+                                <Save className="mr-2 h-4 w-4" />
                                 {processing ? 'SAVING...' : 'SAVE CHANGES'}
                             </Button>
 
@@ -131,9 +125,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             >
                                 <div className="flex items-center gap-2 border-2 border-green-500 bg-green-50 px-3 py-2">
                                     <CheckCircle className="h-4 w-4 text-green-700" />
-                                    <span className="font-heading font-black text-green-800 text-sm uppercase tracking-wide">
-                                        SAVED
-                                    </span>
+                                    <span className="font-heading text-sm font-black tracking-wide text-green-800 uppercase">SAVED</span>
                                 </div>
                             </Transition>
                         </div>
@@ -141,11 +133,11 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                     {/* Danger Zone */}
                     <div className="border-t-2 border-border pt-8">
-                        <div className="border-2 border-red-500 bg-red-50 dark:bg-red-900/20 p-6">
-                            <h3 className="text-lg font-heading font-black uppercase tracking-widest text-red-800 dark:text-red-200 mb-2">
+                        <div className="border-2 border-red-500 bg-red-50 p-6 dark:bg-red-900/20">
+                            <h3 className="mb-2 font-heading text-lg font-black tracking-widest text-red-800 uppercase dark:text-red-200">
                                 DANGER ZONE
                             </h3>
-                            <p className="font-base font-bold text-red-700 dark:text-red-300 text-sm uppercase tracking-wide mb-4">
+                            <p className="mb-4 text-sm font-base font-bold tracking-wide text-red-700 uppercase dark:text-red-300">
                                 DELETE YOUR ACCOUNT PERMANENTLY
                             </p>
                             <DeleteUser />

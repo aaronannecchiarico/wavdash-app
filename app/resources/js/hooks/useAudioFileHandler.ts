@@ -1,5 +1,5 @@
-import { useState, useRef, ChangeEvent, useEffect } from 'react';
-import { formatFileSize, formatDuration } from '@/lib/formatters';
+import { formatDuration, formatFileSize } from '@/lib/formatters';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 interface FileMetadata {
     name: string;
@@ -22,10 +22,7 @@ interface UseAudioFileHandlerReturn {
     resetFileInput: () => void;
 }
 
-export const useAudioFileHandler = ({
-    initialTitle = '',
-    onTitleSuggestion
-}: UseAudioFileHandlerProps = {}): UseAudioFileHandlerReturn => {
+export const useAudioFileHandler = ({ initialTitle = '', onTitleSuggestion }: UseAudioFileHandlerProps = {}): UseAudioFileHandlerReturn => {
     const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
     const [isProcessingFile, setIsProcessingFile] = useState(false);
     const [objectUrl, setObjectUrl] = useState<string | null>(null);

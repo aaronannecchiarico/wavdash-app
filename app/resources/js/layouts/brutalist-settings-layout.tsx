@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/neo/button';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Settings, User, Lock, Palette } from 'lucide-react';
+import { Lock, Palette, Settings, User } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
@@ -32,52 +32,46 @@ export default function BrutalistSettingsLayout({ children }: PropsWithChildren)
     const currentPath = window.location.pathname;
 
     return (
-        <div className="px-6 py-8 bg-background min-h-screen">
+        <div className="min-h-screen bg-background px-6 py-8">
             {/* Header */}
             <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-chart-4 border-2 border-border shadow-shadow flex items-center justify-center">
+                <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center border-2 border-border bg-chart-4 shadow-shadow">
                         <Settings className="h-6 w-6 text-main-foreground" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-heading font-black uppercase tracking-widest text-foreground">
-                            SETTINGS
-                        </h1>
-                        <p className="font-base font-bold text-foreground/70 uppercase tracking-wide text-sm">
-                            CONFIGURE YOUR FORGE EXPERIENCE
-                        </p>
+                        <h1 className="font-heading text-3xl font-black tracking-widest text-foreground uppercase">SETTINGS</h1>
+                        <p className="text-sm font-base font-bold tracking-wide text-foreground/70 uppercase">CONFIGURE YOUR FORGE EXPERIENCE</p>
                     </div>
                 </div>
-                <div className="w-full h-1 bg-border"></div>
+                <div className="h-1 w-full bg-border"></div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col gap-8 lg:flex-row">
                 {/* Navigation Sidebar */}
-                <aside className="w-full lg:w-64 flex-shrink-0">
-                    <div className="border-2 border-border shadow-shadow bg-background p-4">
-                        <h2 className="font-heading font-black text-sm uppercase tracking-widest text-foreground mb-4">
-                            NAVIGATION
-                        </h2>
+                <aside className="w-full flex-shrink-0 lg:w-64">
+                    <div className="border-2 border-border bg-background p-4 shadow-shadow">
+                        <h2 className="mb-4 font-heading text-sm font-black tracking-widest text-foreground uppercase">NAVIGATION</h2>
                         <nav className="space-y-2">
                             {sidebarNavItems.map((item, index) => {
                                 const Icon = item.icon;
                                 const isActive = currentPath === item.href;
-                                
+
                                 return (
                                     <Button
                                         key={`${item.href}-${index}`}
-                                        variant="ghost"
+                                        variant="neutral"
                                         asChild
                                         className={cn(
-                                            'w-full justify-start h-12 border-2 transition-all',
-                                            'font-heading font-black uppercase tracking-wide text-sm',
-                                            isActive 
-                                                ? 'bg-chart-1 border-border text-main-foreground shadow-shadow' 
-                                                : 'bg-background border-border text-foreground hover:bg-chart-1 hover:text-main-foreground hover:shadow-shadow'
+                                            'h-12 w-full justify-start border-2 transition-all',
+                                            'font-heading text-sm font-black tracking-wide uppercase',
+                                            isActive
+                                                ? 'border-border bg-chart-1 text-main-foreground shadow-shadow'
+                                                : 'border-border bg-background text-foreground hover:bg-chart-1 hover:text-main-foreground hover:shadow-shadow',
                                         )}
                                     >
                                         <Link href={item.href} prefetch>
-                                            {Icon && <Icon className="h-4 w-4 mr-3" />}
+                                            {Icon && <Icon className="mr-3 h-4 w-4" />}
                                             {item.title}
                                         </Link>
                                     </Button>
@@ -89,9 +83,7 @@ export default function BrutalistSettingsLayout({ children }: PropsWithChildren)
 
                 {/* Main Content */}
                 <div className="flex-1">
-                    <div className="border-2 border-border shadow-shadow bg-background p-6">
-                        {children}
-                    </div>
+                    <div className="border-2 border-border bg-background p-6 shadow-shadow">{children}</div>
                 </div>
             </div>
         </div>

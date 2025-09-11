@@ -1,4 +1,5 @@
 import { useEcho } from '@/components/echo-provider';
+import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -13,7 +14,7 @@ interface StemSeparationCompletedEvent {
 }
 
 export function useStemNotifications() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const { echo } = useEcho();
 
     useEffect(() => {
@@ -22,7 +23,7 @@ export function useStemNotifications() {
 
             const listener = (e: StemSeparationCompletedEvent) => {
                 console.log('Stem separation completion event received:', e);
-                
+
                 if (e.status === 'completed' && e.has_stems) {
                     toast.success('Stem separation completed successfully!', {
                         description: 'Your stems are now ready to download and play.',

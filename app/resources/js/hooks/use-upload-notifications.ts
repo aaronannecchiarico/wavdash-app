@@ -1,4 +1,5 @@
 import { useEcho } from '@/components/echo-provider';
+import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -11,7 +12,7 @@ interface UploadProcessedEvent {
 }
 
 export function useUploadNotifications() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const { echo } = useEcho();
 
     useEffect(() => {

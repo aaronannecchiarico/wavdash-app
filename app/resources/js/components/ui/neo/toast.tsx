@@ -64,7 +64,7 @@ export function BrutalistToast({
         
         {onDismiss && (
           <Button
-            variant="ghost" 
+            variant="neutral" 
             size="sm"
             className={`${buttonColorMap[type]} border-2 ml-3 h-8 w-8 p-0`}
             onClick={onDismiss}
@@ -77,7 +77,7 @@ export function BrutalistToast({
       {action && (
         <div className="mt-3">
           <Button
-            variant="outline"
+            variant="neutral"
             size="sm"
             className={`font-heading font-black uppercase tracking-wide ${buttonColorMap[type]}`}
             onClick={action.onClick}

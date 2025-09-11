@@ -1,15 +1,15 @@
+import { AudioPlayer } from '@/components/audio-player';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AudioPlayer } from '@/components/audio-player.tsx';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type Upload } from '@/types';
+import { type BreadcrumbItem, type Upload, type UploadTempo } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Gauge, Music, Trash2, Wand2, Zap, AlertCircle, Download, Volume2, Plus } from 'lucide-react';
+import { AlertCircle, Download, Gauge, Music, Plus, Trash2, Volume2, Wand2, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -51,7 +51,13 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     const flash = props.flash as { success?: string; error?: string } | undefined;
     const uploadData = 'data' in upload && upload.data ? (upload.data as Upload) : upload;
 
-    const { data, setData, post, delete: destroy, processing } = useForm<{
+    const {
+        data,
+        setData,
+        post,
+        delete: destroy,
+        processing,
+    } = useForm<{
         preset: string;
         tempo_factor: number;
         pitch_shift_semitones: number;
@@ -98,10 +104,10 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     const handlePresetChange = (preset: string) => {
         setSelectedPreset(preset);
         setData('preset', preset);
-        
+
         if (preset !== 'custom' && tempo_presets?.available_presets?.[preset]) {
             const presetData = tempo_presets.available_presets[preset];
-            setData(prevData => ({
+            setData((prevData) => ({
                 ...prevData,
                 preset,
                 tempo_factor: presetData.tempo_factor,
@@ -130,7 +136,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
         post(route('uploads.tempo.store', { upload: uploadData.id }), {
             onSuccess: () => {
                 handleCreateSuccess();
-            }
+            },
         });
     };
 
@@ -141,44 +147,50 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     };
 
     const handleDeleteTask = () => {
-        if (confirm('Are you sure you want to cancel and delete this tempo processing task? This will stop the processing and allow you to start a new one.')) {
+        if (
+            confirm(
+                'Are you sure you want to cancel and delete this tempo processing task? This will stop the processing and allow you to start a new one.',
+            )
+        ) {
             destroy(route('uploads.tempo.delete-task', { upload: uploadData.id }));
         }
     };
 
-    const getTempoDownloadUrl = (tempo: any) => {
+    const getTempoDownloadUrl = (tempo: UploadTempo) => {
         // Use public R2 URL if available (converted OGG file), otherwise use Laravel route
         if (tempo.storage_type === 'r2' && tempo.public_path) {
             const r2BaseUrl = import.meta.env.VITE_R2_URL || '';
             return `${r2BaseUrl}/${tempo.public_path}`;
         }
-        
-        return route('uploads.tempo.download', { 
-            upload: uploadData.id, 
-            tempo: tempo.id 
+
+        return route('uploads.tempo.download', {
+            upload: uploadData.id,
+            tempo: tempo.id,
         });
     };
 
-    const handleDownload = (tempo: any) => {
+    const handleDownload = (tempo: UploadTempo) => {
         const downloadUrl = getTempoDownloadUrl(tempo);
         window.open(downloadUrl, '_blank');
     };
 
     const canCreateTempo = () => {
-        return analysis_service.enabled && 
-               analysis_service.available && 
-               uploadData.status === 'ready' &&
-               (!uploadData.tempo_task || 
-                uploadData.tempo_task.status === 'deleted' || 
+        return (
+            analysis_service.enabled &&
+            analysis_service.available &&
+            uploadData.status === 'ready' &&
+            (!uploadData.tempo_task ||
+                uploadData.tempo_task.status === 'deleted' ||
                 uploadData.tempo_task.status === 'completed' ||
-                uploadData.tempo_task.status === 'failed');
+                uploadData.tempo_task.status === 'failed')
+        );
     };
 
     const renderCreateTempoForm = () => {
         if (!analysis_service.enabled) {
             return (
-                <div className="text-center py-8 text-muted-foreground">
-                    <Gauge className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <div className="py-8 text-center text-muted-foreground">
+                    <Gauge className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p>Audio processing is currently disabled.</p>
                 </div>
             );
@@ -186,20 +198,20 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
 
         if (!analysis_service.available) {
             return (
-                <div className="text-center py-8 text-muted-foreground">
-                    <Gauge className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <div className="py-8 text-center text-muted-foreground">
+                    <Gauge className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p>Audio processing service is currently unavailable.</p>
-                    <p className="text-sm mt-2">Please try again later.</p>
+                    <p className="mt-2 text-sm">Please try again later.</p>
                 </div>
             );
         }
 
         if (uploadData.status !== 'ready') {
             return (
-                <div className="text-center py-8 text-muted-foreground">
-                    <Gauge className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <div className="py-8 text-center text-muted-foreground">
+                    <Gauge className="mx-auto mb-4 h-12 w-12 opacity-50" />
                     <p>Upload must be processed before tempo effects can be applied.</p>
-                    <p className="text-sm mt-2">Current status: {uploadData.status}</p>
+                    <p className="mt-2 text-sm">Current status: {uploadData.status}</p>
                 </div>
             );
         }
@@ -214,14 +226,15 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             <SelectValue placeholder="Choose a tempo preset" />
                         </SelectTrigger>
                         <SelectContent>
-                            {tempo_presets?.available_presets && Object.entries(tempo_presets.available_presets).map(([key, preset]) => (
-                                <SelectItem key={key} value={key} className="hover:bg-accent hover:text-accent-foreground">
-                                    <div className="flex items-center justify-between w-full">
-                                        <span className="font-medium">{preset.name}</span>
-                                        <span className="text-xs text-muted-foreground ml-2 opacity-70">x{preset.tempo_factor}</span>
-                                    </div>
-                                </SelectItem>
-                            ))}
+                            {tempo_presets?.available_presets &&
+                                Object.entries(tempo_presets.available_presets).map(([key, preset]) => (
+                                    <SelectItem key={key} value={key} className="hover:bg-accent hover:text-accent-foreground">
+                                        <div className="flex w-full items-center justify-between">
+                                            <span className="font-medium">{preset.name}</span>
+                                            <span className="ml-2 text-xs text-muted-foreground opacity-70">x{preset.tempo_factor}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
                         </SelectContent>
                     </Select>
                 </div>
@@ -232,7 +245,11 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                         <Label>Smart Suggestions</Label>
                         <div className="grid gap-2">
                             {Object.entries(tempo_suggestions.suggestions).map(([key, suggestion]) => (
-                                <Card key={key} className="p-3 cursor-pointer hover:bg-muted/50 border-border/50 hover:border-border transition-colors" onClick={() => handlePresetChange(suggestion.preset)}>
+                                <Card
+                                    key={key}
+                                    className="cursor-pointer border-border/50 p-3 transition-colors hover:border-border hover:bg-muted/50"
+                                    onClick={() => handlePresetChange(suggestion.preset)}
+                                >
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="font-medium text-foreground">{suggestion.preset.replace('_', ' ').toUpperCase()}</p>
@@ -262,9 +279,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                     onChange={(e) => setData('tempo_factor', parseFloat(e.target.value))}
                                     className="bg-background"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    1.0 = original speed, &gt;1.0 = faster, &lt;1.0 = slower
-                                </p>
+                                <p className="text-xs text-muted-foreground">1.0 = original speed, &gt;1.0 = faster, &lt;1.0 = slower</p>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="pitch_shift">Pitch Shift (semitones)</Label>
@@ -278,9 +293,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                     onChange={(e) => setData('pitch_shift_semitones', parseFloat(e.target.value))}
                                     className="bg-background"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    0 = original pitch, + = higher, - = lower
-                                </p>
+                                <p className="text-xs text-muted-foreground">0 = original pitch, + = higher, - = lower</p>
                             </div>
                         </div>
                     </div>
@@ -301,21 +314,13 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="add_reverb"
-                                checked={data.add_reverb}
-                                onCheckedChange={(checked) => setData('add_reverb', !!checked)}
-                            />
+                            <Checkbox id="add_reverb" checked={data.add_reverb} onCheckedChange={(checked) => setData('add_reverb', !!checked)} />
                             <Label htmlFor="add_reverb" className="text-sm">
                                 Add reverb effect
                             </Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="use_stems"
-                                checked={data.use_stems}
-                                onCheckedChange={(checked) => setData('use_stems', !!checked)}
-                            />
+                            <Checkbox id="use_stems" checked={data.use_stems} onCheckedChange={(checked) => setData('use_stems', !!checked)} />
                             <Label htmlFor="use_stems" className="text-sm">
                                 High quality processing (uses stems)
                             </Label>
@@ -325,10 +330,10 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
 
                 <div className="flex gap-2">
                     <Button onClick={handleStartProcessing} disabled={processing} className="flex-1">
-                        <Zap className="h-4 w-4 mr-2" />
+                        <Zap className="mr-2 h-4 w-4" />
                         {processing ? 'Processing...' : 'Start Processing'}
                     </Button>
-                    <Button variant="outline" onClick={() => setShowCreateForm(false)} disabled={processing}>
+                    <Button variant="neutral" onClick={() => setShowCreateForm(false)} disabled={processing}>
                         Cancel
                     </Button>
                 </div>
@@ -337,7 +342,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     };
 
     const renderTempoProcessingStatus = () => {
-        if (uploadData.tempo_task && uploadData.tempo_task.status === 'processing' || uploadData.tempo_task?.status === 'pending') {
+        if ((uploadData.tempo_task && uploadData.tempo_task.status === 'processing') || uploadData.tempo_task?.status === 'pending') {
             return (
                 <Card className="border-border/50">
                     <CardHeader>
@@ -352,14 +357,14 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-center py-8">
                             <div className="flex flex-col items-center space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
                                 <div className="text-center">
                                     <p className="text-sm font-medium">Processing tempo effects...</p>
                                     <p className="text-xs text-muted-foreground">
                                         Started {new Date(uploadData.tempo_task.submitted_at).toLocaleString()}
                                     </p>
                                     {uploadData.tempo_task.processing_options && (
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                        <p className="mt-1 text-xs text-muted-foreground">
                                             Preset: {uploadData.tempo_task.processing_options.preset || 'Custom'}
                                         </p>
                                     )}
@@ -367,8 +372,8 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <Button variant="outline" onClick={handleDeleteTask} disabled={processing}>
-                                <Trash2 className="h-4 w-4 mr-2" />
+                            <Button variant="neutral" onClick={handleDeleteTask} disabled={processing}>
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Cancel Processing
                             </Button>
                         </div>
@@ -385,18 +390,16 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             <AlertCircle className="h-5 w-5 text-destructive" />
                             Processing Failed
                         </CardTitle>
-                        <CardDescription>
-                            The tempo processing failed. You can try again or contact support.
-                        </CardDescription>
+                        <CardDescription>The tempo processing failed. You can try again or contact support.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="text-center py-4">
-                            <p className="text-sm text-muted-foreground mb-4">
+                        <div className="py-4 text-center">
+                            <p className="mb-4 text-sm text-muted-foreground">
                                 {uploadData.tempo_task.error_message || 'An error occurred during processing.'}
                             </p>
-                            <div className="flex gap-2 justify-center">
+                            <div className="flex justify-center gap-2">
                                 <Button onClick={handleDeleteTask} disabled={processing}>
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <Trash2 className="mr-2 h-4 w-4" />
                                     Clear Failed Task
                                 </Button>
                             </div>
@@ -418,30 +421,31 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
             <Card className="border-border/50">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Gauge className="h-5 w-5 text-success" />
+                        <Gauge className="text-success h-5 w-5" />
                         Tempo Effects
                     </CardTitle>
-                    <CardDescription>
-                        Your tempo variations are ready for playback and download.
-                    </CardDescription>
+                    <CardDescription>Your tempo variations are ready for playback and download.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
                         <Label>Processed Variations ({uploadData.tempos.length})</Label>
                         <div className="grid gap-4">
-                            {uploadData.tempos.map((tempo: any) => (
-                                <Card key={tempo.id} className="group hover:shadow-md transition-all duration-200 border border-border/50 hover:border-border bg-card">
+                            {uploadData.tempos.map((tempo: UploadTempo) => (
+                                <Card
+                                    key={tempo.id}
+                                    className="group border border-border/50 bg-card transition-all duration-200 hover:border-border hover:shadow-md"
+                                >
                                     <CardContent className="p-6">
                                         <div className="space-y-4">
                                             <div className="flex items-start justify-between">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <h4 className="font-semibold text-lg text-foreground">{tempo.preset_name || tempo.preset}</h4>
-                                                        <Badge variant="secondary" className="text-xs">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="mb-2 flex items-center gap-2">
+                                                        <h4 className="text-lg font-semibold text-foreground">{tempo.preset_name || tempo.preset}</h4>
+                                                        <Badge variant="neutral" className="text-xs">
                                                             x{tempo.tempo_factor}
                                                         </Badge>
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground mb-3">
+                                                    <p className="mb-3 text-sm text-muted-foreground">
                                                         {tempo.tempo_description} • {tempo.pitch_description}
                                                     </p>
                                                     <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
@@ -470,37 +474,37 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                                             </span>
                                                         )}
                                                     </div>
-                                                    
+
                                                     {/* Processing Warnings */}
-                                                    {tempo.processing_metadata?.processing_warnings && tempo.processing_metadata.processing_warnings.length > 0 && (
-                                                        <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-md">
-                                                            <div className="flex items-start gap-2">
-                                                                <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                                                                <div className="text-xs">
-                                                                    <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">Processing Notes:</p>
-                                                                    <ul className="text-amber-700 dark:text-amber-300 space-y-0.5">
-                                                                        {tempo.processing_metadata.processing_warnings.map((warning: string, index: number) => (
-                                                                            <li key={index}>• {warning}</li>
-                                                                        ))}
-                                                                    </ul>
+                                                    {tempo.processing_metadata?.processing_warnings &&
+                                                        tempo.processing_metadata.processing_warnings.length > 0 && (
+                                                            <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2 dark:border-amber-800/30 dark:bg-amber-950/20">
+                                                                <div className="flex items-start gap-2">
+                                                                    <AlertCircle className="mt-0.5 h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" />
+                                                                    <div className="text-xs">
+                                                                        <p className="mb-1 font-medium text-amber-800 dark:text-amber-200">
+                                                                            Processing Notes:
+                                                                        </p>
+                                                                        <ul className="space-y-0.5 text-amber-700 dark:text-amber-300">
+                                                                            {tempo.processing_metadata.processing_warnings.map(
+                                                                                (warning: string, index: number) => (
+                                                                                    <li key={index}>• {warning}</li>
+                                                                                ),
+                                                                            )}
+                                                                        </ul>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
                                                 </div>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleDownload(tempo)}
-                                                    className="shrink-0 ml-4"
-                                                >
-                                                    <Download className="h-4 w-4 mr-2" />
+                                                <Button variant="neutral" size="sm" onClick={() => handleDownload(tempo)} className="ml-4 shrink-0">
+                                                    <Download className="mr-2 h-4 w-4" />
                                                     Download
                                                 </Button>
                                             </div>
-                                            
+
                                             {/* Audio Player */}
-                                            <div className="pt-2 border-t border-border/50">
+                                            <div className="border-t border-border/50 pt-2">
                                                 <AudioPlayer
                                                     url={getTempoDownloadUrl(tempo)}
                                                     title={tempo.preset_name || tempo.preset}
@@ -513,9 +517,9 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             ))}
                         </div>
                     </div>
-                    <div className="flex gap-2 pt-4 border-t border-border/50">
-                        <Button onClick={handleDeleteTempo} variant="outline" disabled={processing}>
-                            <Trash2 className="h-4 w-4 mr-2" />
+                    <div className="flex gap-2 border-t border-border/50 pt-4">
+                        <Button onClick={handleDeleteTempo} variant="neutral" disabled={processing}>
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete All Tempos
                         </Button>
                     </div>
@@ -527,12 +531,12 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Tempo Effects - ${uploadData.title}`} />
-            
+
             <div className="container mx-auto px-4 py-8">
-                <div className="max-w-4xl mx-auto">
+                <div className="mx-auto max-w-4xl">
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold tracking-tight">Tempo Effects</h1>
-                        <p className="text-muted-foreground mt-2">
+                        <p className="mt-2 text-muted-foreground">
                             Create viral-ready tempo variations like sped-up, slowed + reverb, nightcore, and more.
                         </p>
                     </div>
@@ -545,7 +549,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                 {uploadData.title}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-4">
-                                <Badge variant="secondary">{uploadData.status}</Badge>
+                                <Badge variant="neutral">{uploadData.status}</Badge>
                                 {uploadData.analysis && (
                                     <>
                                         <span>Key: {uploadData.analysis.musical_key || 'Unknown'}</span>
@@ -573,23 +577,17 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                                 <Plus className="h-5 w-5" />
                                                 Create New Tempo Effect
                                             </CardTitle>
-                                            <CardDescription>
-                                                Add another tempo variation to your collection.
-                                            </CardDescription>
+                                            <CardDescription>Add another tempo variation to your collection.</CardDescription>
                                         </div>
                                         {!showCreateForm && (
                                             <Button onClick={() => setShowCreateForm(true)} className="shrink-0">
-                                                <Plus className="h-4 w-4 mr-2" />
+                                                <Plus className="mr-2 h-4 w-4" />
                                                 Create New
                                             </Button>
                                         )}
                                     </div>
                                 </CardHeader>
-                                {showCreateForm && (
-                                    <CardContent>
-                                        {renderCreateTempoForm()}
-                                    </CardContent>
-                                )}
+                                {showCreateForm && <CardContent>{renderCreateTempoForm()}</CardContent>}
                             </Card>
                         )}
 
@@ -601,13 +599,9 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                         <Gauge className="h-5 w-5" />
                                         Tempo Effects
                                     </CardTitle>
-                                    <CardDescription>
-                                        Create sped-up, slowed-down, or custom tempo variations of your audio.
-                                    </CardDescription>
+                                    <CardDescription>Create sped-up, slowed-down, or custom tempo variations of your audio.</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    {renderCreateTempoForm()}
-                                </CardContent>
+                                <CardContent>{renderCreateTempoForm()}</CardContent>
                             </Card>
                         )}
                     </div>

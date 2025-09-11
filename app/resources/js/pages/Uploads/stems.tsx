@@ -1,7 +1,7 @@
+import { MultiTrackStemPlayer } from '@/components/multi-track-stem-player';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MultiTrackStemPlayer } from '@/components/multi-track-stem-player';
 import AppLayout from '@/layouts/app-layout';
 import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
 import { type BreadcrumbItem, type Upload } from '@/types';
@@ -51,9 +51,9 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
         const baseBreadcrumbs = generateDynamicBreadcrumbs(
             'Stem Separation',
             route('uploads.stems.show', { upload: uploadData.id }),
-            'Separate audio into individual stems'
+            'Separate audio into individual stems',
         );
-        
+
         // Insert the track title between parent and current page
         return [
             baseBreadcrumbs[0], // Parent (Dashboard or Music Library)
@@ -73,15 +73,19 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
     };
 
     const handleDeleteTask = () => {
-        if (confirm('Are you sure you want to cancel and delete this stem separation task? This will stop the separation and allow you to start a new one.')) {
+        if (
+            confirm(
+                'Are you sure you want to cancel and delete this stem separation task? This will stop the separation and allow you to start a new one.',
+            )
+        ) {
             destroy(route('uploads.stems.delete-task', { upload: uploadData.id }));
         }
     };
 
     const handleDownloadStem = (stemType: string) => {
-        window.location.href = route('uploads.stems.download', { 
-            upload: uploadData.id, 
-            stemType: stemType 
+        window.location.href = route('uploads.stems.download', {
+            upload: uploadData.id,
+            stemType: stemType,
         });
     };
 
@@ -109,34 +113,32 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             <Scissors className="h-5 w-5" />
                             Stem Separation
                         </CardTitle>
-                        <CardDescription>
-                            Separate your audio into individual stems (vocals, drums, bass, and other instruments).
-                        </CardDescription>
+                        <CardDescription>Separate your audio into individual stems (vocals, drums, bass, and other instruments).</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {!analysis_service.enabled ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Scissors className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <div className="py-8 text-center text-muted-foreground">
+                                <Scissors className="mx-auto mb-4 h-12 w-12 opacity-50" />
                                 <p>Audio analysis service is currently disabled.</p>
                             </div>
                         ) : !analysis_service.available ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Scissors className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <div className="py-8 text-center text-muted-foreground">
+                                <Scissors className="mx-auto mb-4 h-12 w-12 opacity-50" />
                                 <p>Audio analysis service is currently unavailable.</p>
-                                <p className="text-sm mt-2">Please try again later.</p>
+                                <p className="mt-2 text-sm">Please try again later.</p>
                             </div>
                         ) : uploadData.status !== 'ready' ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Scissors className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <div className="py-8 text-center text-muted-foreground">
+                                <Scissors className="mx-auto mb-4 h-12 w-12 opacity-50" />
                                 <p>Upload must be processed before stem separation can begin.</p>
-                                <p className="text-sm mt-2">Current status: {uploadData.status}</p>
+                                <p className="mt-2 text-sm">Current status: {uploadData.status}</p>
                             </div>
                         ) : (
-                            <div className="text-center py-8">
-                                <Scissors className="h-12 w-12 mx-auto mb-4 text-blue-500" />
+                            <div className="py-8 text-center">
+                                <Scissors className="mx-auto mb-4 h-12 w-12 text-blue-500" />
                                 <p className="mb-4 text-muted-foreground">No stem separation has been performed yet.</p>
                                 <Button onClick={handleStartSeparation} disabled={processing}>
-                                    <Zap className="h-4 w-4 mr-2" />
+                                    <Zap className="mr-2 h-4 w-4" />
                                     Start Stem Separation
                                 </Button>
                             </div>
@@ -154,14 +156,12 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             <Scissors className="h-5 w-5" />
                             Stem Separation in Progress
                         </CardTitle>
-                        <CardDescription>
-                            Your audio is being separated into stems. You'll receive a notification when it's complete.
-                        </CardDescription>
+                        <CardDescription>Your audio is being separated into stems. You'll receive a notification when it's complete.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-center py-8">
                             <div className="flex flex-col items-center space-y-4">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
                                 <div className="text-center">
                                     <p className="text-sm font-medium">Separating stems...</p>
                                     <p className="text-xs text-muted-foreground">
@@ -171,8 +171,8 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <Button variant="outline" onClick={handleDeleteTask} disabled={processing}>
-                                <Trash2 className="h-4 w-4 mr-2" />
+                            <Button variant="neutral" onClick={handleDeleteTask} disabled={processing}>
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Cancel Separation
                             </Button>
                         </div>
@@ -189,23 +189,21 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             <Scissors className="h-5 w-5" />
                             Stem Separation Failed
                         </CardTitle>
-                        <CardDescription>
-                            The stem separation could not be completed.
-                        </CardDescription>
+                        <CardDescription>The stem separation could not be completed.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                             <p className="text-sm text-red-700">
                                 {uploadData.stem_task.error_message || 'An unknown error occurred during stem separation.'}
                             </p>
                         </div>
                         <div className="flex gap-2">
                             <Button onClick={handleDeleteTask} disabled={processing}>
-                                <Trash2 className="h-4 w-4 mr-2" />
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Delete Failed Task
                             </Button>
-                            <Button variant="outline" onClick={handleDeleteStems} disabled={processing}>
-                                <Trash2 className="h-4 w-4 mr-2" />
+                            <Button variant="neutral" onClick={handleDeleteStems} disabled={processing}>
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Clear All Data
                             </Button>
                         </div>
@@ -235,31 +233,20 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                     <Music className="h-5 w-5" />
                                     Separated Stems
                                 </CardTitle>
-                                <CardDescription>
-                                    Completed {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}
-                                </CardDescription>
+                                <CardDescription>Completed {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}</CardDescription>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleDeleteStems}
-                                disabled={processing}
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" />
+                            <Button variant="neutral" size="sm" onClick={handleDeleteStems} disabled={processing}>
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                             </Button>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {/* Multi-track Stem Player */}
-                        <MultiTrackStemPlayer 
-                            stems={stems} 
-                            uploadId={uploadData.id} 
-                            analysis={uploadData.analysis || undefined}
-                        />
-                        
+                        <MultiTrackStemPlayer stems={stems} uploadId={uploadData.id} analysis={uploadData.analysis || undefined} />
+
                         {/* Stem Downloads */}
-                        <Card className="bg-slate-50 dark:bg-gray-900 border-slate-200 dark:border-gray-700">
+                        <Card className="border-slate-200 bg-slate-50 dark:border-gray-700 dark:bg-gray-900">
                             <CardHeader className="pb-4">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
@@ -268,7 +255,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                     </CardTitle>
                                     <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
                                         <span>Total: {stems.length} files</span>
-                                        <Badge variant="outline" className="bg-slate-100 dark:bg-gray-800 border-slate-300 dark:border-gray-600">
+                                        <Badge variant="neutral" className="border-slate-300 bg-slate-100 dark:border-gray-600 dark:bg-gray-800">
                                             {stems[0]?.storage_type?.toUpperCase() || 'LOCAL'}
                                         </Badge>
                                     </div>
@@ -278,18 +265,23 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                 {stems.map((stem) => {
                                     const getStemColor = (stemType: string) => {
                                         switch (stemType) {
-                                            case 'vocals': return 'bg-blue-500/20 dark:bg-blue-500/20 border-blue-200 dark:border-blue-800';
-                                            case 'drums': return 'bg-red-500/20 dark:bg-red-500/20 border-red-200 dark:border-red-800';
-                                            case 'bass': return 'bg-yellow-500/20 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-800';
-                                            case 'other': return 'bg-green-500/20 dark:bg-green-500/20 border-green-200 dark:border-green-800';
-                                            default: return 'bg-purple-500/20 dark:bg-purple-500/20 border-purple-200 dark:border-purple-800';
+                                            case 'vocals':
+                                                return 'bg-blue-500/20 dark:bg-blue-500/20 border-blue-200 dark:border-blue-800';
+                                            case 'drums':
+                                                return 'bg-red-500/20 dark:bg-red-500/20 border-red-200 dark:border-red-800';
+                                            case 'bass':
+                                                return 'bg-yellow-500/20 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-800';
+                                            case 'other':
+                                                return 'bg-green-500/20 dark:bg-green-500/20 border-green-200 dark:border-green-800';
+                                            default:
+                                                return 'bg-purple-500/20 dark:bg-purple-500/20 border-purple-200 dark:border-purple-800';
                                         }
                                     };
-                                    
+
                                     return (
-                                        <div 
-                                            key={stem.id} 
-                                            className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all hover:shadow-sm ${getStemColor(stem.stem_type)}`}
+                                        <div
+                                            key={stem.id}
+                                            className={`flex items-center justify-between rounded-lg border-2 p-4 transition-all hover:shadow-sm ${getStemColor(stem.stem_type)}`}
                                         >
                                             <div className="flex items-center gap-4">
                                                 {/* Icon and Name */}
@@ -300,28 +292,22 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                                             {stem.stem_type_name || stem.stem_type.charAt(0).toUpperCase() + stem.stem_type.slice(1)}
                                                         </h4>
                                                         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
-                                                            {stem.formatted_file_size && (
-                                                                <span>{stem.formatted_file_size}</span>
-                                                            )}
-                                                            {stem.formatted_file_size && stem.formatted_duration && (
-                                                                <span>•</span>
-                                                            )}
-                                                            {stem.formatted_duration && (
-                                                                <span>{stem.formatted_duration}</span>
-                                                            )}
+                                                            {stem.formatted_file_size && <span>{stem.formatted_file_size}</span>}
+                                                            {stem.formatted_file_size && stem.formatted_duration && <span>•</span>}
+                                                            {stem.formatted_duration && <span>{stem.formatted_duration}</span>}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Download Button */}
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleDownloadStem(stem.stem_type)}
                                                 disabled={processing}
-                                                className="bg-slate-900 hover:bg-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700 text-white border-0 shadow-sm"
+                                                className="border-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700"
                                             >
-                                                <Download className="h-4 w-4 mr-2" />
+                                                <Download className="mr-2 h-4 w-4" />
                                                 Download
                                             </Button>
                                         </div>
@@ -331,16 +317,18 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                         </Card>
 
                         {/* Additional Info */}
-                        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-gray-700">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 dark:text-gray-400">
+                        <div className="mt-6 border-t border-slate-200 pt-6 dark:border-gray-700">
+                            <div className="grid grid-cols-1 gap-4 text-sm text-slate-600 md:grid-cols-2 dark:text-gray-400">
                                 <div>
                                     <span className="font-medium text-slate-900 dark:text-white">Total Stems:</span> {stems.length}
                                 </div>
                                 <div>
-                                    <span className="font-medium text-slate-900 dark:text-white">Storage:</span> {stems[0]?.storage_type?.toUpperCase() || 'Unknown'}
+                                    <span className="font-medium text-slate-900 dark:text-white">Storage:</span>{' '}
+                                    {stems[0]?.storage_type?.toUpperCase() || 'Unknown'}
                                 </div>
                                 <div>
-                                    <span className="font-medium text-slate-900 dark:text-white">Completed:</span> {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}
+                                    <span className="font-medium text-slate-900 dark:text-white">Completed:</span>{' '}
+                                    {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}
                                 </div>
                             </div>
                         </div>
@@ -353,7 +341,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Stem Separation - ${uploadData.title}`} />
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 {renderSeparationStatus()}
                 {renderStemResults()}
             </div>

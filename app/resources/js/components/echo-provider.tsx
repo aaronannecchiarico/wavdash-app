@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 declare global {
     interface Window {
@@ -11,7 +11,7 @@ declare global {
 window.Pusher = Pusher;
 
 interface EchoContextType {
-    echo: Echo<any> | null;
+    echo: Echo<'reverb'> | null;
 }
 
 const EchoContext = createContext<EchoContextType>({ echo: null });
@@ -19,10 +19,10 @@ const EchoContext = createContext<EchoContextType>({ echo: null });
 export const useEcho = () => useContext(EchoContext);
 
 export const EchoProvider = ({ children }: { children: ReactNode }) => {
-    const [echo, setEcho] = useState<Echo<any> | null>(null);
+    const [echo, setEcho] = useState<Echo<'reverb'> | null>(null);
 
     useEffect(() => {
-        const echoInstance = new Echo({
+        const echoInstance = new Echo<'reverb'>({
             broadcaster: 'reverb',
             key: import.meta.env.VITE_REVERB_APP_KEY,
             wsHost: import.meta.env.VITE_REVERB_HOST,

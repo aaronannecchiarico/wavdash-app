@@ -48,9 +48,9 @@ const Pagination: React.FC<{ links: PaginationLink[] }> = ({ links }) => (
                 href={link.url ?? ''}
                 preserveScroll
                 className={cn(
-                    'neo-border px-3 py-2 text-xs font-black uppercase tracking-wide neo-transition',
-                    link.active 
-                        ? 'bg-neo-black text-neo-white' 
+                    'neo-border neo-transition px-3 py-2 text-xs font-black tracking-wide uppercase',
+                    link.active
+                        ? 'bg-neo-black text-neo-white'
                         : 'bg-neo-white text-neo-black hover:bg-neo-green hover:translate-x-1 hover:translate-y-1',
                     !link.url && 'cursor-not-allowed opacity-50',
                 )}
@@ -67,48 +67,39 @@ const ContestIndex: React.FC<Props> = ({ contests }) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contests" />
 
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+            <div className="space-y-6 p-4 sm:p-6 lg:p-8">
                 {/* Neobrutalist Contest Table */}
                 <div className="neo-border neo-shadow bg-neo-white dark:bg-neo-black">
-                    <div className="bg-neo-black p-4 neo-border-b">
-                        <h2 className="text-xl font-black uppercase tracking-wider text-neo-white">
-                            BEAT BATTLES
-                        </h2>
+                    <div className="bg-neo-black neo-border-b p-4">
+                        <h2 className="text-neo-white text-xl font-black tracking-wider uppercase">BEAT BATTLES</h2>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-neo-yellow neo-border-b">
                                 <tr>
-                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">CONTEST</th>
-                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">STATUS</th>
-                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">FIGHTERS</th>
-                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">DEADLINE</th>
-                                    <th className="p-4 text-left font-black uppercase tracking-wide text-neo-black">ACTION</th>
+                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">CONTEST</th>
+                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">STATUS</th>
+                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">FIGHTERS</th>
+                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">DEADLINE</th>
+                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">ACTION</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.map((contest) => (
                                     <tr key={contest.id} className="neo-border-b hover:bg-neo-green/10">
-                                        <td className="p-4 font-bold text-neo-black dark:text-neo-white">
-                                            {contest.name.toUpperCase()}
-                                        </td>
+                                        <td className="text-neo-black dark:text-neo-white p-4 font-bold">{contest.name.toUpperCase()}</td>
                                         <td className="p-4">
                                             <BrutalistStatusBadge status={contest.status} />
                                         </td>
-                                        <td className="p-4 font-mono font-bold text-neo-black dark:text-neo-white">
+                                        <td className="text-neo-black dark:text-neo-white p-4 font-mono font-bold">
                                             {contest.contest_users_count} PLAYERS
                                         </td>
-                                        <td className="p-4 font-mono font-bold text-neo-black dark:text-neo-white">
+                                        <td className="text-neo-black dark:text-neo-white p-4 font-mono font-bold">
                                             {new Date(contest.end_date).toLocaleDateString().toUpperCase()}
                                         </td>
                                         <td className="p-4">
-                                            <Button 
-                                                variant="accent" 
-                                                size="sm"
-                                                className="font-black uppercase neo-shadow"
-                                                asChild
-                                            >
+                                            <Button variant="default" size="sm" className="neo-shadow font-black uppercase" asChild>
                                                 <Link href={`/contests/${contest.id}`}>ENTER</Link>
                                             </Button>
                                         </td>
@@ -117,11 +108,11 @@ const ContestIndex: React.FC<Props> = ({ contests }) => {
                             </tbody>
                         </table>
                     </div>
-                    
+
                     {/* Brutalist Pagination Footer */}
                     <div className="neo-border-t bg-neo-pink p-4">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-bold text-neo-white">
+                            <p className="text-neo-white text-sm font-bold">
                                 SHOWING {meta.from} TO {meta.to} OF {meta.total} RESULTS
                             </p>
                             <Pagination links={meta.links} />

@@ -1,4 +1,5 @@
 import { useEcho } from '@/components/echo-provider';
+import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -13,7 +14,7 @@ interface AnalysisCompletedEvent {
 }
 
 export function useAnalysisNotifications() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const { echo } = useEcho();
 
     useEffect(() => {
@@ -22,7 +23,7 @@ export function useAnalysisNotifications() {
 
             const listener = (e: AnalysisCompletedEvent) => {
                 console.log('Analysis completion event received:', e);
-                
+
                 if (e.status === 'completed' && e.has_analysis) {
                     toast.success('Analysis completed successfully!', {
                         description: 'Your audio analysis is now ready to view.',

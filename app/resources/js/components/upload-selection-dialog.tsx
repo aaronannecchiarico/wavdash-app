@@ -1,18 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Upload } from '@/types';
-import { SearchIcon, PlusIcon, CheckCircle } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { CheckCircle, PlusIcon, SearchIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UploadSelectionDialogProps {
     title: string;
@@ -23,14 +16,7 @@ interface UploadSelectionDialogProps {
     children: React.ReactNode;
 }
 
-export function UploadSelectionDialog({
-    title,
-    description,
-    actionLabel,
-    actionType,
-    onUploadSelect,
-    children,
-}: UploadSelectionDialogProps) {
+export function UploadSelectionDialog({ title, description, actionLabel, actionType, onUploadSelect, children }: UploadSelectionDialogProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -84,19 +70,17 @@ export function UploadSelectionDialog({
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {children}
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent className="flex h-[80vh] max-w-2xl flex-col">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6 flex-1 overflow-hidden flex flex-col">
+                <div className="flex flex-1 flex-col space-y-6 overflow-hidden">
                     <div className="flex gap-3">
                         <div className="relative flex-1">
-                            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
+                            <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 transform text-muted-foreground" />
                             <Input
                                 placeholder="Search uploads..."
                                 value={searchQuery}
@@ -104,7 +88,7 @@ export function UploadSelectionDialog({
                                 className="pl-10"
                             />
                         </div>
-                        <Button asChild variant="outline">
+                        <Button asChild variant="neutral">
                             <Link href="/uploads/create">
                                 <PlusIcon />
                                 New Upload
@@ -112,69 +96,67 @@ export function UploadSelectionDialog({
                         </Button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-3">
+                    <div className="flex-1 space-y-3 overflow-y-auto">
                         {loading ? (
                             <div className="space-y-2">
                                 {[...Array(5)].map((_, i) => (
                                     <Card key={i} className="animate-pulse">
                                         <CardContent className="p-5">
-                                            <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                                            <div className="h-3 bg-muted rounded w-1/2"></div>
+                                            <div className="mb-2 h-4 w-3/4 rounded bg-muted"></div>
+                                            <div className="h-3 w-1/2 rounded bg-muted"></div>
                                         </CardContent>
                                     </Card>
                                 ))}
                             </div>
                         ) : uploads.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground">
+                            <div className="py-8 text-center text-muted-foreground">
                                 {searchQuery ? 'No uploads found matching your search.' : 'No uploads available.'}
                             </div>
                         ) : (
                             uploads.map((upload) => {
                                 const isCompleted = actionType === 'stems' ? upload.has_stems : upload.has_analysis;
-                                
+
                                 return (
                                     <Card
                                         key={upload.id}
-                                        className="cursor-pointer hover:bg-accent/50 transition-colors"
+                                        className="cursor-pointer transition-colors hover:bg-accent/50"
                                         onClick={() => handleUploadSelect(upload)}
                                     >
                                         <CardContent className="p-5">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h4 className="font-medium truncate">{upload.title}</h4>
+                                            <div className="flex items-start justify-between">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="mb-1 flex items-center gap-2">
+                                                        <h4 className="truncate font-medium">{upload.title}</h4>
                                                         {isCompleted && (
-                                                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 rounded-full text-xs font-medium">
+                                                            <div className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-400">
                                                                 <CheckCircle className="size-3" />
                                                                 Done
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground truncate">
-                                                        {upload.filename}
-                                                    </p>
+                                                    <p className="truncate text-sm text-muted-foreground">{upload.filename}</p>
                                                     {upload.description && (
-                                                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                                            {upload.description}
-                                                        </p>
+                                                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{upload.description}</p>
                                                     )}
                                                 </div>
-                                                <div className="flex flex-col items-end text-xs text-muted-foreground ml-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                        upload.status === 'ready' 
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                                            : upload.status === 'processing'
-                                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                                                    }`}>
+                                                <div className="ml-4 flex flex-col items-end text-xs text-muted-foreground">
+                                                    <span
+                                                        className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                                            upload.status === 'ready'
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                                : upload.status === 'processing'
+                                                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                                        }`}
+                                                    >
                                                         {upload.status}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <Button 
-                                                size="sm" 
+                                            <Button
+                                                size="sm"
                                                 className="mt-3 w-full"
-                                                variant={isCompleted ? "outline" : "default"}
+                                                variant={isCompleted ? 'neutral' : 'default'}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleUploadSelect(upload);

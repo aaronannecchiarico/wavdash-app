@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
 import { SoundcloudWaveform } from '@/components/soundcloud-waveform';
+import { Button } from '@/components/ui/button';
 import { Loader2, PauseIcon, PlayIcon, Volume2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type WaveSurfer from 'wavesurfer.js';
 
 interface AudioPlayerProps {
@@ -60,20 +60,16 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
     };
 
     return (
-        <div className={`audio-player neo-border neo-shadow bg-[var(--neo-bg-primary)] dark:bg-[var(--neo-black)] p-6 ${className}`}>
-            {title && (
-                <h3 className="mb-4 text-lg font-black uppercase tracking-widest text-[var(--neo-text-primary)] neo-border-b pb-2">
-                    {title}
-                </h3>
-            )}
-            
+        <div className={`audio-player neo-border neo-shadow bg-[var(--neo-bg-primary)] p-6 dark:bg-[var(--neo-black)] ${className}`}>
+            {title && <h3 className="neo-border-b mb-4 pb-2 text-lg font-black tracking-widest text-[var(--neo-text-primary)] uppercase">{title}</h3>}
+
             <div className="flex items-center space-x-6">
                 {/* Brutalist play button */}
                 <Button
                     onClick={handlePlayPause}
                     variant="default"
                     size="lg"
-                    className="w-16 h-16 bg-[var(--neo-green)] hover:bg-[var(--neo-pink)] neo-shadow hover:neo-shadow-hover hover:translate-x-1 hover:translate-y-1"
+                    className="neo-shadow hover:neo-shadow-hover h-16 w-16 bg-[var(--neo-green)] hover:translate-x-1 hover:translate-y-1 hover:bg-[var(--neo-pink)]"
                     disabled={isLoading}
                 >
                     {isLoading ? (
@@ -86,7 +82,7 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                 </Button>
 
                 {/* Waveform with brutalist styling */}
-                <div className="flex-1 neo-border neo-shadow-hover bg-[var(--neo-yellow)]/20 p-4">
+                <div className="neo-border neo-shadow-hover flex-1 bg-[var(--neo-yellow)]/20 p-4">
                     <SoundcloudWaveform
                         url={url}
                         onReady={(ws) => {
@@ -100,18 +96,18 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                     />
                 </div>
             </div>
-            
+
             {/* Control bar with brutalist buttons */}
-            <div className="mt-4 flex justify-between items-center">
+            <div className="mt-4 flex items-center justify-between">
                 <div className="flex space-x-2">
-                    <Button variant="accent" size="sm" className="font-mono text-[var(--neo-black)]">
+                    <Button variant="default" size="sm" className="font-mono text-[var(--neo-black)]">
                         {formatTime(currentTime)}
                     </Button>
-                    <Button variant="secondary" size="sm" className="font-mono text-[var(--neo-white)]">
+                    <Button variant="neutral" size="sm" className="font-mono text-[var(--neo-white)]">
                         {formatTime(duration)}
                     </Button>
                 </div>
-                
+
                 <div className="flex items-center space-x-3">
                     <Volume2 className="h-4 w-4 text-[var(--neo-text-primary)]" />
                     <input
@@ -121,9 +117,9 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                         step="0.1"
                         value={volume}
                         onChange={handleVolumeChange}
-                        className="w-20 h-2 neo-border bg-[var(--neo-bg-secondary)] slider-thumb:w-4 slider-thumb:h-4 slider-thumb:bg-[var(--neo-green)] slider-thumb:border-2 slider-thumb:border-[var(--neo-black)] slider-thumb:cursor-pointer hover:slider-thumb:bg-[var(--neo-pink)]"
+                        className="neo-border slider-thumb:w-4 slider-thumb:h-4 slider-thumb:bg-[var(--neo-green)] slider-thumb:border-2 slider-thumb:border-[var(--neo-black)] slider-thumb:cursor-pointer hover:slider-thumb:bg-[var(--neo-pink)] h-2 w-20 bg-[var(--neo-bg-secondary)]"
                         style={{
-                            background: `linear-gradient(to right, var(--neo-green) 0%, var(--neo-green) ${volume * 100}%, var(--neo-bg-secondary) ${volume * 100}%, var(--neo-bg-secondary) 100%)`
+                            background: `linear-gradient(to right, var(--neo-green) 0%, var(--neo-green) ${volume * 100}%, var(--neo-bg-secondary) ${volume * 100}%, var(--neo-bg-secondary) 100%)`,
                         }}
                     />
                 </div>

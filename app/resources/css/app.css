@@ -9,39 +9,44 @@
 
 /* Cabinet Grotesk Font Family */
 @font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('./fonts/fonts/CabinetGrotesk-Regular.woff2') format('woff2'),
-       url('./fonts/fonts/CabinetGrotesk-Regular.woff') format('woff');
-  font-weight: 400;
-  font-display: swap;
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Regular.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Regular.woff') format('woff');
+    font-weight: 400;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('./fonts/fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
-       url('./fonts/fonts/CabinetGrotesk-Medium.woff') format('woff');
-  font-weight: 500;
-  font-display: swap;
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Medium.woff') format('woff');
+    font-weight: 500;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('./fonts/fonts/CabinetGrotesk-Bold.woff2') format('woff2'),
-       url('./fonts/fonts/CabinetGrotesk-Bold.woff') format('woff');
-  font-weight: 700;
-  font-display: swap;
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Bold.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Bold.woff') format('woff');
+    font-weight: 700;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('./fonts/fonts/CabinetGrotesk-Black.woff2') format('woff2'),
-       url('./fonts/fonts/CabinetGrotesk-Black.woff') format('woff');
-  font-weight: 900;
-  font-display: swap;
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Black.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Black.woff') format('woff');
+    font-weight: 900;
+    font-display: swap;
 }
 
 @theme {
-    --font-sans: 'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans:
+        'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-heading: 'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif;
 
     --radius-lg: 0px;
@@ -137,11 +142,11 @@
 
 :root {
     /* Beat Forge Brand Colors - Neobrutalist Palette */
-    --neo-white: #FFFFFF;
-    --neo-green: #00EB90;
-    --neo-pink: #FF73A9;
-    --neo-yellow: #FFDC00;
-    --neo-blue: #3F5EF4;
+    --neo-white: #ffffff;
+    --neo-green: #00eb90;
+    --neo-pink: #ff73a9;
+    --neo-yellow: #ffdc00;
+    --neo-blue: #3f5ef4;
     --neo-black: #000000;
 
     /* Neobrutalism.dev CSS Variables - Adapted to Beat Forge Colors */
@@ -187,7 +192,7 @@
     --muted-foreground: var(--foreground);
     --accent: var(--neo-blue);
     --accent-foreground: var(--neo-white);
-    --destructive: #EF4444;
+    --destructive: #ef4444;
     --destructive-foreground: var(--neo-white);
     --input: var(--border);
     --radius: 0px;
@@ -242,7 +247,7 @@
     --muted-foreground: var(--foreground);
     --accent: var(--neo-yellow);
     --accent-foreground: var(--neo-black);
-    --destructive: #EF4444;
+    --destructive: #ef4444;
     --destructive-foreground: var(--neo-white);
     --input: var(--border);
     --sidebar: var(--neo-black);
@@ -261,10 +266,15 @@
     }
 
     body {
-        @apply bg-background text-foreground font-base;
+        @apply bg-background font-base text-foreground;
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         @apply font-heading;
     }
 }
@@ -296,7 +306,7 @@
     }
 
     .dark .neo-shadow {
-        box-shadow: 4px 4px 0px #FFFFFF;
+        box-shadow: 4px 4px 0px #ffffff;
     }
 
     .neo-shadow-hover {
@@ -304,7 +314,7 @@
     }
 
     .dark .neo-shadow-hover {
-        box-shadow: 2px 2px 0px #FFFFFF;
+        box-shadow: 2px 2px 0px #ffffff;
     }
 
     .neo-transition {
@@ -313,7 +323,7 @@
 
     /* Component-specific overrides */
     .neo-button {
-        @apply font-bold uppercase tracking-wider;
+        @apply font-bold tracking-wider uppercase;
         border: 3px solid currentColor;
         box-shadow: 4px 4px 0px #000000;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -321,7 +331,7 @@
     }
 
     .dark .neo-button {
-        box-shadow: 4px 4px 0px #FFFFFF;
+        box-shadow: 4px 4px 0px #ffffff;
     }
 
     .neo-button:hover {
@@ -330,7 +340,7 @@
     }
 
     .dark .neo-button:hover {
-        box-shadow: 2px 2px 0px #FFFFFF;
+        box-shadow: 2px 2px 0px #ffffff;
     }
 
     .neo-card {
@@ -340,7 +350,7 @@
     }
 
     .dark .neo-card {
-        box-shadow: 4px 4px 0px #FFFFFF;
+        box-shadow: 4px 4px 0px #ffffff;
     }
 
     .neo-input {
@@ -351,7 +361,7 @@
     }
 
     .dark .neo-input {
-        box-shadow: 2px 2px 0px #FFFFFF;
+        box-shadow: 2px 2px 0px #ffffff;
     }
 
     .neo-input:focus {
@@ -363,30 +373,30 @@
         border: 3px solid currentColor;
     }
 
-    .neo-slider [data-orientation="horizontal"] {
+    .neo-slider [data-orientation='horizontal'] {
         height: 8px;
     }
 
-    .neo-slider [role="slider"] {
+    .neo-slider [role='slider'] {
         border: 3px solid currentColor;
         box-shadow: 4px 4px 0px #000000;
-        background-color: #00EB90;
+        background-color: #00eb90;
         width: 16px;
         height: 16px;
         border-radius: 0;
     }
 
-    .dark .neo-slider [role="slider"] {
-        box-shadow: 4px 4px 0px #FFFFFF;
+    .dark .neo-slider [role='slider'] {
+        box-shadow: 4px 4px 0px #ffffff;
     }
 
-    .neo-slider [role="slider"]:hover {
+    .neo-slider [role='slider']:hover {
         box-shadow: 2px 2px 0px #000000;
         transform: translate(-1px, -1px);
     }
 
-    .dark .neo-slider [role="slider"]:hover {
-        box-shadow: 2px 2px 0px #FFFFFF;
+    .dark .neo-slider [role='slider']:hover {
+        box-shadow: 2px 2px 0px #ffffff;
     }
 }
 
@@ -423,13 +433,13 @@
     }
 
     /* Enhanced button variants for dark mode */
-    .dark .neo-button[data-variant="outline"] {
+    .dark .neo-button[data-variant='outline'] {
         background-color: transparent;
         border-color: var(--neo-white);
         color: var(--neo-white);
     }
 
-    .dark .neo-button[data-variant="outline"]:hover {
+    .dark .neo-button[data-variant='outline']:hover {
         background-color: var(--neo-white);
         color: var(--neo-black);
     }
@@ -449,45 +459,65 @@
 
 /* Neobrutalist animations */
 @keyframes slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes bounce-in {
-  0% {
-    transform: scale(0.3) rotate(-5deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.05) rotate(1deg);
-  }
-  70% {
-    transform: scale(0.9) rotate(-1deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
+    0% {
+        transform: scale(0.3) rotate(-5deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05) rotate(1deg);
+    }
+    70% {
+        transform: scale(0.9) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-  20%, 40%, 60%, 80% { transform: translateX(2px); }
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
 }
 
-.animate-slide-up { animation: slide-up 0.3s ease-out; }
-.animate-bounce-in { animation: bounce-in 0.5s ease-out; }
-.animate-shake { animation: shake 0.5s ease-in-out; }
+.animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+}
+.animate-bounce-in {
+    animation: bounce-in 0.5s ease-out;
+}
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
 
 /* Hover transforms for brutalist effect */
 .neo-hover-transform:hover {
-  transform: translate(-2px, -2px);
-  transition: transform 0.1s ease-out;
+    transform: translate(-2px, -2px);
+    transition: transform 0.1s ease-out;
 }

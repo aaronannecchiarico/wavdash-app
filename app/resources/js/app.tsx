@@ -1,14 +1,12 @@
 import '../css/app.css';
 
-import { createInertiaApp, usePage } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
-import { BrutalistToaster } from './components/ui/neo/toaster';
+import { createInertiaApp } from '@inertiajs/react';
 import Echo from 'laravel-echo';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import Pusher from 'pusher-js';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
+import { createRoot } from 'react-dom/client';
+import { BrutalistToaster } from './components/ui/neo/toaster';
+import { initializeTheme } from './hooks/use-appearance';
 
 declare global {
     interface Window {
@@ -41,7 +39,7 @@ createInertiaApp({
             <>
                 <App {...props} />
                 <BrutalistToaster position="top-right" richColors={false} closeButton={false} />
-            </>
+            </>,
         );
     },
     progress: {

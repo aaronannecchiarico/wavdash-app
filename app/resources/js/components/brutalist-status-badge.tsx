@@ -17,10 +17,8 @@ export const BrutalistStatusBadge = ({ status }: BrutalistStatusBadgeProps) => {
     };
 
     return (
-        <div className={`${getStatusClasses(status)} px-3 py-1 inline-block`}>
-            <span className="font-black text-xs uppercase tracking-wide">
-                {status}
-            </span>
+        <div className={`${getStatusClasses(status)} inline-block px-3 py-1`}>
+            <span className="text-xs font-black tracking-wide uppercase">{status}</span>
         </div>
     );
 };

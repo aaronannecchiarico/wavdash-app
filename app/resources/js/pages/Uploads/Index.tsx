@@ -2,12 +2,12 @@ import { MusicCard } from '@/components/music-library-card';
 import { MusicLibraryControls } from '@/components/music-library-controls';
 import { Button } from '@/components/ui/neo/button';
 import AppLayout from '@/layouts/app-layout';
+import { formatDuration, formatFileSize } from '@/lib/formatters';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Music, PlusIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { formatFileSize, formatDuration } from '@/lib/formatters';
 
 interface Props {
     uploads: {
@@ -68,9 +68,7 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
             <Head title="Music Library" />
             <div className="p-4 sm:p-6 lg:p-8">
                 <div className="mb-6 flex items-center justify-between">
-                    {uploads.data.length > 0 && (
-                        <MusicLibraryControls filters={filters} filterOptions={filterOptions} />
-                    )}
+                    {uploads.data.length > 0 && <MusicLibraryControls filters={filters} filterOptions={filterOptions} />}
                     <Link href={route('uploads.create')} className={uploads.data.length === 0 ? 'ml-auto' : ''}>
                         <Button>
                             <PlusIcon className="mr-2 h-4 w-4" />
@@ -81,10 +79,10 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
                 <div className="flex h-full flex-1 flex-col gap-4 pb-8">
                     {uploads.data.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center bg-secondary-background border-2 border-border">
+                            <div className="mb-4 flex h-16 w-16 items-center justify-center border-2 border-border bg-secondary-background">
                                 <Music className="h-8 w-8 text-foreground" />
                             </div>
-                            <h3 className="mb-2 text-lg font-heading text-foreground">No music files found</h3>
+                            <h3 className="mb-2 font-heading text-lg text-foreground">No music files found</h3>
                             <p className="max-w-sm font-base text-foreground opacity-75">
                                 {hasFilters
                                     ? 'Your search returned no results. Try adjusting your filters.'

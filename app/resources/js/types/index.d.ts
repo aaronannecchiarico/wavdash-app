@@ -111,6 +111,14 @@ export interface UploadStemTask {
     error_message: string | null;
 }
 
+export interface StemMetadata {
+    quality_score?: number;
+    processing_time?: number;
+    algorithm_version?: string;
+    separation_confidence?: number;
+    [key: string]: unknown;
+}
+
 export interface UploadStem {
     id: number;
     stem_type: string;
@@ -118,7 +126,7 @@ export interface UploadStem {
     storage_type: string;
     file_size?: number;
     duration?: number;
-    metadata?: any;
+    metadata?: StemMetadata;
     created_at: string;
     updated_at: string;
     formatted_file_size?: string;
@@ -126,15 +134,33 @@ export interface UploadStem {
     stem_type_name?: string;
 }
 
+export interface TempoProcessingOptions {
+    preset?: string;
+    tempo_factor?: number;
+    pitch_shift_semitones?: number;
+    preserve_pitch?: boolean;
+    add_reverb?: boolean;
+    use_stems?: boolean;
+    [key: string]: unknown;
+}
+
 export interface UploadTempoTask {
     id: number;
     task_id: string;
     status: 'pending' | 'processing' | 'completed' | 'failed' | 'deleted';
     progress: number;
-    processing_options?: any;
+    processing_options?: TempoProcessingOptions;
     submitted_at: string;
     completed_at: string | null;
     error_message: string | null;
+}
+
+export interface TempoProcessingMetadata {
+    quality_score?: number;
+    processing_warnings?: string[];
+    processing_time?: number;
+    algorithm_version?: string;
+    [key: string]: unknown;
 }
 
 export interface UploadTempo {
@@ -150,7 +176,7 @@ export interface UploadTempo {
     file_size?: number;
     duration?: number;
     final_bpm?: number;
-    processing_metadata?: any;
+    processing_metadata?: TempoProcessingMetadata;
     created_at: string;
     updated_at: string;
     preset_name?: string;
@@ -158,6 +184,7 @@ export interface UploadTempo {
     formatted_duration?: string;
     tempo_description?: string;
     pitch_description?: string;
+    public_path?: string; // Adding this property since it was used in the tempo component
 }
 
 export interface Upload {

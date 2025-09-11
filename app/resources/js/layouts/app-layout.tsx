@@ -1,9 +1,9 @@
 import { EchoProvider } from '@/components/echo-provider';
-import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
-import { useUploadNotifications } from '@/hooks/use-upload-notifications';
 import { useAnalysisNotifications } from '@/hooks/use-analysis-notifications';
 import { useStemNotifications } from '@/hooks/use-stem-notifications';
 import { useTempoNotifications } from '@/hooks/use-tempo-notifications';
+import { useUploadNotifications } from '@/hooks/use-upload-notifications';
+import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode } from 'react';
 

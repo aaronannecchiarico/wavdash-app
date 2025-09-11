@@ -1,5 +1,7 @@
 import * as esbuild from 'esbuild'
 
+/* eslint-env node */
+/* global process */
 const isDev = process.argv.includes('--dev')
 
 async function compile(options) {

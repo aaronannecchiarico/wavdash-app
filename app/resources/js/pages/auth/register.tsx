@@ -1,11 +1,11 @@
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/neo/button';
 import { BrutalistInput } from '@/components/brutalist-input';
 import { BrutalistLabel } from '@/components/brutalist-label';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/neo/button';
 import BrutalistAuthLayout from '@/layouts/brutalist-auth-layout';
 
 type RegisterForm = {
@@ -104,24 +104,22 @@ export default function Register() {
                         <InputError message={errors.password_confirmation} />
                     </div>
 
-                    <Button 
-                        type="submit" 
-                        className="w-full bg-chart-2 text-main-foreground hover:bg-chart-1 font-heading font-black uppercase tracking-widest h-12 mt-6" 
-                        tabIndex={5} 
+                    <Button
+                        type="submit"
+                        className="mt-6 h-12 w-full bg-chart-2 font-heading font-black tracking-widest text-main-foreground uppercase hover:bg-chart-1"
+                        tabIndex={5}
                         disabled={processing}
                     >
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin mr-2" />}
+                        {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                         {processing ? 'CREATING ACCOUNT...' : 'CREATE FORGE ACCOUNT'}
                     </Button>
                 </div>
 
-                <div className="text-center border-t-2 border-border pt-6">
-                    <span className="font-base font-bold text-foreground/70 text-sm uppercase tracking-wide">
-                        ALREADY HAVE AN ACCOUNT?{' '}
-                    </span>
-                    <Link 
-                        href={route('login')} 
-                        className="font-heading font-black text-sm uppercase tracking-wide text-chart-1 hover:text-chart-2 transition-colors"
+                <div className="border-t-2 border-border pt-6 text-center">
+                    <span className="text-sm font-base font-bold tracking-wide text-foreground/70 uppercase">ALREADY HAVE AN ACCOUNT? </span>
+                    <Link
+                        href={route('login')}
+                        className="font-heading text-sm font-black tracking-wide text-chart-1 uppercase transition-colors hover:text-chart-2"
                         tabIndex={6}
                     >
                         LOG IN

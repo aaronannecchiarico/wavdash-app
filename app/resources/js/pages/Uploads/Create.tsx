@@ -33,11 +33,7 @@ export default function Create() {
         });
     };
 
-    const breadcrumbs: BreadcrumbItem[] = generateDynamicBreadcrumbs(
-        'Upload',
-        route('uploads.create'),
-        'Add a new track to your library'
-    );
+    const breadcrumbs: BreadcrumbItem[] = generateDynamicBreadcrumbs('Upload', route('uploads.create'), 'Add a new track to your library');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
