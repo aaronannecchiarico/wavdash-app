@@ -1,3 +1,4 @@
+# Laravel specific
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
@@ -14,9 +15,13 @@
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
+
+# Frontend
 npm-debug.log
 yarn-error.log
 /auth.json
+
+# AI Tools
 /.fleet
 /.idea
 /.nova
@@ -29,3 +34,14 @@ yarn-error.log
 .github/chatmodes
 .github/prompts
 .github/copilot-instructions.md
+
+# Database files
+*.sqlite
+*.db
+/storage/logs/
+*.backup
+*.bak
+
+# Cloudflare Workers
+wrangler.toml
+.wrangler/
