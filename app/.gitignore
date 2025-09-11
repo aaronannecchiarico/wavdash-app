@@ -34,6 +34,7 @@ yarn-error.log
 .github/chatmodes
 .github/prompts
 .github/copilot-instructions.md
+.playwright-mcp
 
 # Database files
 *.sqlite
@@ -45,3 +46,4 @@ yarn-error.log
 # Cloudflare Workers
 wrangler.toml
 .wrangler/
+
