@@ -5,6 +5,7 @@ namespace Tests\Feature\Http\Controllers;
 use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,9 @@ final class UploadControllerTest extends TestCase
 
         // Fake queues to prevent job execution
         Queue::fake();
+
+        // Fake events to prevent real event dispatching
+        Event::fake();
 
         // Fake storage to prevent file system operations
         Storage::fake('r2');
@@ -362,5 +366,158 @@ final class UploadControllerTest extends TestCase
         $this->assertDatabaseMissing('uploads', [
             'id' => $upload->id,
         ]);
+    }
+
+    #[Test]
+    public function store_handles_client_processed_upload_when_feature_enabled()
+    {
+        // Enable client-side processing feature flag
+        config(['app.client_side_audio_processing' => true]);
+
+        $user = User::factory()->create();
+
+        // Create a fake OGG file to simulate client-processed audio
+        $fakeOggFile = \Illuminate\Http\UploadedFile::fake()->create('processed_audio.ogg', 1000, 'audio/ogg');
+
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Client Processed Audio',
+            'description' => 'This was processed on the client',
+            'audio_file' => $fakeOggFile,
+            'client_processed' => true,
+            'original_filename' => 'original_audio.mp3',
+            'original_size' => 5000000, // 5MB original
+            'duration' => 180.5, // 3 minutes 30.5 seconds
+        ]);
+
+        $response->assertRedirect(route('uploads.index'))
+            ->assertSessionHas('success', 'Audio file uploaded and processed successfully!');
+
+        $this->assertDatabaseHas('uploads', [
+            'title' => 'Client Processed Audio',
+            'description' => 'This was processed on the client',
+            'filename' => 'original_audio.mp3',
+            'mime_type' => 'audio/ogg',
+            'size' => 5000000,
+            'status' => 'ready', // Should be immediately ready
+            'duration_seconds' => 180.5,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    #[Test]
+    public function store_falls_back_to_server_processing_when_feature_disabled()
+    {
+        // Disable client-side processing feature flag
+        config(['app.client_side_audio_processing' => false]);
+
+        $user = User::factory()->create();
+
+        $fakeOggFile = \Illuminate\Http\UploadedFile::fake()->create('processed_audio.ogg', 1000, 'audio/ogg');
+
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Should Use Server Processing',
+            'description' => 'Feature flag disabled',
+            'audio_file' => $fakeOggFile,
+            'client_processed' => true,
+            'original_filename' => 'original_audio.mp3',
+            'original_size' => 5000000,
+            'duration' => 180.5,
+        ]);
+
+        $response->assertRedirect(route('uploads.index'))
+            ->assertSessionHas('success', 'Audio file uploaded successfully and is now being processed!');
+
+        $this->assertDatabaseHas('uploads', [
+            'title' => 'Should Use Server Processing',
+            'status' => 'pending', // Should use server processing (pending status)
+        ]);
+    }
+
+    #[Test]
+    public function store_validates_client_processed_upload_fields()
+    {
+        config(['app.client_side_audio_processing' => true]);
+
+        $user = User::factory()->create();
+
+        // Missing required client processing fields
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Invalid Client Upload',
+            'audio_file' => \Illuminate\Http\UploadedFile::fake()->create('audio.ogg', 1000, 'audio/ogg'),
+            'client_processed' => true,
+            // Missing: original_filename, original_size, duration
+        ]);
+
+        $response->assertSessionHasErrors(['original_filename', 'original_size', 'duration']);
+    }
+
+    #[Test]
+    public function store_validates_ogg_mime_type_for_client_processed_files()
+    {
+        config(['app.client_side_audio_processing' => true]);
+
+        $user = User::factory()->create();
+
+        // Wrong mime type for client-processed file (should be OGG)
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Wrong Format',
+            'audio_file' => \Illuminate\Http\UploadedFile::fake()->create('audio.mp3', 1000, 'audio/mpeg'),
+            'client_processed' => true,
+            'original_filename' => 'original.mp3',
+            'original_size' => 1000,
+            'duration' => 60,
+        ]);
+
+        $response->assertSessionHasErrors(['audio_file']);
+    }
+
+    #[Test]
+    public function store_allows_various_formats_for_server_processed_files()
+    {
+        config(['app.client_side_audio_processing' => true]);
+
+        $user = User::factory()->create();
+
+        // Server-processed file with MP3 format should be allowed
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Server Processed MP3',
+            'audio_file' => \Illuminate\Http\UploadedFile::fake()->create('audio.mp3', 1000, 'audio/mpeg'),
+            'client_processed' => false, // Explicitly server processing
+        ]);
+
+        $response->assertRedirect(route('uploads.index'));
+
+        $this->assertDatabaseHas('uploads', [
+            'title' => 'Server Processed MP3',
+            'status' => 'pending',
+        ]);
+    }
+
+    #[Test]
+    public function store_creates_proper_file_paths_for_client_processed_uploads()
+    {
+        config(['app.client_side_audio_processing' => true]);
+
+        $user = User::factory()->create();
+
+        $fakeOggFile = \Illuminate\Http\UploadedFile::fake()->create('processed_audio.ogg', 1000, 'audio/ogg');
+
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Path Test Audio',
+            'audio_file' => $fakeOggFile,
+            'client_processed' => true,
+            'original_filename' => 'original_audio.mp3',
+            'original_size' => 5000000,
+            'duration' => 180.5,
+        ]);
+
+        $response->assertRedirect(route('uploads.index'));
+
+        $upload = Upload::where('title', 'Path Test Audio')->first();
+
+        $this->assertNotNull($upload);
+        $this->assertStringContainsString('path-test-audio', $upload->stream_path);
+        $this->assertStringEndsWith('.ogg', $upload->stream_path);
+        $this->assertEquals($upload->path, $upload->stream_path); // Should be same for processed files
     }
 }

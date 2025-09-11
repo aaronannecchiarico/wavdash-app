@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Client-Side Audio Processing
+    |--------------------------------------------------------------------------
+    |
+    | This flag determines whether client-side audio processing using MediaBunny
+    | is enabled. When enabled, audio files are processed in the browser before
+    | upload, reducing server load and improving user experience.
+    |
+    */
+
+    'client_side_audio_processing' => env('CLIENT_SIDE_PROCESSING', false),
+
 ];

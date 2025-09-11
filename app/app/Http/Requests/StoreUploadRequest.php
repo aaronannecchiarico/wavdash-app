@@ -22,15 +22,30 @@ class StoreUploadRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'audio_file' => [
+        ];
+
+        if ($this->boolean('client_processed')) {
+            $rules['audio_file'] = [
+                'required',
+                'file',
+                'mimes:ogg', // Only OGG for processed files
+                'max:25000', // Processed files are typically smaller
+            ];
+            $rules['original_filename'] = 'required|string';
+            $rules['original_size'] = 'required|integer|min:1';
+            $rules['duration'] = 'required|numeric|min:0';
+        } else {
+            $rules['audio_file'] = [
                 'required',
                 'file',
                 'mimes:mp3,wav,aiff,ogg,flac',
                 'max:50000', // 50MB max file size
-            ],
-        ];
+            ];
+        }
+
+        return $rules;
     }
 }

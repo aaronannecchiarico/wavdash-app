@@ -155,7 +155,13 @@ class UploadController extends Controller
     {
         $user = Auth::user();
         $file = $request->file('audio_file');
+        $isClientProcessed = $request->boolean('client_processed', false);
 
+        if (config('app.client_side_audio_processing') && $isClientProcessed) {
+            return $this->storeClientProcessedUpload($request, $user, $file);
+        }
+
+        // Existing server-side processing flow
         $uploadData = $this->prepareUploadData($request, $file);
         $this->logUploadStart($user, $file, $uploadData);
 
@@ -167,6 +173,82 @@ class UploadController extends Controller
 
         return redirect()->route('uploads.index')
             ->with('success', 'Audio file uploaded successfully and is now being processed!');
+    }
+
+    /**
+     * Store client-processed upload directly as ready.
+     */
+    private function storeClientProcessedUpload(StoreUploadRequest $request, $user, $file)
+    {
+        $uploadData = [
+            'title' => $request->input('title'),
+            'description' => $request->input('description', ''),
+            'filename' => $request->input('original_filename', $file->getClientOriginalName()),
+            'mime_type' => 'audio/ogg', // Client always processes to OGG
+            'size' => $request->input('original_size', $file->getSize()),
+            'status' => 'ready', // Skip processing queue
+            'duration_seconds' => $request->input('duration'),
+        ];
+
+        $this->logUploadStart($user, $file, $uploadData);
+
+        // Store the pre-processed OGG file directly as stream file
+        $uploadData = $this->storeProcessedFile($file, $user, $uploadData);
+        $upload = $this->createUploadRecord($user, $uploadData);
+
+        // Broadcast ready event immediately
+        \App\Events\UploadProcessed::dispatch($upload);
+
+        $this->logUploadSuccess($upload);
+
+        return redirect()->route('uploads.index')
+            ->with('success', 'Audio file uploaded and processed successfully!');
+    }
+
+    /**
+     * Store pre-processed file directly to stream storage.
+     */
+    private function storeProcessedFile($file, $user, array $uploadData): array
+    {
+        $filename = Str::slug($uploadData['title']).'-'.Str::uuid().'.ogg';
+        $disk = config('filesystems.default');
+        $date = now();
+
+        if ($disk === 'r2') {
+            // Store directly to public bucket since it's already processed
+            $streamPath = sprintf('uploads/stream/%s/%s/%s',
+                $user->id,
+                $date->format('Y/m/d'),
+                $filename
+            );
+
+            $file->storeAs(
+                dirname($streamPath),
+                basename($streamPath),
+                'r2_public'
+            );
+
+            return array_merge($uploadData, [
+                'stream_path' => $streamPath,
+                'path' => $streamPath, // Same as stream for processed files
+                'uses_r2_storage' => true,
+            ]);
+        }
+
+        // Local storage
+        $streamPath = sprintf('uploads/stream/%s/%s/%s',
+            $user->id,
+            $date->format('Y/m/d'),
+            $filename
+        );
+
+        $file->storeAs(dirname($streamPath), basename($streamPath), 'public');
+
+        return array_merge($uploadData, [
+            'stream_path' => $streamPath,
+            'path' => $streamPath,
+            'uses_r2_storage' => false,
+        ]);
     }
 
     /**
