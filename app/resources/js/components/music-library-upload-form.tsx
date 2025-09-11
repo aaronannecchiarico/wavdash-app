@@ -6,15 +6,22 @@ import { Input } from '@/components/ui/neo/input';
 import { NeoProgressBar } from '@/components/ui/neo/progress-bar';
 import { Textarea } from '@/components/ui/textarea';
 import { useAudioFileHandler } from '@/hooks/useAudioFileHandler';
+import { useClientAudioProcessing } from '@/hooks/useClientAudioProcessing';
+import { checkMediaBunnySupport } from '@/lib/browser-support';
+import { formatFileSize } from '@/lib/formatters';
 import { type Upload as UploadType } from '@/types';
 import { Loader2, Music, Upload } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export interface UploadFormData {
     title: string;
     description: string;
     audio_file: File | null;
     _method?: 'PUT';
+    client_processed?: boolean;
+    original_filename?: string;
+    original_size?: number;
+    duration?: number;
 }
 
 interface MusicLibraryUploadFormProps {
@@ -28,6 +35,12 @@ interface MusicLibraryUploadFormProps {
     uploadProgress?: number;
     wasSuccessful?: boolean;
     onReset?: () => void;
+    onProcessedFile?: (data: {
+        processedFile: File;
+        originalFilename: string;
+        originalSize: number;
+        duration: number;
+    } | null) => void;
 }
 
 export function MusicLibraryUploadForm({
@@ -41,6 +54,7 @@ export function MusicLibraryUploadForm({
     uploadProgress = 0,
     wasSuccessful,
     onReset,
+    onProcessedFile,
 }: MusicLibraryUploadFormProps) {
     const {
         fileMetadata,
@@ -52,6 +66,24 @@ export function MusicLibraryUploadForm({
         initialTitle: data.title,
         onTitleSuggestion: (title) => setData('title', title),
     });
+
+    const {
+        processAudioFile,
+        progress: processingProgress,
+        error: processingError,
+        isProcessing,
+    } = useClientAudioProcessing();
+    
+    const [processedFile, setProcessedFile] = useState<File | null>(null);
+    const [originalFileData, setOriginalFileData] = useState<{
+        name: string;
+        size: number;
+        duration: number;
+    } | null>(null);
+
+    // Check if client-side processing is enabled (placeholder for feature flag)
+    const clientSideProcessingEnabled = true; // TODO: Replace with actual feature flag
+    const { supported: browserSupportsProcessing } = checkMediaBunnySupport();
 
     useEffect(() => {
         if (wasSuccessful && onReset) {
@@ -67,11 +99,40 @@ export function MusicLibraryUploadForm({
         }
     }, [mode, upload, fileMetadata, setData]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        handleAudioFileChange(e);
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setData('audio_file', file);
+        if (!file) return;
+
+        // Always run the existing audio file metadata extraction
+        handleAudioFileChange(e);
+
+        // Process file on client if supported and enabled
+        if (browserSupportsProcessing && clientSideProcessingEnabled) {
+            try {
+                const result = await processAudioFile(file);
+                setProcessedFile(result.processedFile);
+                setOriginalFileData({
+                    name: file.name,
+                    size: file.size,
+                    duration: result.duration,
+                });
+                setData('audio_file', result.processedFile);
+                
+                // Notify parent component about the processed file
+                onProcessedFile?.({
+                    processedFile: result.processedFile,
+                    originalFilename: file.name,
+                    originalSize: file.size,
+                    duration: result.duration,
+                });
+            } catch (error) {
+                console.error('Client processing failed, using original file:', error);
+                setData('audio_file', file); // Fallback to server processing
+                onProcessedFile?.(null); // Clear processed file data
+            }
+        } else {
+            setData('audio_file', file); // Server processing
+            onProcessedFile?.(null); // Clear processed file data
         }
     };
 
@@ -159,6 +220,59 @@ export function MusicLibraryUploadForm({
                                         </div>
                                     )
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Show processing progress */}
+                    {isProcessing && (
+                        <div className="space-y-2">
+                            <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="font-heading font-black text-secondary-background uppercase">
+                                        Converting Audio...
+                                    </span>
+                                    <span className="font-mono text-chart-1">{processingProgress}%</span>
+                                </div>
+                                <NeoProgressBar value={processingProgress} color="bg-chart-1" />
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Show file comparison if processed */}
+                    {processedFile && originalFileData && (
+                        <div className="space-y-2">
+                            <div className="border-2 border-border bg-green-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                                <div className="text-sm text-green-700">
+                                    <div className="font-heading font-black uppercase mb-2">✅ Audio Processed Successfully</div>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <strong>Original:</strong> {originalFileData.name}
+                                        </div>
+                                        <div>
+                                            <strong>Processed:</strong> {processedFile.name}
+                                        </div>
+                                        <div>
+                                            <strong>Size:</strong> {formatFileSize(originalFileData.size)} → {formatFileSize(processedFile.size)}
+                                        </div>
+                                        <div>
+                                            <strong>Format:</strong> OGG Vorbis (128kbps)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Show processing error if any */}
+                    {processingError && (
+                        <div className="space-y-2">
+                            <div className="border-2 border-border bg-red-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                                <div className="text-sm text-red-700">
+                                    <div className="font-heading font-black uppercase mb-2">⚠️ Processing Failed</div>
+                                    <div className="text-xs">{processingError}</div>
+                                    <div className="text-xs mt-2">Falling back to server-side processing.</div>
+                                </div>
                             </div>
                         </div>
                     )}

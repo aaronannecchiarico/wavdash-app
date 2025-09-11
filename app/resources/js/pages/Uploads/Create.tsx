@@ -10,12 +10,34 @@ export default function Create() {
         title: '',
         description: '',
         audio_file: null as File | null,
+        client_processed: false,
+        original_filename: '',
+        original_size: 0,
+        duration: 0,
     });
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [processedFileData, setProcessedFileData] = useState<{
+        processedFile: File;
+        originalFilename: string;
+        originalSize: number;
+        duration: number;
+    } | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Update the form data with client processing metadata if available
+        if (processedFileData) {
+            setData({
+                ...data,
+                client_processed: true,
+                original_filename: processedFileData.originalFilename,
+                original_size: processedFileData.originalSize,
+                duration: processedFileData.duration,
+            });
+        }
+        
         post(route('uploads.store'), {
             forceFormData: true,
             preserveScroll: true,
@@ -26,6 +48,7 @@ export default function Create() {
             },
             onSuccess: () => {
                 reset();
+                setProcessedFileData(null);
             },
             onFinish: () => {
                 setUploadProgress(0);
@@ -49,6 +72,7 @@ export default function Create() {
                     uploadProgress={uploadProgress}
                     wasSuccessful={wasSuccessful}
                     onReset={() => reset()}
+                    onProcessedFile={setProcessedFileData}
                 />
             </div>
         </AppLayout>
