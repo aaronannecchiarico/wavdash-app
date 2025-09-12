@@ -6,7 +6,8 @@ import {
   OggOutputFormat, 
   BlobSource, 
   BufferTarget, 
-  ALL_FORMATS 
+  ALL_FORMATS,
+  canEncodeAudio 
 } from 'mediabunny';
 
 interface ProcessedAudioData {
@@ -30,11 +31,22 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Check browser compatibility
-  const isSupported = 'VideoDecoder' in window && 'VideoEncoder' in window;
+  const isSupported = 'VideoDecoder' in window && 'VideoEncoder' in window && 'AudioDecoder' in window && 'AudioEncoder' in window;
 
   const processAudioFile = useCallback(async (file: File): Promise<ProcessedAudioData> => {
     if (!isSupported) {
       throw new Error('Browser does not support WebCodecs API');
+    }
+
+    // Check if Opus encoding is supported (Opus works better in Chrome than Vorbis)
+    const canEncodeOpus = await canEncodeAudio('opus', {
+      numberOfChannels: 2,
+      sampleRate: 44100,
+      bitrate: 128000,
+    });
+    
+    if (!canEncodeOpus) {
+      throw new Error('Browser does not support Opus encoding');
     }
 
     setIsProcessing(true);
@@ -52,13 +64,18 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
         target: new BufferTarget(),
       });
       
+      // Start the output stream
+      output.start();
+      
       const conversion = await Conversion.init({
         input,
         output,
         audio: {
-          codec: 'vorbis',
+          codec: 'opus',
           bitrate: 128000, // 128kbps to match server processing
           numberOfChannels: 2, // stereo
+          sampleRate: 44100, // Standard sample rate
+          forceTranscode: true, // Ensure transcoding happens
         },
       });
 
@@ -68,6 +85,9 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
       };
 
       await conversion.execute();
+      
+      // Finalize the output to ensure all data is written
+      await output.finalize();
       
       const processedBuffer = output.target.buffer;
       

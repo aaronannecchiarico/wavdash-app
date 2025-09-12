@@ -5,7 +5,19 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
-export default function Create() {
+interface AudioProcessingConfig {
+    client_side_processing_enabled: boolean;
+    ab_test_enabled: boolean;
+    should_use_client_processing: boolean;
+    fallback_on_error: boolean;
+    monitor_performance: boolean;
+}
+
+interface CreateProps {
+    audioProcessingConfig: AudioProcessingConfig;
+}
+
+export default function Create({ audioProcessingConfig }: CreateProps) {
     const { data, setData, post, errors, processing, reset, wasSuccessful } = useForm({
         title: '',
         description: '',
@@ -14,6 +26,7 @@ export default function Create() {
         original_filename: '',
         original_size: 0,
         duration: 0,
+        processing_time_ms: 0,
     });
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -22,6 +35,7 @@ export default function Create() {
         originalFilename: string;
         originalSize: number;
         duration: number;
+        processingTimeMs: number;
     } | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -35,6 +49,7 @@ export default function Create() {
                 original_filename: processedFileData.originalFilename,
                 original_size: processedFileData.originalSize,
                 duration: processedFileData.duration,
+                processing_time_ms: processedFileData.processingTimeMs,
             });
         }
         
@@ -73,6 +88,7 @@ export default function Create() {
                     wasSuccessful={wasSuccessful}
                     onReset={() => reset()}
                     onProcessedFile={setProcessedFileData}
+                    audioProcessingConfig={audioProcessingConfig}
                 />
             </div>
         </AppLayout>

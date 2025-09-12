@@ -136,4 +136,24 @@ return [
 
     'client_side_audio_processing' => env('CLIENT_SIDE_PROCESSING', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Audio Processing A/B Testing
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for A/B testing client-side vs server-side audio processing.
+    | - enabled: Whether A/B testing is active
+    | - client_percentage: Percentage of users to get client-side processing (0-100)
+    | - monitor_performance: Whether to log performance metrics
+    | - fallback_on_error: Whether to fallback to server processing on client errors
+    |
+    */
+
+    'audio_processing_ab_test' => [
+        'enabled' => env('AUDIO_PROCESSING_AB_TEST_ENABLED', false),
+        'client_percentage' => (int) env('AUDIO_PROCESSING_CLIENT_PERCENTAGE', 50),
+        'monitor_performance' => env('AUDIO_PROCESSING_MONITOR_PERFORMANCE', true),
+        'fallback_on_error' => env('AUDIO_PROCESSING_FALLBACK_ON_ERROR', true),
+    ],
+
 ];

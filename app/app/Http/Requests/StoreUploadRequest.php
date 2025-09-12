@@ -37,6 +37,7 @@ class StoreUploadRequest extends FormRequest
             $rules['original_filename'] = 'required|string';
             $rules['original_size'] = 'required|integer|min:1';
             $rules['duration'] = 'required|numeric|min:0';
+            $rules['processing_time_ms'] = 'nullable|numeric|min:0'; // Performance metric
         } else {
             $rules['audio_file'] = [
                 'required',

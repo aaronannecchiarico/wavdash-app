@@ -6,6 +6,7 @@ use App\Http\Requests\StoreUploadRequest;
 use App\Http\Requests\UpdateUploadRequest;
 use App\Http\Resources\UploadResource;
 use App\Models\Upload;
+use App\Services\AudioProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,10 @@ use Illuminate\Support\Str;
 
 class UploadController extends Controller
 {
+    public function __construct(
+        private AudioProcessingService $audioProcessingService
+    ) {}
+
     /**
      * Display a listing of the user's uploads.
      */
@@ -145,7 +150,9 @@ class UploadController extends Controller
      */
     public function create()
     {
-        return inertia('uploads/create');
+        return inertia('uploads/create', [
+            'audioProcessingConfig' => $this->audioProcessingService->getFrontendConfig(),
+        ]);
     }
 
     /**
@@ -153,21 +160,48 @@ class UploadController extends Controller
      */
     public function store(StoreUploadRequest $request)
     {
+        $startTime = microtime(true);
         $user = Auth::user();
         $file = $request->file('audio_file');
         $isClientProcessed = $request->boolean('client_processed', false);
 
-        if (config('app.client_side_audio_processing') && $isClientProcessed) {
-            return $this->storeClientProcessedUpload($request, $user, $file);
+        // Determine if client-side processing should be used
+        $shouldUseClientProcessing = $this->audioProcessingService->shouldUseClientSideProcessing();
+        
+        if ($shouldUseClientProcessing && $isClientProcessed) {
+            $processingTime = $request->input('processing_time_ms');
+            $originalSize = $request->input('original_size');
+            $processedSize = $file->getSize();
+            
+            $this->audioProcessingService->logPerformanceMetrics([
+                'processing_type' => 'client',
+                'client_processing_time_ms' => $processingTime,
+                'original_file_size' => $originalSize,
+                'processed_file_size' => $processedSize,
+                'compression_ratio' => $originalSize > 0 ? round($processedSize / $originalSize, 2) : 0,
+                'file_format' => $file->getMimeType(),
+            ]);
+            
+            return $this->storeClientProcessedUpload($request, $user, $file, $startTime);
         }
 
-        // Existing server-side processing flow
+        // Server-side processing flow
         $uploadData = $this->prepareUploadData($request, $file);
         $this->logUploadStart($user, $file, $uploadData);
 
         $uploadData = $this->storeFile($file, $user, $uploadData);
         $upload = $this->createUploadRecord($user, $uploadData);
         $this->dispatchProcessingJob($upload);
+
+        $uploadTime = (microtime(true) - $startTime) * 1000;
+        
+        $this->audioProcessingService->logPerformanceMetrics([
+            'processing_type' => 'server',
+            'upload_time_ms' => $uploadTime,
+            'file_size' => $file->getSize(),
+            'file_format' => $file->getMimeType(),
+            'status' => 'queued_for_processing',
+        ]);
 
         $this->logUploadSuccess($upload);
 
@@ -178,7 +212,7 @@ class UploadController extends Controller
     /**
      * Store client-processed upload directly as ready.
      */
-    private function storeClientProcessedUpload(StoreUploadRequest $request, $user, $file)
+    private function storeClientProcessedUpload(StoreUploadRequest $request, $user, $file, float $startTime)
     {
         $uploadData = [
             'title' => $request->input('title'),
@@ -198,6 +232,15 @@ class UploadController extends Controller
 
         // Broadcast ready event immediately
         \App\Events\UploadProcessed::dispatch($upload);
+
+        $totalTime = (microtime(true) - $startTime) * 1000;
+        
+        $this->audioProcessingService->logProcessingSuccess([
+            'processing_type' => 'client',
+            'total_time_ms' => $totalTime,
+            'upload_id' => $upload->id,
+            'final_status' => 'ready',
+        ]);
 
         $this->logUploadSuccess($upload);
 

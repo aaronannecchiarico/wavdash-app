@@ -22,6 +22,15 @@ export interface UploadFormData {
     original_filename?: string;
     original_size?: number;
     duration?: number;
+    processing_time_ms?: number;
+}
+
+interface AudioProcessingConfig {
+    client_side_processing_enabled: boolean;
+    ab_test_enabled: boolean;
+    should_use_client_processing: boolean;
+    fallback_on_error: boolean;
+    monitor_performance: boolean;
 }
 
 interface MusicLibraryUploadFormProps {
@@ -40,7 +49,9 @@ interface MusicLibraryUploadFormProps {
         originalFilename: string;
         originalSize: number;
         duration: number;
+        processingTimeMs: number;
     } | null) => void;
+    audioProcessingConfig?: AudioProcessingConfig;
 }
 
 export function MusicLibraryUploadForm({
@@ -55,6 +66,7 @@ export function MusicLibraryUploadForm({
     wasSuccessful,
     onReset,
     onProcessedFile,
+    audioProcessingConfig,
 }: MusicLibraryUploadFormProps) {
     const {
         fileMetadata,
@@ -80,10 +92,13 @@ export function MusicLibraryUploadForm({
         size: number;
         duration: number;
     } | null>(null);
+    const [processingStartTime, setProcessingStartTime] = useState<number>(0);
+    const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
-    // Check if client-side processing is enabled (placeholder for feature flag)
-    const clientSideProcessingEnabled = true; // TODO: Replace with actual feature flag
-    const { supported: browserSupportsProcessing } = checkMediaBunnySupport();
+    // Use server-provided configuration
+    const shouldUseClientProcessing = audioProcessingConfig?.should_use_client_processing ?? false;
+    const fallbackOnError = audioProcessingConfig?.fallback_on_error ?? true;
+    const { supported: browserSupportsProcessing, missingFeatures } = checkMediaBunnySupport();
 
     useEffect(() => {
         if (wasSuccessful && onReset) {
@@ -106,33 +121,59 @@ export function MusicLibraryUploadForm({
         // Always run the existing audio file metadata extraction
         handleAudioFileChange(e);
 
-        // Process file on client if supported and enabled
-        if (browserSupportsProcessing && clientSideProcessingEnabled) {
-            try {
-                const result = await processAudioFile(file);
-                setProcessedFile(result.processedFile);
-                setOriginalFileData({
-                    name: file.name,
-                    size: file.size,
-                    duration: result.duration,
-                });
-                setData('audio_file', result.processedFile);
-                
-                // Notify parent component about the processed file
-                onProcessedFile?.({
-                    processedFile: result.processedFile,
-                    originalFilename: file.name,
-                    originalSize: file.size,
-                    duration: result.duration,
-                });
-            } catch (error) {
-                console.error('Client processing failed, using original file:', error);
+        // Reset previous state
+        setFallbackReason(null);
+        setProcessedFile(null);
+        setOriginalFileData(null);
+
+        // Determine if client-side processing should be used
+        if (!shouldUseClientProcessing) {
+            setFallbackReason('Server-side processing selected by A/B test');
+            setData('audio_file', file);
+            onProcessedFile?.(null);
+            return;
+        }
+
+        if (!browserSupportsProcessing) {
+            setFallbackReason(`Browser missing required features: ${missingFeatures.join(', ')}`);
+            setData('audio_file', file);
+            onProcessedFile?.(null);
+            return;
+        }
+
+        // Process file on client
+        try {
+            setProcessingStartTime(Date.now());
+            const result = await processAudioFile(file);
+            const processingTimeMs = Date.now() - processingStartTime;
+            
+            setProcessedFile(result.processedFile);
+            setOriginalFileData({
+                name: file.name,
+                size: file.size,
+                duration: result.duration,
+            });
+            setData('audio_file', result.processedFile);
+            
+            // Notify parent component about the processed file
+            onProcessedFile?.({
+                processedFile: result.processedFile,
+                originalFilename: file.name,
+                originalSize: file.size,
+                duration: result.duration,
+                processingTimeMs,
+            });
+        } catch (error) {
+            console.error('Client processing failed:', error);
+            
+            if (fallbackOnError) {
+                setFallbackReason(`Client processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 setData('audio_file', file); // Fallback to server processing
                 onProcessedFile?.(null); // Clear processed file data
+            } else {
+                // Don't fallback, show error to user
+                throw error;
             }
-        } else {
-            setData('audio_file', file); // Server processing
-            onProcessedFile?.(null); // Clear processed file data
         }
     };
 
@@ -272,6 +313,35 @@ export function MusicLibraryUploadForm({
                                     <div className="font-heading font-black uppercase mb-2">⚠️ Processing Failed</div>
                                     <div className="text-xs">{processingError}</div>
                                     <div className="text-xs mt-2">Falling back to server-side processing.</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Show fallback information */}
+                    {fallbackReason && (
+                        <div className="space-y-2">
+                            <div className="border-2 border-border bg-blue-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                                <div className="text-sm text-blue-700">
+                                    <div className="font-heading font-black uppercase mb-2">ℹ️ Using Server Processing</div>
+                                    <div className="text-xs">{fallbackReason}</div>
+                                    <div className="text-xs mt-2">Your file will be processed on our servers after upload.</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Show A/B test info if enabled */}
+                    {audioProcessingConfig?.ab_test_enabled && (
+                        <div className="space-y-2">
+                            <div className="border-2 border-border bg-gray-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
+                                <div className="text-sm text-gray-700">
+                                    <div className="font-heading font-black uppercase mb-2">🧪 A/B Testing Active</div>
+                                    <div className="text-xs">
+                                        Processing method: {shouldUseClientProcessing ? 'Client-side' : 'Server-side'}
+                                        <br />
+                                        Browser support: {browserSupportsProcessing ? '✅ Supported' : '❌ Unsupported'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
