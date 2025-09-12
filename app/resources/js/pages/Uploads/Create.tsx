@@ -40,19 +40,9 @@ export default function Create({ audioProcessingConfig }: CreateProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // Update the form data with client processing metadata if available
-        if (processedFileData) {
-            setData({
-                ...data,
-                client_processed: true,
-                original_filename: processedFileData.originalFilename,
-                original_size: processedFileData.originalSize,
-                duration: processedFileData.duration,
-                processing_time_ms: processedFileData.processingTimeMs,
-            });
-        }
-        
+
+        // Client-side processing populates form fields (client_processed and metadata)
+        // during file handling; submit current form state as-is.
         post(route('uploads.store'), {
             forceFormData: true,
             preserveScroll: true,

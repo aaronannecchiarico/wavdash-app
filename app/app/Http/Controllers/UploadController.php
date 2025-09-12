@@ -165,48 +165,27 @@ class UploadController extends Controller
         $file = $request->file('audio_file');
         $isClientProcessed = $request->boolean('client_processed', false);
 
-        // Determine if client-side processing should be used
-        $shouldUseClientProcessing = $this->audioProcessingService->shouldUseClientSideProcessing();
-        
-        if ($shouldUseClientProcessing && $isClientProcessed) {
-            $processingTime = $request->input('processing_time_ms');
-            $originalSize = $request->input('original_size');
-            $processedSize = $file->getSize();
-            
-            $this->audioProcessingService->logPerformanceMetrics([
-                'processing_type' => 'client',
-                'client_processing_time_ms' => $processingTime,
-                'original_file_size' => $originalSize,
-                'processed_file_size' => $processedSize,
-                'compression_ratio' => $originalSize > 0 ? round($processedSize / $originalSize, 2) : 0,
-                'file_format' => $file->getMimeType(),
+        // Phase 4: Client-side processing is now required for all uploads
+        if (!$isClientProcessed) {
+            return back()->withErrors([
+                'audio_file' => 'Audio processing failed. Please try uploading again with a supported browser.'
             ]);
-            
-            return $this->storeClientProcessedUpload($request, $user, $file, $startTime);
         }
-
-        // Server-side processing flow
-        $uploadData = $this->prepareUploadData($request, $file);
-        $this->logUploadStart($user, $file, $uploadData);
-
-        $uploadData = $this->storeFile($file, $user, $uploadData);
-        $upload = $this->createUploadRecord($user, $uploadData);
-        $this->dispatchProcessingJob($upload);
-
-        $uploadTime = (microtime(true) - $startTime) * 1000;
+        
+        $processingTime = $request->input('processing_time_ms');
+        $originalSize = $request->input('original_size');
+        $processedSize = $file->getSize();
         
         $this->audioProcessingService->logPerformanceMetrics([
-            'processing_type' => 'server',
-            'upload_time_ms' => $uploadTime,
-            'file_size' => $file->getSize(),
+            'processing_type' => 'client',
+            'client_processing_time_ms' => $processingTime,
+            'original_file_size' => $originalSize,
+            'processed_file_size' => $processedSize,
+            'compression_ratio' => $originalSize > 0 ? round($processedSize / $originalSize, 2) : 0,
             'file_format' => $file->getMimeType(),
-            'status' => 'queued_for_processing',
         ]);
-
-        $this->logUploadSuccess($upload);
-
-        return redirect()->route('uploads.index')
-            ->with('success', 'Audio file uploaded successfully and is now being processed!');
+        
+        return $this->storeClientProcessedUpload($request, $user, $file, $startTime);
     }
 
     /**
@@ -327,40 +306,17 @@ class UploadController extends Controller
     {
         $this->authorize('update', $upload);
 
-        $upload->update($request->only('title', 'description'));
-
         if ($request->hasFile('audio_file')) {
-            // Delete the old files from storage
-            if (Storage::disk('private')->exists($upload->path)) {
-                Storage::disk('private')->delete($upload->path);
-            }
-            if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
-                Storage::disk('public')->delete($upload->stream_path);
-            }
-
-            $file = $request->file('audio_file');
-            $originalFilename = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
-            $filename = Str::uuid().'.'.$extension;
-            $path = $file->storeAs('uploads/original', $filename, 'private');
-
-            $upload->update([
-                'filename' => $originalFilename,
-                'path' => $path,
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'status' => 'pending',
-                'stream_path' => null,
-                'duration' => null,
+            // Phase 4: Audio file updates are no longer supported via server-side processing
+            // Users must create a new upload with client-side processing
+            return back()->withErrors([
+                'audio_file' => 'Audio file updates are no longer supported. Please create a new upload instead.'
             ]);
-
-            \App\Jobs\ProcessAudioUpload::dispatch($upload);
-
-            return redirect()->route('uploads.index', $upload)
-                ->with('success', 'Upload details updated and the new audio file is processing!');
         }
 
-        return redirect()->route('uploads.index', $upload)
+        $upload->update($request->only('title', 'description'));
+
+        return redirect()->route('uploads.show', $upload)
             ->with('success', 'Upload details updated successfully!');
     }
 
@@ -481,10 +437,18 @@ class UploadController extends Controller
 
     /**
      * Dispatch audio processing job.
+     * 
+     * @deprecated Phase 4: No longer used - client-side processing is now required
      */
     private function dispatchProcessingJob(Upload $upload): void
     {
-        \App\Jobs\ProcessAudioUpload::dispatch($upload);
+        // This method is deprecated and should not be called in Phase 4
+        \Log::warning('Deprecated dispatchProcessingJob method called', [
+            'upload_id' => $upload->id,
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+        ]);
+        
+        throw new \Exception('Server-side audio processing is no longer supported. Please use client-side processing.');
     }
 
     /**

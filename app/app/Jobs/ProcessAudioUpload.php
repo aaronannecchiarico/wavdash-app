@@ -18,6 +18,10 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 
+/**
+ * @deprecated Phase 4: Server-side audio processing has been replaced by client-side processing.
+ *             This job should not be executed in Phase 4 and will throw an exception if run.
+ */
 class ProcessAudioUpload implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -53,29 +57,27 @@ class ProcessAudioUpload implements ShouldQueue
 
     /**
      * Execute the job.
+     * 
+     * @deprecated Phase 4: Server-side audio processing is deprecated. Client-side processing is now required.
      */
     public function handle(): void
     {
-        $this->updateUploadStatus('processing');
-        $this->logJobStart();
-        $this->validateStorageCompatibility();
+        // Log deprecation warning
+        Log::warning('ProcessAudioUpload job is deprecated and should not be running in Phase 4', [
+            'upload_id' => $this->upload->id,
+            'upload_status' => $this->upload->status,
+            'message' => 'Server-side audio processing has been replaced by client-side processing. This job should not be executing.',
+            'phase' => 4,
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
+        ]);
 
-        $tempFilePath = null;
+        // Mark upload as failed since server-side processing is no longer supported
+        $this->upload->update([
+            'status' => 'failed',
+            'error_message' => 'Server-side audio processing is no longer supported. Please re-upload using client-side processing.'
+        ]);
 
-        try {
-            $ffmpeg = $this->setupFFMpeg($tempFilePath);
-            $duration = $this->getDuration($ffmpeg);
-            $streamPath = $this->processAudioFile($ffmpeg);
-
-            $this->finalizeUpload($streamPath, $duration);
-            $this->broadcastSuccess();
-
-        } catch (\Exception $e) {
-            $this->handleProcessingError($e, $tempFilePath);
-            throw $e;
-        } finally {
-            $this->cleanupTempFile($tempFilePath);
-        }
+        throw new \Exception('ProcessAudioUpload job is deprecated in Phase 4. Server-side audio processing is no longer supported.');
     }
 
     /**

@@ -85,7 +85,7 @@ export function MusicLibraryUploadForm({
         error: processingError,
         isProcessing,
     } = useClientAudioProcessing();
-    
+
     const [processedFile, setProcessedFile] = useState<File | null>(null);
     const [originalFileData, setOriginalFileData] = useState<{
         name: string;
@@ -143,18 +143,24 @@ export function MusicLibraryUploadForm({
 
         // Process file on client
         try {
-            setProcessingStartTime(Date.now());
+            const startTime = Date.now();
             const result = await processAudioFile(file);
-            const processingTimeMs = Date.now() - processingStartTime;
-            
+            const processingTimeMs = Date.now() - startTime;
+
             setProcessedFile(result.processedFile);
             setOriginalFileData({
                 name: file.name,
                 size: file.size,
                 duration: result.duration,
             });
+            // Update form data immediately so client_processed and metadata are present
             setData('audio_file', result.processedFile);
-            
+            setData('client_processed', true);
+            setData('original_filename', file.name);
+            setData('original_size', file.size);
+            setData('duration', result.duration);
+            setData('processing_time_ms', processingTimeMs);
+
             // Notify parent component about the processed file
             onProcessedFile?.({
                 processedFile: result.processedFile,
@@ -165,7 +171,7 @@ export function MusicLibraryUploadForm({
             });
         } catch (error) {
             console.error('Client processing failed:', error);
-            
+
             if (fallbackOnError) {
                 setFallbackReason(`Client processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 setData('audio_file', file); // Fallback to server processing
@@ -279,7 +285,7 @@ export function MusicLibraryUploadForm({
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Show file comparison if processed */}
                     {processedFile && originalFileData && (
                         <div className="space-y-2">

@@ -54,6 +54,15 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
     setProgress(0);
 
     try {
+      // Validate file before processing
+      if (file.size === 0) {
+        throw new Error('Audio file is empty or corrupted');
+      }
+      
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        throw new Error('Audio file is too large (maximum 50MB allowed)');
+      }
+
       const input = new Input({
         source: new BlobSource(file),
         formats: ALL_FORMATS,
@@ -63,9 +72,6 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
         format: new OggOutputFormat(),
         target: new BufferTarget(),
       });
-      
-      // Start the output stream
-      output.start();
       
       const conversion = await Conversion.init({
         input,
@@ -91,8 +97,8 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
       
       const processedBuffer = output.target.buffer;
       
-      if (!processedBuffer) {
-        throw new Error('Conversion failed: No output buffer generated');
+      if (!processedBuffer || processedBuffer.byteLength === 0) {
+        throw new Error('Conversion failed: No valid audio output was generated');
       }
       
       const processedFile = new File(
@@ -104,6 +110,10 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
       // Extract duration from original input
       const duration = await input.computeDuration();
       
+      if (!duration || duration <= 0) {
+        throw new Error('Unable to determine audio duration - file may be corrupted');
+      }
+      
       setProgress(100);
       
       return {
@@ -114,8 +124,25 @@ export function useClientAudioProcessing(): UseClientAudioProcessingReturn {
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown processing error';
-      setError(errorMessage);
-      throw new Error(`Audio processing failed: ${errorMessage}`);
+      
+      // Provide more user-friendly error messages
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('Ogg requires at least 1 track')) {
+        userFriendlyMessage = 'This audio file format is not supported or may be corrupted. Please try a different file.';
+      } else if (errorMessage.includes('unsupported track configuration')) {
+        userFriendlyMessage = 'This audio file has an unsupported configuration. Please try converting it to MP3 or WAV first.';
+      } else if (errorMessage.includes('Unable to probe')) {
+        userFriendlyMessage = 'Unable to read the audio file. Please ensure it\'s a valid audio file.';
+      } else if (errorMessage.includes('codec')) {
+        userFriendlyMessage = 'Your browser doesn\'t support processing this audio format. Please try a different browser or convert the file to MP3 first.';
+      }
+      
+      setError(userFriendlyMessage);
+      
+      // Log the original error for debugging
+      console.error('Client processing failed:', errorMessage, err);
+      
+      throw new Error(`Audio processing failed: ${userFriendlyMessage}`);
     } finally {
       setIsProcessing(false);
     }
