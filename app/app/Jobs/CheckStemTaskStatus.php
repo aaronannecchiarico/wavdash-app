@@ -50,24 +50,26 @@ class CheckStemTaskStatus implements ShouldQueue
     public function handle(AudioAnalysisService $analysisService): void
     {
         // Check if the task is still processing
-        if (!$this->stemTask->isProcessing()) {
+        if (! $this->stemTask->isProcessing()) {
             Log::info('Stem task no longer processing', [
                 'task_id' => $this->stemTask->task_id,
-                'status' => $this->stemTask->status
+                'status' => $this->stemTask->status,
             ]);
+
             return;
         }
 
         // Check the current status from the API
         $success = $analysisService->checkStemTaskStatus($this->stemTask);
 
-        if (!$success) {
+        if (! $success) {
             Log::warning('Failed to check stem task status', [
-                'task_id' => $this->stemTask->task_id
+                'task_id' => $this->stemTask->task_id,
             ]);
 
             // Retry later if we couldn't check the status
             $this->release(30);
+
             return;
         }
 
@@ -78,7 +80,7 @@ class CheckStemTaskStatus implements ShouldQueue
         if ($this->stemTask->isProcessing()) {
             Log::debug('Stem task still processing, scheduling next check', [
                 'task_id' => $this->stemTask->task_id,
-                'progress' => $this->stemTask->progress
+                'progress' => $this->stemTask->progress,
             ]);
 
             // Schedule next check in 30 seconds
@@ -86,12 +88,12 @@ class CheckStemTaskStatus implements ShouldQueue
         } elseif ($this->stemTask->isCompleted()) {
             Log::info('Stem task completed successfully', [
                 'task_id' => $this->stemTask->task_id,
-                'upload_id' => $this->stemTask->upload_id
+                'upload_id' => $this->stemTask->upload_id,
             ]);
         } elseif ($this->stemTask->hasFailed()) {
             Log::warning('Stem task failed', [
                 'task_id' => $this->stemTask->task_id,
-                'error' => $this->stemTask->error_message
+                'error' => $this->stemTask->error_message,
             ]);
         }
     }
@@ -103,9 +105,9 @@ class CheckStemTaskStatus implements ShouldQueue
     {
         Log::error('CheckStemTaskStatus job failed', [
             'task_id' => $this->stemTask->task_id,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
 
-        $this->stemTask->markFailed('Job failed: ' . $exception->getMessage());
+        $this->stemTask->markFailed('Job failed: '.$exception->getMessage());
     }
 }

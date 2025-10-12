@@ -57,7 +57,7 @@ class ProcessAudioUpload implements ShouldQueue
 
     /**
      * Execute the job.
-     * 
+     *
      * @deprecated Phase 4: Server-side audio processing is deprecated. Client-side processing is now required.
      */
     public function handle(): void
@@ -68,13 +68,13 @@ class ProcessAudioUpload implements ShouldQueue
             'upload_status' => $this->upload->status,
             'message' => 'Server-side audio processing has been replaced by client-side processing. This job should not be executing.',
             'phase' => 4,
-            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
         ]);
 
         // Mark upload as failed since server-side processing is no longer supported
         $this->upload->update([
             'status' => 'failed',
-            'error_message' => 'Server-side audio processing is no longer supported. Please re-upload using client-side processing.'
+            'error_message' => 'Server-side audio processing is no longer supported. Please re-upload using client-side processing.',
         ]);
 
         throw new \Exception('ProcessAudioUpload job is deprecated in Phase 4. Server-side audio processing is no longer supported.');

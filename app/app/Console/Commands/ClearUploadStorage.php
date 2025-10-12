@@ -26,8 +26,9 @@ class ClearUploadStorage extends Command
      */
     public function handle()
     {
-        if (!$this->option('force') && !$this->confirm('This will permanently delete all upload files. Are you sure?')) {
+        if (! $this->option('force') && ! $this->confirm('This will permanently delete all upload files. Are you sure?')) {
             $this->info('Operation cancelled.');
+
             return 0;
         }
 
@@ -63,7 +64,7 @@ class ClearUploadStorage extends Command
                     $clearedCount++;
                 }
             } catch (\Exception $e) {
-                $this->warn('⚠ Could not clear R2 storage: ' . $e->getMessage());
+                $this->warn('⚠ Could not clear R2 storage: '.$e->getMessage());
             }
         }
 

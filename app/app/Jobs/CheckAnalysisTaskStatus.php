@@ -50,24 +50,26 @@ class CheckAnalysisTaskStatus implements ShouldQueue
     public function handle(AudioAnalysisService $analysisService): void
     {
         // Check if the task is still processing
-        if (!$this->analysisTask->isProcessing()) {
+        if (! $this->analysisTask->isProcessing()) {
             Log::info('Analysis task no longer processing', [
                 'task_id' => $this->analysisTask->task_id,
-                'status' => $this->analysisTask->status
+                'status' => $this->analysisTask->status,
             ]);
+
             return;
         }
 
         // Check the current status from the API
         $success = $analysisService->checkTaskStatus($this->analysisTask);
 
-        if (!$success) {
+        if (! $success) {
             Log::warning('Failed to check analysis task status', [
-                'task_id' => $this->analysisTask->task_id
+                'task_id' => $this->analysisTask->task_id,
             ]);
 
             // Retry later if we couldn't check the status
             $this->release(30);
+
             return;
         }
 
@@ -78,7 +80,7 @@ class CheckAnalysisTaskStatus implements ShouldQueue
         if ($this->analysisTask->isProcessing()) {
             Log::debug('Analysis task still processing, scheduling next check', [
                 'task_id' => $this->analysisTask->task_id,
-                'progress' => $this->analysisTask->progress
+                'progress' => $this->analysisTask->progress,
             ]);
 
             // Schedule next check in 30 seconds
@@ -86,12 +88,12 @@ class CheckAnalysisTaskStatus implements ShouldQueue
         } elseif ($this->analysisTask->isCompleted()) {
             Log::info('Analysis task completed successfully', [
                 'task_id' => $this->analysisTask->task_id,
-                'upload_id' => $this->analysisTask->upload_id
+                'upload_id' => $this->analysisTask->upload_id,
             ]);
         } elseif ($this->analysisTask->hasFailed()) {
             Log::warning('Analysis task failed', [
                 'task_id' => $this->analysisTask->task_id,
-                'error' => $this->analysisTask->error_message
+                'error' => $this->analysisTask->error_message,
             ]);
         }
     }
@@ -103,9 +105,9 @@ class CheckAnalysisTaskStatus implements ShouldQueue
     {
         Log::error('CheckAnalysisTaskStatus job failed', [
             'task_id' => $this->analysisTask->task_id,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
 
-        $this->analysisTask->markFailed('Job failed: ' . $exception->getMessage());
+        $this->analysisTask->markFailed('Job failed: '.$exception->getMessage());
     }
 }

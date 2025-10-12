@@ -27,8 +27,9 @@ class MigrateUploadsToR2 extends Command
      */
     public function handle(R2StorageService $r2Service)
     {
-        if (!$r2Service->isEnabled()) {
+        if (! $r2Service->isEnabled()) {
             $this->error('R2 storage is not enabled. Please configure R2 settings in your .env file.');
+
             return self::FAILURE;
         }
 
@@ -36,7 +37,7 @@ class MigrateUploadsToR2 extends Command
         $limit = (int) $this->option('limit');
 
         $this->info('Starting upload migration to R2...');
-        
+
         if ($dryRun) {
             $this->warn('DRY RUN MODE - No changes will be made');
         }
@@ -50,6 +51,7 @@ class MigrateUploadsToR2 extends Command
 
         if ($uploads->isEmpty()) {
             $this->info('No uploads found that need migration.');
+
             return self::SUCCESS;
         }
 
@@ -86,7 +88,7 @@ class MigrateUploadsToR2 extends Command
         $progressBar->finish();
 
         $this->newLine(2);
-        $this->info("Migration completed!");
+        $this->info('Migration completed!');
         $this->info("Successful: {$successCount}");
         if ($failureCount > 0) {
             $this->error("Failed: {$failureCount}");

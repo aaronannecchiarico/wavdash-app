@@ -16,9 +16,9 @@ class AdminRateLimiting
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $key = 'admin-access:' . $request->ip();
+        $key = 'admin-access:'.$request->ip();
         $rateLimitConfig = config('admin.rate_limiting.global_requests', '60,1');
-        
+
         // Handle malformed configuration gracefully
         $configParts = explode(',', $rateLimitConfig);
         if (count($configParts) !== 2) {
@@ -28,10 +28,10 @@ class AdminRateLimiting
         } else {
             [$maxAttempts, $decayMinutes] = $configParts;
         }
-        
+
         if (RateLimiter::tooManyAttempts($key, (int) $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
-            
+
             logger()->warning('Admin panel rate limit exceeded', [
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
@@ -39,13 +39,13 @@ class AdminRateLimiting
                 'retry_after' => $seconds,
                 'timestamp' => now()->toISOString(),
             ]);
-            
+
             // Return 404 instead of 429 to hide admin panel existence
             abort(404);
         }
-        
+
         RateLimiter::hit($key, (int) $decayMinutes * 60);
-        
+
         return $next($request);
     }
 }

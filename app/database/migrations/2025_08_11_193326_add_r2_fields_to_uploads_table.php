@@ -28,18 +28,18 @@ return new class extends Migration
     {
         // Clean up any remaining upload files before dropping columns
         $this->clearUploadStorage();
-        
+
         Schema::table('uploads', function (Blueprint $table) {
             $table->dropColumn([
                 'r2_upload_path',
                 'r2_stems_paths',
                 'r2_analysis_path',
                 'r2_uploaded_at',
-                'uses_r2_storage'
+                'uses_r2_storage',
             ]);
         });
     }
-    
+
     /**
      * Clear all upload-related files from storage.
      */
@@ -49,12 +49,12 @@ return new class extends Migration
         if (Storage::disk('private')->exists('uploads')) {
             Storage::disk('private')->deleteDirectory('uploads');
         }
-        
+
         // Clear public uploads/stream
         if (Storage::disk('public')->exists('uploads/stream')) {
             Storage::disk('public')->deleteDirectory('uploads/stream');
         }
-        
+
         // Clear R2 uploads if configured
         if (config('filesystems.disks.r2.bucket')) {
             try {

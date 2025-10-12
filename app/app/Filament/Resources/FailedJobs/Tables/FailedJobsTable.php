@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources\FailedJobs\Tables;
 
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\CodeEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -33,8 +31,7 @@ class FailedJobsTable
                     ->label('Job Class')
                     ->searchable()
                     ->wrap()
-                    ->formatStateUsing(fn(?string $state): string =>
-                        $state ? class_basename($state) : 'Unknown Job'
+                    ->formatStateUsing(fn (?string $state): string => $state ? class_basename($state) : 'Unknown Job'
                     ),
                 TextColumn::make('queue')
                     ->label('Queue')
@@ -59,7 +56,7 @@ class FailedJobsTable
                     ->dateTime()
                     ->sortable()
                     ->since()
-                    ->description(fn($record): string => $record->failed_at?->format('M j, Y g:i A')),
+                    ->description(fn ($record): string => $record->failed_at?->format('M j, Y g:i A')),
             ])
             ->filters([
                 SelectFilter::make('queue')
@@ -93,8 +90,7 @@ class FailedJobsTable
                                             ->fontFamily('mono'),
                                         TextEntry::make('job_class')
                                             ->label('Job Class')
-                                            ->formatStateUsing(fn(?string $state): string =>
-                                                $state ? class_basename($state) : 'Unknown Job'
+                                            ->formatStateUsing(fn (?string $state): string => $state ? class_basename($state) : 'Unknown Job'
                                             ),
                                         TextEntry::make('queue')
                                             ->label('Queue')
@@ -115,16 +111,17 @@ class FailedJobsTable
                                 CodeEntry::make('payload')
                                     ->label('')
                                     ->formatStateUsing(function ($record): string {
-                                        if (!$record->payload || !is_array($record->payload)) {
+                                        if (! $record->payload || ! is_array($record->payload)) {
                                             return 'No payload data available';
                                         }
+
                                         return json_encode($record->payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
                                     })
                                     ->copyable()
                                     ->copyMessage('Payload copied!')
                                     ->copyMessageDuration(2000),
                             ])
-                            ->visible(fn($record) => $record->payload && is_array($record->payload))
+                            ->visible(fn ($record) => $record->payload && is_array($record->payload))
                             ->collapsible()
                             ->collapsed(),
                         Section::make('Exception Details')
@@ -162,7 +159,7 @@ class FailedJobsTable
                                             '<br>#8 ',
                                             '<br>#9 ',
                                         ], htmlspecialchars($state));
-                                        
+
                                         return new \Illuminate\Support\HtmlString($formatted);
                                     })
                                     ->fontFamily('mono')
@@ -171,7 +168,7 @@ class FailedJobsTable
                                     ->copyMessageDuration(2000)
                                     ->color('danger'),
                             ])
-                            ->visible(fn($record) => !empty($record->exception))
+                            ->visible(fn ($record) => ! empty($record->exception))
                             ->collapsible()
                             ->collapsed(false),
                     ])

@@ -66,7 +66,7 @@ class UploadAnalysis extends Model
      */
     public function getBpmCategory(): ?string
     {
-        if (!$this->bpm) {
+        if (! $this->bpm) {
             return null;
         }
 
@@ -83,7 +83,7 @@ class UploadAnalysis extends Model
      */
     public function getLoudnessCategory(): ?string
     {
-        if (!$this->loudness_db) {
+        if (! $this->loudness_db) {
             return null;
         }
 
@@ -100,7 +100,7 @@ class UploadAnalysis extends Model
      */
     public function getDynamicRangeCategory(): ?string
     {
-        if (!$this->dynamic_range_db) {
+        if (! $this->dynamic_range_db) {
             return null;
         }
 
@@ -116,7 +116,7 @@ class UploadAnalysis extends Model
      */
     public function getBrightnessCategory(): ?string
     {
-        if (!$this->brightness) {
+        if (! $this->brightness) {
             return null;
         }
 

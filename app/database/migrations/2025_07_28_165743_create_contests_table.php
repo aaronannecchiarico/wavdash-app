@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('genre', 100);
-            $table->enum('state', ["open","voting","finished"])->default('open');
+            $table->enum('state', ['open', 'voting', 'finished'])->default('open');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->foreignId('winner_id')->nullable();

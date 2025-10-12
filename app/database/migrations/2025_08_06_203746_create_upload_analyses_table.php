@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('upload_analyses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('upload_id')->constrained()->cascadeOnDelete();
-            
+
             // Musical Analysis Data - Core Fields from API Integration Guide
             $table->string('musical_key')->nullable(); // "E major", "A minor"
             $table->float('key_confidence')->nullable(); // 0.0 - 1.0
@@ -24,14 +24,14 @@ return new class extends Migration
             $table->float('dynamic_range_db')->nullable(); // Compression level indicator
             $table->float('brightness')->nullable(); // Spectral centroid (Hz)
             $table->float('timbral_complexity')->nullable(); // Texture complexity
-            
+
             // Processing Metadata
             $table->float('analysis_duration')->nullable(); // Analysis processing time
             $table->integer('chunk_count')->nullable(); // Processing segments
             $table->integer('key_changes')->default(1); // Key modulations detected
-            
+
             $table->timestamps();
-            
+
             // Add index on upload_id for faster lookups
             $table->index('upload_id');
         });

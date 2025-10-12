@@ -15,13 +15,15 @@ class AudioAnalysisServiceTest extends TestCase
     use RefreshDatabase;
 
     private AudioAnalysisService $analysisService;
+
     private AudioMicroserviceClient $mockClient;
+
     private Upload $upload;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->mockClient = $this->createMock(AudioMicroserviceClient::class);
         $this->analysisService = new AudioAnalysisService($this->mockClient);
 
@@ -29,7 +31,7 @@ class AudioAnalysisServiceTest extends TestCase
         $this->upload = Upload::factory()->create([
             'user_id' => $user->id,
             'uses_r2_storage' => false,
-            'path' => 'uploads/original/test.mp3'
+            'path' => 'uploads/original/test.mp3',
         ]);
     }
 
@@ -48,7 +50,7 @@ class AudioAnalysisServiceTest extends TestCase
             )
             ->willReturn([
                 'task_id' => 'test-task-123',
-                'status' => 'processing'
+                'status' => 'processing',
             ]);
 
         $task = $this->analysisService->submitForAnalysis($this->upload);
@@ -87,7 +89,7 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
             'status' => 'processing',
-            'progress' => 50
+            'progress' => 50,
         ]);
 
         $this->mockClient->expects($this->once())
@@ -95,7 +97,7 @@ class AudioAnalysisServiceTest extends TestCase
             ->with('test-task-123')
             ->willReturn([
                 'status' => 'processing',
-                'progress' => 75
+                'progress' => 75,
             ]);
 
         $result = $this->analysisService->checkTaskStatus($task);
@@ -111,14 +113,14 @@ class AudioAnalysisServiceTest extends TestCase
         $task = UploadAnalysisTask::factory()->create([
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mockClient->expects($this->once())
             ->method('getTaskStatus')
             ->willReturn([
                 'status' => 'completed',
-                'progress' => 100
+                'progress' => 100,
             ]);
 
         $this->mockClient->expects($this->once())
@@ -130,9 +132,9 @@ class AudioAnalysisServiceTest extends TestCase
                     'key' => 'C major',
                     'key_confidence' => 0.85,
                     'loudness_db' => -12.3,
-                    'brightness' => 2000.0
+                    'brightness' => 2000.0,
                 ],
-                'processing_time' => 3.45
+                'processing_time' => 3.45,
             ]);
 
         $result = $this->analysisService->checkTaskStatus($task);
@@ -140,7 +142,7 @@ class AudioAnalysisServiceTest extends TestCase
         $this->assertTrue($result);
         $task->refresh();
         $this->assertEquals('completed', $task->status);
-        
+
         // Check that analysis was created
         $this->upload->refresh();
         $analysis = $this->upload->analysis;
@@ -155,14 +157,14 @@ class AudioAnalysisServiceTest extends TestCase
         $task = UploadAnalysisTask::factory()->create([
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mockClient->expects($this->once())
             ->method('getTaskStatus')
             ->willReturn([
                 'status' => 'failed',
-                'error' => 'Processing failed due to invalid file format'
+                'error' => 'Processing failed due to invalid file format',
             ]);
 
         $result = $this->analysisService->checkTaskStatus($task);
@@ -193,7 +195,7 @@ class AudioAnalysisServiceTest extends TestCase
             ->willReturn([
                 'storage_type' => 'local',
                 'available' => true,
-                'total_files' => 42
+                'total_files' => 42,
             ]);
 
         $status = $this->analysisService->getServiceStatus();
@@ -224,7 +226,7 @@ class AudioAnalysisServiceTest extends TestCase
         $expectedInfo = [
             'exists' => true,
             'size_bytes' => 5242880,
-            'format' => 'wav'
+            'format' => 'wav',
         ];
 
         $this->mockClient->expects($this->once())
@@ -242,7 +244,7 @@ class AudioAnalysisServiceTest extends TestCase
         $prefix = 'uploads/user123/';
         $expectedFiles = [
             'files' => ['file1.wav', 'file2.wav'],
-            'total_count' => 2
+            'total_count' => 2,
         ];
 
         $this->mockClient->expects($this->once())
@@ -261,7 +263,7 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
             'status' => 'processing',
-            'progress' => 50
+            'progress' => 50,
         ]);
 
         $this->mockClient->expects($this->once())
@@ -270,7 +272,7 @@ class AudioAnalysisServiceTest extends TestCase
             ->willReturn([
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
-                'message' => 'Task deleted successfully'
+                'message' => 'Task deleted successfully',
             ]);
 
         $result = $this->analysisService->deleteTask($task);
@@ -292,7 +294,7 @@ class AudioAnalysisServiceTest extends TestCase
         $task = UploadAnalysisTask::factory()->create([
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mockClient->expects($this->once())
@@ -303,7 +305,7 @@ class AudioAnalysisServiceTest extends TestCase
         $result = $this->analysisService->deleteTask($task);
 
         $this->assertTrue($result);
-        
+
         // Check that analysis was deleted
         $this->upload->refresh();
         $this->assertNull($this->upload->analysis);
@@ -315,7 +317,7 @@ class AudioAnalysisServiceTest extends TestCase
         $task = UploadAnalysisTask::factory()->create([
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
-            'status' => 'processing'
+            'status' => 'processing',
         ]);
 
         $this->mockClient->expects($this->once())
@@ -337,7 +339,7 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
             'status' => 'failed',
-            'error_message' => 'Original failure reason'
+            'error_message' => 'Original failure reason',
         ]);
 
         $this->mockClient->expects($this->once())
@@ -359,7 +361,7 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'test-task-123',
             'status' => 'pending',
-            'progress' => 0
+            'progress' => 0,
         ]);
 
         $this->mockClient->expects($this->once())
@@ -369,7 +371,7 @@ class AudioAnalysisServiceTest extends TestCase
                 'task_id' => 'test-task-123',
                 'status' => 'deleted',
                 'deleted_from_celery' => true,
-                'marked_as_deleted' => true
+                'marked_as_deleted' => true,
             ]);
 
         $result = $this->analysisService->deleteTask($task);
@@ -387,14 +389,14 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'deleted-task-123',
             'status' => 'deleted',
-            'error_message' => 'Task deleted by user'
+            'error_message' => 'Task deleted by user',
         ]);
 
         $this->mockClient->expects($this->once())
             ->method('extractFeatures')
             ->willReturn([
                 'task_id' => 'new-task-456',
-                'status' => 'pending'
+                'status' => 'pending',
             ]);
 
         $newTask = $this->analysisService->submitForAnalysis($this->upload);
@@ -414,14 +416,14 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'failed-task-123',
             'status' => 'failed',
-            'error_message' => 'Analysis failed'
+            'error_message' => 'Analysis failed',
         ]);
 
         $this->mockClient->expects($this->once())
             ->method('extractFeatures')
             ->willReturn([
                 'task_id' => 'new-task-789',
-                'status' => 'pending'
+                'status' => 'pending',
             ]);
 
         $newTask = $this->analysisService->submitForAnalysis($this->upload);
@@ -441,7 +443,7 @@ class AudioAnalysisServiceTest extends TestCase
             'upload_id' => $this->upload->id,
             'task_id' => 'processing-task-123',
             'status' => 'processing',
-            'progress' => 50
+            'progress' => 50,
         ]);
 
         // Should not call extractFeatures since there's an active task

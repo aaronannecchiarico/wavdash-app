@@ -15,10 +15,10 @@ class SuperAdminUploadListTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         // Create SuperAdmin role for tests
         Role::firstOrCreate(['name' => 'SuperAdmin']);
     }
@@ -28,15 +28,15 @@ class SuperAdminUploadListTest extends TestCase
         // Create multiple users with uploads
         $user1 = User::factory()->create(['name' => 'User One']);
         $user2 = User::factory()->create(['name' => 'User Two']);
-        
+
         $upload1 = Upload::factory()->create([
             'user_id' => $user1->id,
-            'title' => 'Upload from User One'
+            'title' => 'Upload from User One',
         ]);
-        
+
         $upload2 = Upload::factory()->create([
             'user_id' => $user2->id,
-            'title' => 'Upload from User Two'
+            'title' => 'Upload from User Two',
         ]);
 
         // Create SuperAdmin user
@@ -48,20 +48,20 @@ class SuperAdminUploadListTest extends TestCase
             ->get('/admin/uploads');
 
         $response->assertSuccessful();
-        
+
         // The response should contain both uploads (checking the HTML content)
         $content = $response->getContent();
         $this->assertStringContainsString('Upload from User One', $content);
         $this->assertStringContainsString('Upload from User Two', $content);
     }
-    
+
     public function test_super_admin_can_view_individual_uploads_from_different_users(): void
     {
         // Create a regular user and their upload
         $regularUser = User::factory()->create(['name' => 'Regular User']);
         $upload = Upload::factory()->create([
             'user_id' => $regularUser->id,
-            'title' => 'Private Upload'
+            'title' => 'Private Upload',
         ]);
 
         // Create SuperAdmin user
@@ -73,7 +73,7 @@ class SuperAdminUploadListTest extends TestCase
             ->get("/admin/uploads/{$upload->id}");
 
         $response->assertSuccessful();
-        
+
         // Should contain the upload details
         $content = $response->getContent();
         $this->assertStringContainsString('Private Upload', $content);

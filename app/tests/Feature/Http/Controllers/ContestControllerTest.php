@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Http\Controllers;
 
-use App\Http\Controllers\ContestController;
 use App\Models\Contest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,7 +115,7 @@ final class ContestControllerTest extends TestCase
     {
         // Create authenticated user
         $user = User::factory()->create();
-        
+
         // Create some test contests
         $contests = Contest::factory()
             ->count(3)

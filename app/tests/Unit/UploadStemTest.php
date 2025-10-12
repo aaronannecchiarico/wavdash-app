@@ -49,25 +49,25 @@ class UploadStemTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $vocalsStep = UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'vocals'
+            'stem_type' => 'vocals',
         ]);
-        
+
         $drumsStep = UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'drums'
+            'stem_type' => 'drums',
         ]);
-        
+
         $bassStep = UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'bass'
+            'stem_type' => 'bass',
         ]);
-        
+
         $otherStep = UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'other'
+            'stem_type' => 'other',
         ]);
 
         $this->assertEquals('Vocals', $vocalsStep->getStemTypeName());
@@ -80,29 +80,29 @@ class UploadStemTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $smallStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'vocals',
-            'file_size' => 1024 // 1KB
+            'file_size' => 1024, // 1KB
         ]);
-        
+
         $mediumStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'drums',
-            'file_size' => 1048576 // 1MB
+            'file_size' => 1048576, // 1MB
         ]);
-        
+
         $largeStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'bass',
-            'file_size' => 1073741824 // 1GB
+            'file_size' => 1073741824, // 1GB
         ]);
 
         $nullStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'other',
-            'file_size' => null
+            'file_size' => null,
         ]);
 
         $this->assertEquals('1 KB', $smallStem->getFormattedFileSize());
@@ -115,23 +115,23 @@ class UploadStemTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $shortStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'vocals',
-            'duration' => 65.5 // 1 minute 5.5 seconds
+            'duration' => 65.5, // 1 minute 5.5 seconds
         ]);
-        
+
         $longStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'drums',
-            'duration' => 3661.2 // 1 hour 1 minute 1.2 seconds
+            'duration' => 3661.2, // 1 hour 1 minute 1.2 seconds
         ]);
 
         $nullStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'bass',
-            'duration' => null
+            'duration' => null,
         ]);
 
         $this->assertEquals('1:05', $shortStem->getFormattedDuration());
@@ -143,22 +143,22 @@ class UploadStemTest extends TestCase
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->create(['user_id' => $user->id]);
-        
+
         $localStem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'vocals',
-            'storage_type' => 'local'
+            'storage_type' => 'local',
         ]);
-        
+
         $r2Stem = UploadStem::factory()->create([
             'upload_id' => $upload->id,
             'stem_type' => 'drums',
-            'storage_type' => 'r2'
+            'storage_type' => 'r2',
         ]);
 
         $this->assertTrue($localStem->isStoredLocally());
         $this->assertFalse($localStem->isStoredOnR2());
-        
+
         $this->assertFalse($r2Stem->isStoredLocally());
         $this->assertTrue($r2Stem->isStoredOnR2());
     }
@@ -189,15 +189,15 @@ class UploadStemTest extends TestCase
         // Create the first vocals stem
         UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'vocals'
+            'stem_type' => 'vocals',
         ]);
 
         // Try to create another vocals stem for the same upload - should fail
         $this->expectException(\Exception::class);
-        
+
         UploadStem::factory()->create([
             'upload_id' => $upload->id,
-            'stem_type' => 'vocals'
+            'stem_type' => 'vocals',
         ]);
     }
 }

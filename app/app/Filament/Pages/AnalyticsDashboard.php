@@ -177,7 +177,7 @@ class AnalyticsDashboard extends Page implements HasInfolists
                         TextEntry::make('debug')
                             ->label('Debug Info')
                             ->formatStateUsing(function () use ($uploadTrends) {
-                                return 'Upload trends data: ' . count($uploadTrends['labels']) . ' months, ' . array_sum($uploadTrends['data']) . ' total uploads';
+                                return 'Upload trends data: '.count($uploadTrends['labels']).' months, '.array_sum($uploadTrends['data']).' total uploads';
                             }),
                         TextEntry::make('uploadTrends.chart')
                             ->label('Chart')

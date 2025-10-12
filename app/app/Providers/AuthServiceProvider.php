@@ -7,7 +7,6 @@ use App\Models\Upload;
 use App\Policies\FailedJobPolicy;
 use App\Policies\UploadPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {

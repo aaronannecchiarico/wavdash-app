@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('rating_at_contest');
             $table->string('original_path');
             $table->string('streamable_path')->nullable();
-            $table->enum('status', ["pending","processing","ready","failed"])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'ready', 'failed'])->default('pending');
             $table->timestamps();
         });
     }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\StemSeparationCompleted;
 use App\Http\Resources\UploadResource;
 use App\Models\Upload;
 use App\Services\AudioAnalysisService;
@@ -27,7 +26,7 @@ class UploadStemController extends Controller
     {
         $this->authorize('update', $upload);
 
-        if (!config('services.audio_analysis.enabled')) {
+        if (! config('services.audio_analysis.enabled')) {
             return redirect()->back()->with('error', 'Audio analysis service is currently disabled.');
         }
 
@@ -44,13 +43,13 @@ class UploadStemController extends Controller
         }
 
         // Check service availability
-        if (!$this->analysisService->isServiceAvailable()) {
+        if (! $this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
         $stemTask = $this->analysisService->submitForStemSeparation($upload);
 
-        if (!$stemTask) {
+        if (! $stemTask) {
             return redirect()->back()->with('error', 'Failed to submit upload for stem separation.');
         }
 
@@ -110,11 +109,11 @@ class UploadStemController extends Controller
             Log::info('Stem separation task deleted', [
                 'upload_id' => $upload->id,
                 'task_status' => $upload->stemTask->status,
-                'task_id' => $upload->stemTask->task_id
+                'task_id' => $upload->stemTask->task_id,
             ]);
         }
 
-        if (!$deleted) {
+        if (! $deleted) {
             return redirect()->back()->with('error', 'No stem separation data found to delete.');
         }
 
@@ -128,20 +127,20 @@ class UploadStemController extends Controller
     {
         $this->authorize('update', $upload);
 
-        if (!config('services.audio_analysis.enabled')) {
+        if (! config('services.audio_analysis.enabled')) {
             return redirect()->back()->with('error', 'Audio analysis service is currently disabled.');
         }
 
-        if (!$upload->stemTask) {
+        if (! $upload->stemTask) {
             return redirect()->back()->with('error', 'No stem separation task found to delete.');
         }
 
-        if (!$upload->stemTask->canBeDeleted()) {
+        if (! $upload->stemTask->canBeDeleted()) {
             return redirect()->back()->with('error', 'This stem separation task cannot be deleted in its current state.');
         }
 
         // Check service availability
-        if (!$this->analysisService->isServiceAvailable()) {
+        if (! $this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
@@ -169,7 +168,7 @@ class UploadStemController extends Controller
 
         $stem = $upload->stems()->where('stem_type', $stemType)->first();
 
-        if (!$stem) {
+        if (! $stem) {
             return redirect()->back()->with('error', 'Stem not found.');
         }
 
@@ -181,22 +180,23 @@ class UploadStemController extends Controller
 
         // If stored on R2, redirect to R2 URL
         if ($stem->isStoredOnR2()) {
-            $r2Url = config('filesystems.disks.r2.url') . '/' . $stem->file_path;
+            $r2Url = config('filesystems.disks.r2.url').'/'.$stem->file_path;
+
             return redirect()->away($r2Url);
         }
 
         // If stored locally, serve the file from private storage
         $filePath = $stem->file_path;
-        
+
         // Handle both old and new file path formats
         if (str_starts_with($filePath, 'private/')) {
             // New format: file_path already includes 'private/'
-            $fullPath = storage_path('app/' . $filePath);
+            $fullPath = storage_path('app/'.$filePath);
         } else {
             // Old format: file_path needs 'private/' prepended
-            $fullPath = storage_path('app/private/' . $filePath);
+            $fullPath = storage_path('app/private/'.$filePath);
         }
-        
+
         return response()->download($fullPath);
     }
 

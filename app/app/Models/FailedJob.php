@@ -45,6 +45,7 @@ class FailedJob extends Model
 
         if (is_array($this->payload) && isset($this->payload['job'])) {
             $job = unserialize($this->payload['job']);
+
             return get_class($job);
         }
 
@@ -56,11 +57,12 @@ class FailedJob extends Model
      */
     public function getShortExceptionAttribute(): string
     {
-        if (!$this->exception) {
+        if (! $this->exception) {
             return 'No exception message';
         }
 
         $lines = explode("\n", $this->exception);
+
         return $lines[0] ?? 'Unknown exception';
     }
 }

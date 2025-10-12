@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class AdminUploadAccessTest extends TestCase
 {
-    use RefreshDatabase, OptimizedTestTrait;
+    use OptimizedTestTrait, RefreshDatabase;
 
     public function test_super_admin_can_access_upload_list_in_admin_panel(): void
     {
@@ -34,8 +34,8 @@ class AdminUploadAccessTest extends TestCase
         // Use optimized reusable users
         $regularUser = $this->getTestUser();
         $superAdmin = $this->getTestSuperAdmin();
-        
-        // Create upload explicitly with the user ID 
+
+        // Create upload explicitly with the user ID
         $upload = Upload::factory()->create(['user_id' => $regularUser->id]);
 
         // SuperAdmin should be able to view the specific upload
@@ -50,8 +50,8 @@ class AdminUploadAccessTest extends TestCase
         // Use optimized reusable users
         $regularUser = $this->getTestUser();
         $superAdmin = $this->getTestSuperAdmin();
-        
-        // Create upload explicitly with the user ID 
+
+        // Create upload explicitly with the user ID
         $upload = Upload::factory()->create(['user_id' => $regularUser->id]);
 
         // SuperAdmin should be able to access the edit page

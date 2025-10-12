@@ -2,10 +2,9 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 use App\Models\Contest;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ContestFactory extends Factory
 {
@@ -25,7 +24,7 @@ class ContestFactory extends Factory
             'user_id' => User::factory(),
             'name' => fake()->name(),
             'genre' => fake()->regexify('[A-Za-z0-9]{100}'),
-            'state' => fake()->randomElement(["open","voting","finished"]),
+            'state' => fake()->randomElement(['open', 'voting', 'finished']),
             'start_date' => fake()->dateTime(),
             'end_date' => fake()->dateTime(),
         ];

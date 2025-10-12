@@ -29,7 +29,7 @@ class UploadPolicy
         if ($user->hasRole('SuperAdmin')) {
             return true;
         }
-        
+
         // Regular users can only view their own uploads
         return $user->id === $upload->user_id;
     }
@@ -51,7 +51,7 @@ class UploadPolicy
         if ($user->hasRole('SuperAdmin')) {
             return true;
         }
-        
+
         // Regular users can only update their own uploads
         return $user->id === $upload->user_id;
     }
@@ -65,7 +65,7 @@ class UploadPolicy
         if ($user->hasRole('SuperAdmin')) {
             return true;
         }
-        
+
         // Regular users can only delete their own uploads
         return $user->id === $upload->user_id;
     }

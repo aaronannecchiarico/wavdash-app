@@ -2,12 +2,11 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 use App\Models\Contest;
 use App\Models\ContestUser;
 use App\Models\Upload;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ContestUserFactory extends Factory
 {
@@ -25,7 +24,7 @@ class ContestUserFactory extends Factory
     {
         $user = User::factory()->create();
         $upload = Upload::factory()->for($user)->create([
-            'status' => 'ready'
+            'status' => 'ready',
         ]);
 
         return [

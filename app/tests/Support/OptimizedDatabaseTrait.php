@@ -11,14 +11,14 @@ trait OptimizedDatabaseTrait
 
     protected function seedTestDatabase(): void
     {
-        if (!static::$databaseSeeded) {
+        if (! static::$databaseSeeded) {
             // Create common test users that can be reused
             User::factory()->count(5)->create();
-            
+
             // Create common roles
             Role::firstOrCreate(['name' => 'SuperAdmin']);
             Role::firstOrCreate(['name' => 'User']);
-            
+
             static::$databaseSeeded = true;
         }
     }
@@ -38,6 +38,7 @@ trait OptimizedDatabaseTrait
     protected function getTestUserByIndex(int $index = 1): User
     {
         $this->seedTestDatabase();
+
         return User::find($index) ?? User::factory()->create();
     }
 
@@ -48,15 +49,15 @@ trait OptimizedDatabaseTrait
     {
         $this->seedTestDatabase();
         $superAdmin = User::find(5); // Use the 5th user as super admin
-        if (!$superAdmin) {
+        if (! $superAdmin) {
             $superAdmin = User::factory()->create();
         }
-        
+
         $role = Role::firstOrCreate(['name' => 'SuperAdmin']);
-        if (!$superAdmin->hasRole('SuperAdmin')) {
+        if (! $superAdmin->hasRole('SuperAdmin')) {
             $superAdmin->assignRole($role);
         }
-        
+
         return $superAdmin;
     }
 }

@@ -26,7 +26,7 @@ class UploadAnalysisController extends Controller
     {
         $this->authorize('update', $upload);
 
-        if (!config('services.audio_analysis.enabled')) {
+        if (! config('services.audio_analysis.enabled')) {
             return redirect()->back()->with('error', 'Audio analysis is currently disabled.');
         }
 
@@ -43,13 +43,13 @@ class UploadAnalysisController extends Controller
         }
 
         // Check service availability
-        if (!$this->analysisService->isServiceAvailable()) {
+        if (! $this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
         $analysisTask = $this->analysisService->submitForAnalysis($upload);
 
-        if (!$analysisTask) {
+        if (! $analysisTask) {
             return redirect()->back()->with('error', 'Failed to submit upload for analysis.');
         }
 
@@ -101,18 +101,18 @@ class UploadAnalysisController extends Controller
             if ($upload->analysisTask->isProcessing()) {
                 return redirect()->back()->with('error', 'Cannot delete analysis while it is still processing.');
             }
-            
+
             // Delete the task if it's completed, failed, or in any non-processing state
             $upload->analysisTask->delete();
             $deleted = true;
             Log::info('Analysis task deleted', [
                 'upload_id' => $upload->id,
                 'task_status' => $upload->analysisTask->status,
-                'task_id' => $upload->analysisTask->task_id
+                'task_id' => $upload->analysisTask->task_id,
             ]);
         }
 
-        if (!$deleted) {
+        if (! $deleted) {
             return redirect()->back()->with('error', 'No analysis data found to delete.');
         }
 
@@ -126,20 +126,20 @@ class UploadAnalysisController extends Controller
     {
         $this->authorize('update', $upload);
 
-        if (!config('services.audio_analysis.enabled')) {
+        if (! config('services.audio_analysis.enabled')) {
             return redirect()->back()->with('error', 'Audio analysis is currently disabled.');
         }
 
-        if (!$upload->analysisTask) {
+        if (! $upload->analysisTask) {
             return redirect()->back()->with('error', 'No analysis task found to delete.');
         }
 
-        if (!$upload->analysisTask->canBeDeleted()) {
+        if (! $upload->analysisTask->canBeDeleted()) {
             return redirect()->back()->with('error', 'This analysis task cannot be deleted in its current state.');
         }
 
         // Check service availability
-        if (!$this->analysisService->isServiceAvailable()) {
+        if (! $this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
@@ -151,7 +151,7 @@ class UploadAnalysisController extends Controller
                 'task_id' => $upload->analysisTask->task_id,
                 'user_id' => Auth::user()->id,
             ]);
-            
+
             return redirect()->back()->with('success', 'Analysis task has been cancelled and deleted. You can now start a new analysis.');
         } else {
             return redirect()->back()->with('warning', 'Analysis task was marked as deleted locally, but there may have been an issue communicating with the analysis service.');
@@ -167,7 +167,7 @@ class UploadAnalysisController extends Controller
 
         $upload->load(['analysis']);
 
-        if (!$upload->analysis) {
+        if (! $upload->analysis) {
             return redirect()->route('uploads.analysis.show', $upload)
                 ->with('error', 'Upload has no analysis data to compare against.');
         }
@@ -182,7 +182,7 @@ class UploadAnalysisController extends Controller
                 'bpm' => $upload->analysis->bpm,
                 'brightness' => $upload->analysis->brightness,
                 'key_confidence' => $upload->analysis->key_confidence,
-            ]
+            ],
         ]);
     }
 
@@ -192,7 +192,7 @@ class UploadAnalysisController extends Controller
     public function status(): JsonResponse
     {
         $status = $this->analysisService->getServiceStatus();
-        
+
         return response()->json($status);
     }
 }

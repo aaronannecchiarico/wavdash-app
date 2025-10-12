@@ -18,7 +18,7 @@ class AudioMicroserviceClientTest extends TestCase
     {
         parent::setUp();
         Config::set('services.audio_analysis.base_url', 'http://localhost:8001');
-        $this->client = new AudioMicroserviceClient();
+        $this->client = new AudioMicroserviceClient;
     }
 
     public function test_extract_features_makes_correct_api_call(): void
@@ -27,8 +27,8 @@ class AudioMicroserviceClientTest extends TestCase
             'localhost:8001/storage/extract-features' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'processing',
-                'message' => 'Task submitted successfully'
-            ])
+                'message' => 'Task submitted successfully',
+            ]),
         ]);
 
         $storagePath = 'uploads/user123/2024/08/12/uuid-song.wav';
@@ -38,14 +38,15 @@ class AudioMicroserviceClientTest extends TestCase
             'metadata' => [
                 'upload_id' => 123,
                 'user_id' => 456,
-                'original_filename' => 'song.wav'
-            ]
+                'original_filename' => 'song.wav',
+            ],
         ];
 
         $result = $this->client->extractFeatures($storagePath, $options);
 
         Http::assertSent(function ($request) use ($storagePath, $options) {
             $data = $request->data();
+
             return $request->url() === 'http://localhost:8001/storage/extract-features' &&
                    $data['storage_path'] === $storagePath &&
                    $data['extract_detailed'] === false &&
@@ -61,8 +62,8 @@ class AudioMicroserviceClientTest extends TestCase
     {
         Http::fake([
             'localhost:8001/storage/extract-features' => Http::response([
-                'error' => 'File not found'
-            ], 404)
+                'error' => 'File not found',
+            ], 404),
         ]);
 
         $this->expectException(\Exception::class);
@@ -77,21 +78,22 @@ class AudioMicroserviceClientTest extends TestCase
             'localhost:8001/storage/separate-stems' => Http::response([
                 'task_id' => 'stem-task-456',
                 'status' => 'processing',
-                'estimated_time' => 120
-            ])
+                'estimated_time' => 120,
+            ]),
         ]);
 
         $storagePath = 'uploads/user123/2024/08/12/uuid-song.wav';
         $options = [
             'model' => 'htdemucs',
             'callback_url' => 'https://app.test/api/stems/callback/123',
-            'metadata' => ['upload_id' => 123]
+            'metadata' => ['upload_id' => 123],
         ];
 
         $result = $this->client->separateStems($storagePath, $options);
 
         Http::assertSent(function ($request) use ($storagePath, $options) {
             $data = $request->data();
+
             return $request->url() === 'http://localhost:8001/storage/separate-stems' &&
                    $data['storage_path'] === $storagePath &&
                    $data['model_name'] === 'htdemucs' &&
@@ -112,10 +114,10 @@ class AudioMicroserviceClientTest extends TestCase
                     'bpm' => 120.5,
                     'key' => 'C major',
                     'key_confidence' => 0.85,
-                    'loudness_db' => -12.3
+                    'loudness_db' => -12.3,
                 ],
-                'processing_time' => 3.45
-            ])
+                'processing_time' => 3.45,
+            ]),
         ]);
 
         $result = $this->client->getTaskSummary('test-task-123');
@@ -132,8 +134,8 @@ class AudioMicroserviceClientTest extends TestCase
             'localhost:8001/task-status/test-task-123' => Http::response([
                 'task_id' => 'test-task-123',
                 'status' => 'processing',
-                'progress' => 75
-            ])
+                'progress' => 75,
+            ]),
         ]);
 
         $result = $this->client->getTaskStatus('test-task-123');
@@ -151,8 +153,8 @@ class AudioMicroserviceClientTest extends TestCase
                 'available' => true,
                 'storage_path' => '/path/to/laravel/storage/app',
                 'total_files' => 42,
-                'total_size_bytes' => 1073741824
-            ])
+                'total_size_bytes' => 1073741824,
+            ]),
         ]);
 
         $result = $this->client->getStorageStatus();
@@ -167,8 +169,8 @@ class AudioMicroserviceClientTest extends TestCase
         Http::fake([
             'localhost:8001/health' => Http::response([
                 'status' => 'healthy',
-                'timestamp' => now()->toISOString()
-            ])
+                'timestamp' => now()->toISOString(),
+            ]),
         ]);
 
         $this->assertTrue($this->client->isServiceAvailable());
@@ -178,8 +180,8 @@ class AudioMicroserviceClientTest extends TestCase
     {
         Http::fake([
             'localhost:8001/health' => Http::response([
-                'status' => 'unhealthy'
-            ], 500)
+                'status' => 'unhealthy',
+            ], 500),
         ]);
 
         $this->assertFalse($this->client->isServiceAvailable());
@@ -188,7 +190,7 @@ class AudioMicroserviceClientTest extends TestCase
     public function test_is_service_available_when_unreachable(): void
     {
         Http::fake([
-            'localhost:8001/health' => Http::response([], 500)
+            'localhost:8001/health' => Http::response([], 500),
         ]);
 
         $this->assertFalse($this->client->isServiceAvailable());
@@ -203,8 +205,8 @@ class AudioMicroserviceClientTest extends TestCase
                 'size_bytes' => 5242880,
                 'format' => 'wav',
                 'duration' => 180.0,
-                'sample_rate' => 44100
-            ])
+                'sample_rate' => 44100,
+            ]),
         ]);
 
         $result = $this->client->getFileInfo('uploads/user123/2024/08/12/uuid-song.wav');
@@ -221,12 +223,12 @@ class AudioMicroserviceClientTest extends TestCase
             'localhost:8001/storage/list-files*' => Http::response([
                 'files' => [
                     'uploads/user123/2024/08/12/uuid1-song1.wav',
-                    'uploads/user123/2024/08/12/uuid2-song2.wav'
+                    'uploads/user123/2024/08/12/uuid2-song2.wav',
                 ],
                 'total_count' => 2,
                 'prefix' => 'uploads/user123/',
-                'storage_type' => 'local'
-            ])
+                'storage_type' => 'local',
+            ]),
         ]);
 
         $result = $this->client->listFiles('uploads/user123/', 100);
@@ -244,8 +246,8 @@ class AudioMicroserviceClientTest extends TestCase
                 'status' => 'deleted',
                 'message' => 'Task deleted successfully',
                 'deleted_from_celery' => true,
-                'marked_as_deleted' => true
-            ])
+                'marked_as_deleted' => true,
+            ]),
         ]);
 
         $result = $this->client->deleteTask('test-task-123');
@@ -265,8 +267,8 @@ class AudioMicroserviceClientTest extends TestCase
     {
         Http::fake([
             'localhost:8001/task/test-task-123' => Http::response([
-                'error' => 'Task not found'
-            ], 404)
+                'error' => 'Task not found',
+            ], 404),
         ]);
 
         $this->expectException(\Exception::class);
@@ -279,8 +281,8 @@ class AudioMicroserviceClientTest extends TestCase
     {
         Http::fake([
             'localhost:8001/task/test-task-123' => Http::response([
-                'error' => 'Internal server error'
-            ], 500)
+                'error' => 'Internal server error',
+            ], 500),
         ]);
 
         $this->expectException(\Exception::class);

@@ -36,10 +36,10 @@ return new class extends Migration
     {
         // Clear all upload storage before dropping the table
         $this->clearUploadStorage();
-        
+
         Schema::dropIfExists('uploads');
     }
-    
+
     /**
      * Clear all upload-related files from storage.
      */
@@ -49,12 +49,12 @@ return new class extends Migration
         if (Storage::disk('private')->exists('uploads')) {
             Storage::disk('private')->deleteDirectory('uploads');
         }
-        
+
         // Clear public uploads/stream
         if (Storage::disk('public')->exists('uploads/stream')) {
             Storage::disk('public')->deleteDirectory('uploads/stream');
         }
-        
+
         // Clear R2 uploads if configured
         if (config('filesystems.disks.r2.bucket')) {
             try {

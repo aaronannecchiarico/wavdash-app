@@ -12,7 +12,9 @@ use Spatie\Permission\Models\Role;
 trait OptimizedTestTrait
 {
     private static array $testClassUsers = [];
+
     private static array $testClassSuperAdmins = [];
+
     private static array $testClassSuperAdminRoles = [];
 
     /**
@@ -21,7 +23,7 @@ trait OptimizedTestTrait
     protected function getTestUser(): User
     {
         $testClass = static::class;
-        
+
         // Check if cached user still exists in database
         if (isset(static::$testClassUsers[$testClass])) {
             $cachedUser = static::$testClassUsers[$testClass];
@@ -33,6 +35,7 @@ trait OptimizedTestTrait
         }
 
         static::$testClassUsers[$testClass] = User::factory()->create();
+
         return static::$testClassUsers[$testClass];
     }
 
@@ -42,7 +45,7 @@ trait OptimizedTestTrait
     protected function getTestSuperAdmin(): User
     {
         $testClass = static::class;
-        
+
         // Check if cached super admin still exists in database
         if (isset(static::$testClassSuperAdmins[$testClass])) {
             $cachedSuperAdmin = static::$testClassSuperAdmins[$testClass];
@@ -55,6 +58,7 @@ trait OptimizedTestTrait
 
         static::$testClassSuperAdmins[$testClass] = User::factory()->create();
         static::$testClassSuperAdmins[$testClass]->assignRole($this->getSuperAdminRole());
+
         return static::$testClassSuperAdmins[$testClass];
     }
 
@@ -64,7 +68,7 @@ trait OptimizedTestTrait
     protected function getSuperAdminRole(): Role
     {
         $testClass = static::class;
-        
+
         // Check if cached role still exists in database
         if (isset(static::$testClassSuperAdminRoles[$testClass])) {
             $cachedRole = static::$testClassSuperAdminRoles[$testClass];
@@ -77,8 +81,9 @@ trait OptimizedTestTrait
 
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         static::$testClassSuperAdminRoles[$testClass] = Role::firstOrCreate(['name' => 'SuperAdmin']);
+
         return static::$testClassSuperAdminRoles[$testClass];
     }
 
@@ -134,8 +139,9 @@ trait OptimizedTestTrait
         \ProtoneMedia\LaravelFFMpeg\Support\FFMpeg::shouldReceive('save')
             ->andReturnUsing(function ($filename) {
                 // Create a temporary file with the expected name
-                $tempPath = sys_get_temp_dir() . '/' . $filename;
+                $tempPath = sys_get_temp_dir().'/'.$filename;
                 file_put_contents($tempPath, 'fake ogg content');
+
                 return true;
             });
     }

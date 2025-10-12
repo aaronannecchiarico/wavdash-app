@@ -15,10 +15,10 @@ class FailedJobPolicyTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-        
+
         // Create SuperAdmin role for tests
         Role::firstOrCreate(['name' => 'SuperAdmin']);
     }
@@ -103,13 +103,13 @@ class FailedJobPolicyTest extends TestCase
     private function createFailedJob(): FailedJob
     {
         return FailedJob::create([
-            'uuid' => 'test-uuid-' . uniqid(),
+            'uuid' => 'test-uuid-'.uniqid(),
             'connection' => 'database',
             'queue' => 'default',
             'payload' => json_encode([
                 'displayName' => 'App\\Jobs\\TestJob',
                 'job' => 'serialized-job-data',
-                'data' => ['test' => 'data']
+                'data' => ['test' => 'data'],
             ]),
             'exception' => 'Test exception message for failed job',
             'failed_at' => now(),

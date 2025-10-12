@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Services\R2StorageService;
 use App\Models\Upload;
 use App\Models\User;
+use App\Services\R2StorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
@@ -20,7 +20,7 @@ class R2StorageServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->r2Service = new R2StorageService();
+        $this->r2Service = new R2StorageService;
     }
 
     public function test_is_enabled_returns_false_when_r2_disabled(): void
@@ -52,9 +52,9 @@ class R2StorageServiceTest extends TestCase
     public function test_upload_file_returns_null_when_disabled(): void
     {
         Config::set('filesystems.default', 'local');
-        
+
         $file = UploadedFile::fake()->create('test.mp3', 10, 'audio/mpeg');
-        
+
         $result = $this->r2Service->uploadFile($file);
 
         $this->assertNull($result);
@@ -63,11 +63,11 @@ class R2StorageServiceTest extends TestCase
     public function test_upload_file_returns_path_when_successful(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
-        
+
         $file = UploadedFile::fake()->create('test.mp3', 10, 'audio/mpeg');
-        
+
         $result = $this->r2Service->uploadFile($file, 'uploads');
 
         $this->assertNotNull($result);
@@ -87,7 +87,7 @@ class R2StorageServiceTest extends TestCase
     public function test_get_file_returns_content_when_exists(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
         Storage::disk('r2')->put('test/path.mp3', 'test content');
 
@@ -108,7 +108,7 @@ class R2StorageServiceTest extends TestCase
     public function test_file_exists_checks_storage(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
         Storage::disk('r2')->put('test/exists.mp3', 'content');
 
@@ -128,12 +128,12 @@ class R2StorageServiceTest extends TestCase
     public function test_delete_file_removes_existing_file(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
         Storage::disk('r2')->put('test/delete.mp3', 'content');
 
         $this->assertTrue($this->r2Service->fileExists('test/delete.mp3'));
-        
+
         $result = $this->r2Service->deleteFile('test/delete.mp3');
 
         $this->assertTrue($result);
@@ -170,18 +170,18 @@ class R2StorageServiceTest extends TestCase
     public function test_upload_stems_uploads_multiple_files(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
-        
+
         // Create temporary files
-        $vocalsPath = tempnam(sys_get_temp_dir(), 'vocals') . '.wav';
-        $drumsPath = tempnam(sys_get_temp_dir(), 'drums') . '.wav';
+        $vocalsPath = tempnam(sys_get_temp_dir(), 'vocals').'.wav';
+        $drumsPath = tempnam(sys_get_temp_dir(), 'drums').'.wav';
         file_put_contents($vocalsPath, 'vocals content');
         file_put_contents($drumsPath, 'drums content');
 
         $stems = [
             'vocals' => $vocalsPath,
-            'drums' => $drumsPath
+            'drums' => $drumsPath,
         ];
 
         $result = $this->r2Service->uploadStems($stems, 'test-base');
@@ -221,11 +221,11 @@ class R2StorageServiceTest extends TestCase
     {
         // Set filesystem to local to disable R2
         Config::set('filesystems.default', 'local');
-        
+
         $user = User::factory()->create();
         $upload = Upload::factory()->create([
             'user_id' => $user->id,
-            'uses_r2_storage' => false
+            'uses_r2_storage' => false,
         ]);
 
         $result = $this->r2Service->migrateUpload($upload);
@@ -236,11 +236,11 @@ class R2StorageServiceTest extends TestCase
     public function test_migrate_upload_returns_false_when_already_using_r2(): void
     {
         $this->enableR2();
-        
+
         $user = User::factory()->create();
         $upload = Upload::factory()->create([
             'user_id' => $user->id,
-            'uses_r2_storage' => true
+            'uses_r2_storage' => true,
         ]);
 
         $result = $this->r2Service->migrateUpload($upload);
@@ -269,9 +269,9 @@ class R2StorageServiceTest extends TestCase
     public function test_copy_from_local_uploads_file_content(): void
     {
         $this->enableR2();
-        
+
         Storage::fake('r2');
-        
+
         // Create temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'test');
         file_put_contents($tempFile, 'test content');
