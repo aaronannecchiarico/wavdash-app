@@ -40,6 +40,9 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      - name: Build SSR
+        run: npm run build:ssr
+
       - name: Copy Environment File
         run: cp .env.example .env
 

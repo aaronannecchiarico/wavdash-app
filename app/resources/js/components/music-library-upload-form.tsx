@@ -92,7 +92,6 @@ export function MusicLibraryUploadForm({
         size: number;
         duration: number;
     } | null>(null);
-    const [processingStartTime, setProcessingStartTime] = useState<number>(0);
     const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
     // Use server-provided configuration

@@ -30,13 +30,6 @@ export default function Create({ audioProcessingConfig }: CreateProps) {
     });
 
     const [uploadProgress, setUploadProgress] = useState<number>(0);
-    const [processedFileData, setProcessedFileData] = useState<{
-        processedFile: File;
-        originalFilename: string;
-        originalSize: number;
-        duration: number;
-        processingTimeMs: number;
-    } | null>(null);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,7 +46,6 @@ export default function Create({ audioProcessingConfig }: CreateProps) {
             },
             onSuccess: () => {
                 reset();
-                setProcessedFileData(null);
             },
             onFinish: () => {
                 setUploadProgress(0);
@@ -77,7 +69,6 @@ export default function Create({ audioProcessingConfig }: CreateProps) {
                     uploadProgress={uploadProgress}
                     wasSuccessful={wasSuccessful}
                     onReset={() => reset()}
-                    onProcessedFile={setProcessedFileData}
                     audioProcessingConfig={audioProcessingConfig}
                 />
             </div>
