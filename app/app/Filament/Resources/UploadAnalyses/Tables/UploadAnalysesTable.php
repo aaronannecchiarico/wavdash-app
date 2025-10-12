@@ -162,6 +162,7 @@ class UploadAnalysesTable
                                     'moderate' => $query->orWhere(fn ($q) => $q->whereBetween('bpm', [90, 119])),
                                     'upbeat' => $query->orWhere(fn ($q) => $q->whereBetween('bpm', [120, 139])),
                                     'fast' => $query->orWhere('bpm', '>=', 140),
+                                    default => null, // Ignore unknown categories
                                 };
                             }
                         });
@@ -191,6 +192,7 @@ class UploadAnalysesTable
                                     'moderate' => $query->orWhere(fn ($q) => $q->whereBetween('loudness_db', [-18, -12])),
                                     'loud' => $query->orWhere(fn ($q) => $q->whereBetween('loudness_db', [-12, -6])),
                                     'very_loud' => $query->orWhere('loudness_db', '>', -6),
+                                    default => null, // Ignore unknown categories
                                 };
                             }
                         });

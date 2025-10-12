@@ -9,8 +9,20 @@ parameters:
     level: 5
 
     ignoreErrors:
+        # Laravel/Eloquent false positives
         - '#Unsafe usage of new static#'
         - '#Access to an undefined property (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)::\$#'
-        - '#Call to static method make\(\) on an unknown class Filament\\Schemas\\Components#'
-        - '#Relation .+ is not found in App\\Models\\.+ model#'
         - '#Call to an undefined method (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)#'
+        - '#Relation .+ is not found in App\\Models\\.+ model#'
+
+        # Filament false positives
+        - '#Call to static method make\(\) on an unknown class Filament\\Schemas\\Components#'
+
+        # Model $fillable property type variance (Laravel 11+ uses list<string>, older uses array)
+        - '#PHPDoc type .+ of property .+::\$fillable is not covariant with PHPDoc type .+ of overridden property#'
+        - '#Property .+::\$fillable .+ does not accept default value of type .+#'
+
+        # Encrypted and JSON cast arrays (Laravel handles these correctly at runtime)
+        - '#Argument of an invalid type string supplied for foreach, only iterables are supported#'
+        - '#Method .+::getAppAuthenticationRecoveryCodes\(\) should return .+ but returns .+#'
+        - '#Property .+::\$app_authentication_recovery_codes .+ does not accept .+#'
