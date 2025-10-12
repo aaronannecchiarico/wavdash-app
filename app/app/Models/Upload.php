@@ -170,7 +170,7 @@ class Upload extends Model
      */
     public function usesR2Storage(): bool
     {
-        return $this->uses_r2_storage && ! empty($this->r2_upload_path);
+        return $this->uses_r2_storage;
     }
 
     /**
@@ -178,7 +178,11 @@ class Upload extends Model
      */
     public function getFilePath(): string
     {
-        return $this->usesR2Storage() ? $this->r2_upload_path : $this->path;
+        if ($this->usesR2Storage() && $this->r2_upload_path) {
+            return $this->r2_upload_path;
+        }
+
+        return $this->path;
     }
 
     /**

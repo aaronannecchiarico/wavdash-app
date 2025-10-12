@@ -342,13 +342,40 @@ final class UploadControllerTest extends TestCase
             'description' => 'Updated Description',
         ]);
 
-        $response->assertRedirect(route('uploads.index', $upload))
+        $response->assertRedirect(route('uploads.show', $upload))
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('uploads', [
             'id' => $upload->id,
             'title' => 'Updated Title',
             'description' => 'Updated Description',
+        ]);
+    }
+
+    #[Test]
+    public function update_rejects_audio_file_updates_in_phase_4()
+    {
+        $user = User::factory()->create();
+        $upload = Upload::factory()->for($user)->state([
+            'title' => 'Original Title',
+            'description' => 'Original Description',
+            'status' => 'ready',
+        ])->create();
+
+        $response = $this->actingAs($user)->put(route('uploads.update', $upload), [
+            'title' => 'Updated Title',
+            'description' => 'Updated Description',
+            'audio_file' => \Illuminate\Http\UploadedFile::fake()->create('new_audio.mp3', 1000, 'audio/mpeg'),
+        ]);
+
+        $response->assertRedirect()
+            ->assertSessionHasErrors(['audio_file']);
+
+        // Title and description should not be updated when audio_file is provided
+        $this->assertDatabaseHas('uploads', [
+            'id' => $upload->id,
+            'title' => 'Original Title',
+            'description' => 'Original Description',
         ]);
     }
 
@@ -392,6 +419,9 @@ final class UploadControllerTest extends TestCase
         $response->assertRedirect(route('uploads.index'))
             ->assertSessionHas('success', 'Audio file uploaded and processed successfully!');
 
+        // Ensure UploadProcessed event was dispatched for client-processed uploads
+        Event::assertDispatched(\App\Events\UploadProcessed::class);
+
         $this->assertDatabaseHas('uploads', [
             'title' => 'Client Processed Audio',
             'description' => 'This was processed on the client',
@@ -401,6 +431,29 @@ final class UploadControllerTest extends TestCase
             'status' => 'ready', // Should be immediately ready
             'duration_seconds' => 180.5,
             'user_id' => $user->id,
+        ]);
+    }
+
+    #[Test]
+    public function store_rejects_uploads_without_client_processing()
+    {
+        $user = User::factory()->create();
+
+        $fakeMp3File = \Illuminate\Http\UploadedFile::fake()->create('audio.mp3', 1000, 'audio/mpeg');
+
+        $response = $this->actingAs($user)->post(route('uploads.store'), [
+            'title' => 'Should Be Rejected',
+            'description' => 'Server-side processing no longer supported',
+            'audio_file' => $fakeMp3File,
+            'client_processed' => false, // No client processing
+        ]);
+
+        $response->assertRedirect()
+            ->assertSessionHasErrors(['audio_file']);
+
+        // Should not create any upload record
+        $this->assertDatabaseMissing('uploads', [
+            'title' => 'Should Be Rejected',
         ]);
     }
 
@@ -443,24 +496,22 @@ final class UploadControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_allows_various_formats_for_server_processed_files()
+    public function store_rejects_non_client_processed_files_in_phase_4()
     {
-        config(['app.client_side_audio_processing' => true]);
-
         $user = User::factory()->create();
 
-        // Server-processed file with MP3 format should be allowed
+        // Server-processed file with MP3 format should now be rejected
         $response = $this->actingAs($user)->post(route('uploads.store'), [
             'title' => 'Server Processed MP3',
             'audio_file' => \Illuminate\Http\UploadedFile::fake()->create('audio.mp3', 1000, 'audio/mpeg'),
             'client_processed' => false, // Explicitly server processing
         ]);
 
-        $response->assertRedirect(route('uploads.index'));
+        $response->assertRedirect()
+            ->assertSessionHasErrors(['audio_file']);
 
-        $this->assertDatabaseHas('uploads', [
+        $this->assertDatabaseMissing('uploads', [
             'title' => 'Server Processed MP3',
-            'status' => 'pending',
         ]);
     }
 
@@ -483,6 +534,9 @@ final class UploadControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('uploads.index'));
+
+        // Ensure event was fired for processed upload
+        Event::assertDispatched(\App\Events\UploadProcessed::class);
 
         $upload = Upload::where('title', 'Path Test Audio')->first();
 

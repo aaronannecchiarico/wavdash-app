@@ -55,8 +55,9 @@ This is your primary reference for common tasks. Commands are organized by workf
 
 ### **Key Data Flows**
 
-1.  **Audio Processing:** User Upload → `ProcessAudioUpload` Job Queued → FFMpeg converts to OGG → `UploadProcessed` event broadcasted via Reverb → UI updates in real-time.
+1.  **Audio Processing (Client-Side):** User Upload → MediaBunny processes to OGG on client → Direct upload to storage → Immediate `UploadProcessed` event → UI updates instantly.
 2.  **Data Rendering:** Laravel Controller (`Inertia::render()`) → Inertia.js Middleware → React Page Component (`/resources/js/Pages`).
+3.  **Stems Processing:** Uses server-side `AudioConversionService` and `ConvertAndPublishAudio` job for advanced audio analysis features.
 
 ### **Important Directory Structures**
 
@@ -81,7 +82,7 @@ Follow these patterns to maintain code consistency and quality.
     * Use Eloquent relationships and eager loading (`with()`) to prevent N+1 queries.
     * Prefer `Model::query()` over the `DB::` facade.
 * **File Creation:** Use `php artisan make:` commands to generate boilerplate for models, controllers, etc.
-* **Background Jobs:** Use the `ShouldQueue` interface for any time-consuming tasks like audio processing.
+* **Background Jobs:** Use the `ShouldQueue` interface for time-consuming tasks like stems processing. **Note:** `ProcessAudioUpload` job is deprecated in Phase 4 - main upload processing now happens client-side.
 * **Code Style:** Run `vendor/bin/pint --dirty` to format your code before committing.
 
 ### **Frontend (Inertia.js & React)**
@@ -102,6 +103,16 @@ Follow these patterns to maintain code consistency and quality.
 * **CSS Variables Only:** Neobrutalism components use CSS variables, not utility classes
 * **Styling System:** Uses custom CSS variables defined in `resources/css/app.css` adapted to Beat Forge brand colors
 * **Preferred Usage:** For redesign work, prefer neobrutalism components over standard shadcn/ui components
+
+### **Client-Side Audio Processing (Phase 4)**
+
+* **MediaBunny Library:** Uses MediaBunny for client-side audio conversion to OGG Opus format
+* **Hook Location:** `useClientAudioProcessing` in `/resources/js/hooks/useClientAudioProcessing.ts`
+* **Browser Support:** Requires WebCodecs API support (Chrome, Edge, modern browsers)
+* **Processing Flow:** File validation → MediaBunny conversion → Direct upload with metadata
+* **Error Handling:** User-friendly error messages with fallback suggestions
+* **Required Fields:** Client-processed uploads must include `client_processed=true`, `original_filename`, `original_size`, and `duration`
+* **Server Fallback:** **Deprecated in Phase 4** - server-side processing is no longer supported for main uploads
 
 ### **Filament v4 Admin Panel**
 
