@@ -378,24 +378,6 @@ class UploadController extends Controller
     }
 
     /**
-     * Dispatch audio processing job.
-     *
-     * @deprecated Phase 4: No longer used - client-side processing is now required
-     *
-     * @throws \Exception
-     */
-    private function dispatchProcessingJob(Upload $upload): void
-    {
-        // This method is deprecated and should not be called in Phase 4
-        Log::warning('Deprecated dispatchProcessingJob method called', [
-            'upload_id' => $upload->id,
-            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3),
-        ]);
-
-        throw new \Exception('Server-side audio processing is no longer supported. Please use client-side processing.');
-    }
-
-    /**
      * Log upload success.
      */
     private function logUploadSuccess(Upload $upload): void
