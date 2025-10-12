@@ -2,29 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UploadProcessed;
 use App\Http\Requests\StoreUploadRequest;
 use App\Http\Requests\UpdateUploadRequest;
 use App\Http\Resources\UploadResource;
 use App\Models\Upload;
+use App\Models\User;
 use App\Services\AudioProcessingService;
+use App\Services\FileStorageService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Inertia\Response as InertiaResponse;
 
 class UploadController extends Controller
 {
     public function __construct(
-        private AudioProcessingService $audioProcessingService
+        private AudioProcessingService $audioProcessingService,
+        private FileStorageService $fileStorageService
     ) {}
 
     /**
      * Display a listing of the user's uploads.
+     *
+     * @param  Request  $request  The current HTTP request containing filters and sorting options.
+     * @return InertiaResponse An Inertia response with paginated uploads and filter options.
      */
-    public function index(Request $request)
+    public function index(Request $request): InertiaResponse
     {
-        $query = Auth::user()->uploads();
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
+        $query = $user->uploads();
 
         // Filtering by basic properties
         if ($request->has('status')) {
@@ -108,7 +122,7 @@ class UploadController extends Controller
     /**
      * API endpoint for fetching uploads (for dialogs, etc.)
      */
-    public function apiIndex(Request $request)
+    public function apiIndex(Request $request): JsonResponse
     {
         $query = $request->user()->uploads();
 
@@ -148,7 +162,7 @@ class UploadController extends Controller
     /**
      * Show the form for creating a new upload.
      */
-    public function create()
+    public function create(): InertiaResponse
     {
         return inertia('uploads/create', [
             'audioProcessingConfig' => $this->audioProcessingService->getFrontendConfig(),
@@ -157,25 +171,30 @@ class UploadController extends Controller
 
     /**
      * Store a newly created upload in storage.
+     *
+     * @throws \Throwable
      */
-    public function store(StoreUploadRequest $request)
+    public function store(StoreUploadRequest $request): RedirectResponse
     {
         $startTime = microtime(true);
         $user = Auth::user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
         $file = $request->file('audio_file');
         $isClientProcessed = $request->boolean('client_processed', false);
 
         // Phase 4: Client-side processing is now required for all uploads
-        if (!$isClientProcessed) {
+        if (! $isClientProcessed) {
             return back()->withErrors([
-                'audio_file' => 'Audio processing failed. Please try uploading again with a supported browser.'
+                'audio_file' => 'Audio processing failed. Please try uploading again with a supported browser.',
             ]);
         }
-        
+
         $processingTime = $request->input('processing_time_ms');
         $originalSize = $request->input('original_size');
         $processedSize = $file->getSize();
-        
+
         $this->audioProcessingService->logPerformanceMetrics([
             'processing_type' => 'client',
             'client_processing_time_ms' => $processingTime,
@@ -184,14 +203,16 @@ class UploadController extends Controller
             'compression_ratio' => $originalSize > 0 ? round($processedSize / $originalSize, 2) : 0,
             'file_format' => $file->getMimeType(),
         ]);
-        
+
         return $this->storeClientProcessedUpload($request, $user, $file, $startTime);
     }
 
     /**
      * Store client-processed upload directly as ready.
+     *
+     * @param  float  $startTime  Timestamp when upload started (microtime)
      */
-    private function storeClientProcessedUpload(StoreUploadRequest $request, $user, $file, float $startTime)
+    private function storeClientProcessedUpload(StoreUploadRequest $request, User $user, UploadedFile $file, float $startTime): RedirectResponse
     {
         $uploadData = [
             'title' => $request->input('title'),
@@ -206,14 +227,14 @@ class UploadController extends Controller
         $this->logUploadStart($user, $file, $uploadData);
 
         // Store the pre-processed OGG file directly as stream file
-        $uploadData = $this->storeProcessedFile($file, $user, $uploadData);
+        $uploadData = $this->fileStorageService->storeProcessedFile($file, $user, $uploadData);
         $upload = $this->createUploadRecord($user, $uploadData);
 
         // Broadcast ready event immediately
-        \App\Events\UploadProcessed::dispatch($upload);
+        UploadProcessed::dispatch($upload);
 
         $totalTime = (microtime(true) - $startTime) * 1000;
-        
+
         $this->audioProcessingService->logProcessingSuccess([
             'processing_type' => 'client',
             'total_time_ms' => $totalTime,
@@ -229,54 +250,17 @@ class UploadController extends Controller
 
     /**
      * Store pre-processed file directly to stream storage.
+     *
+     * @param  UploadedFile  $file
+     * @param  User  $user
+     * @param  array<string, mixed>  $uploadData
+     * @return array<string, mixed>
      */
-    private function storeProcessedFile($file, $user, array $uploadData): array
-    {
-        $filename = Str::slug($uploadData['title']).'-'.Str::uuid().'.ogg';
-        $disk = config('filesystems.default');
-        $date = now();
-
-        if ($disk === 'r2') {
-            // Store directly to public bucket since it's already processed
-            $streamPath = sprintf('uploads/stream/%s/%s/%s',
-                $user->id,
-                $date->format('Y/m/d'),
-                $filename
-            );
-
-            $file->storeAs(
-                dirname($streamPath),
-                basename($streamPath),
-                'r2_public'
-            );
-
-            return array_merge($uploadData, [
-                'stream_path' => $streamPath,
-                'path' => $streamPath, // Same as stream for processed files
-                'uses_r2_storage' => true,
-            ]);
-        }
-
-        // Local storage
-        $streamPath = sprintf('uploads/stream/%s/%s/%s',
-            $user->id,
-            $date->format('Y/m/d'),
-            $filename
-        );
-
-        $file->storeAs(dirname($streamPath), basename($streamPath), 'public');
-
-        return array_merge($uploadData, [
-            'stream_path' => $streamPath,
-            'path' => $streamPath,
-            'uses_r2_storage' => false,
-        ]);
-    }
 
     /**
      * Display the specified upload.
      */
-    public function show(Upload $upload)
+    public function show(Upload $upload): InertiaResponse
     {
         $this->authorize('view', $upload);
 
@@ -290,7 +274,7 @@ class UploadController extends Controller
     /**
      * Show the form for editing the specified upload.
      */
-    public function edit(Upload $upload)
+    public function edit(Upload $upload): InertiaResponse
     {
         $this->authorize('update', $upload);
 
@@ -302,7 +286,7 @@ class UploadController extends Controller
     /**
      * Update the specified upload in storage.
      */
-    public function update(UpdateUploadRequest $request, Upload $upload)
+    public function update(UpdateUploadRequest $request, Upload $upload): RedirectResponse
     {
         $this->authorize('update', $upload);
 
@@ -310,7 +294,7 @@ class UploadController extends Controller
             // Phase 4: Audio file updates are no longer supported via server-side processing
             // Users must create a new upload with client-side processing
             return back()->withErrors([
-                'audio_file' => 'Audio file updates are no longer supported. Please create a new upload instead.'
+                'audio_file' => 'Audio file updates are no longer supported. Please create a new upload instead.',
             ]);
         }
 
@@ -323,13 +307,13 @@ class UploadController extends Controller
     /**
      * Remove the specified upload from storage.
      */
-    public function destroy(Upload $upload)
+    public function destroy(Upload $upload): RedirectResponse
     {
         try {
             $this->authorize('delete', $upload);
             $title = $upload->title;
 
-            $this->deleteUploadFiles($upload);
+            $this->fileStorageService->deleteUploadFiles($upload);
             $upload->delete();
 
             return redirect()->route('uploads.index')
@@ -344,8 +328,10 @@ class UploadController extends Controller
 
     /**
      * Prepare upload data from request and file.
+     *
+     * @return array<string, mixed>
      */
-    private function prepareUploadData(StoreUploadRequest $request, $file): array
+    private function prepareUploadData(StoreUploadRequest $request, UploadedFile $file): array
     {
         return [
             'title' => $request->input('title'),
@@ -359,8 +345,10 @@ class UploadController extends Controller
 
     /**
      * Log upload start information.
+     *
+     * @param  array<string, mixed>  $uploadData
      */
-    private function logUploadStart($user, $file, array $uploadData): void
+    private function logUploadStart(User $user, UploadedFile $file, array $uploadData): void
     {
         Log::info('Upload Controller - Starting file upload', [
             'user_id' => $user->id,
@@ -373,81 +361,37 @@ class UploadController extends Controller
 
     /**
      * Store file based on configured disk.
+     *
+     * @param  UploadedFile  $file
+     * @param  array<string, mixed>  $uploadData
+     * @return array<string, mixed>
      */
-    private function storeFile($file, $user, array $uploadData): array
-    {
-        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $disk = config('filesystems.default');
-        $date = now();
-
-        if ($disk === 'r2') {
-            return $this->storeFileToR2($file, $user, $uploadData, $filename, $date);
-        }
-
-        return $this->storeFileLocally($file, $user, $uploadData, $filename, $date, $disk);
-    }
-
-    /**
-     * Store file to R2 private bucket.
-     */
-    private function storeFileToR2($file, $user, array $uploadData, string $filename, $date): array
-    {
-        $r2Path = 'uploads/'.$user->id.'/'.$date->format('Y/m/d');
-        $file->storeAs($r2Path, $filename, 'r2_private');
-
-        $fullR2Path = $r2Path.'/'.$filename;
-
-        return array_merge($uploadData, [
-            'r2_upload_path' => $fullR2Path,
-            'uses_r2_storage' => true,
-            'r2_uploaded_at' => now(),
-            'path' => $fullR2Path,
-        ]);
-    }
-
-    /**
-     * Store file locally.
-     */
-    private function storeFileLocally($file, $user, array $uploadData, string $filename, $date, string $disk): array
-    {
-        $storageDisk = $disk === 'local' ? 'private' : $disk;
-        $directory = 'uploads/'.$user->id.'/'.$date->format('Y/m/d');
-        $path = sprintf(
-            'uploads/%s/%s/%s',
-            $user->id,
-            $date->format('Y/m/d'),
-            $filename
-        );
-
-        $file->storeAs($directory, $filename, $storageDisk);
-
-        return array_merge($uploadData, [
-            'path' => $path,
-            'uses_r2_storage' => false,
-        ]);
-    }
 
     /**
      * Create upload record.
+     *
+     * @param  array<string, mixed>  $uploadData
      */
-    private function createUploadRecord($user, array $uploadData): Upload
+    private function createUploadRecord(User $user, array $uploadData): Upload
     {
         return $user->uploads()->create($uploadData);
     }
 
     /**
      * Dispatch audio processing job.
-     * 
+     *
      * @deprecated Phase 4: No longer used - client-side processing is now required
+     *
+     * @throws \Exception
      */
     private function dispatchProcessingJob(Upload $upload): void
     {
         // This method is deprecated and should not be called in Phase 4
-        \Log::warning('Deprecated dispatchProcessingJob method called', [
+        Log::warning('Deprecated dispatchProcessingJob method called', [
             'upload_id' => $upload->id,
-            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3),
         ]);
-        
+
         throw new \Exception('Server-side audio processing is no longer supported. Please use client-side processing.');
     }
 
@@ -464,94 +408,8 @@ class UploadController extends Controller
 
     /**
      * Delete all files associated with upload.
+     *
+     * @param  Upload  $upload
+     * @return void
      */
-    private function deleteUploadFiles(Upload $upload): void
-    {
-        $disk = config('filesystems.default');
-
-        if ($upload->usesR2Storage() && $disk === 'r2') {
-            $this->deleteR2Files($upload);
-        } else {
-            $this->deleteLocalFiles($upload, $disk);
-        }
-    }
-
-    /**
-     * Delete R2 files from both private and public buckets.
-     */
-    private function deleteR2Files(Upload $upload): void
-    {
-        // Delete from private bucket
-        $this->deleteFromR2Bucket($upload->r2_upload_path, 'r2_private', "R2 private file not found for upload ID: {$upload->id}");
-        $this->deleteFromR2Bucket($upload->r2_analysis_path, 'r2_private', "R2 analysis file not found for upload ID: {$upload->id}");
-
-        // Delete stems from private bucket
-        if ($upload->hasR2Stems()) {
-            foreach ($upload->r2_stems_paths as $stemPath) {
-                $this->deleteFromR2Bucket($stemPath, 'r2_private');
-            }
-        }
-
-        // Delete from public bucket
-        $this->deleteFromR2Bucket($upload->stream_path, 'r2_public', "R2 public stream file not found for upload ID: {$upload->id}");
-
-        // Delete public stems
-        if ($upload->hasR2Stems()) {
-            foreach ($upload->r2_stems_paths as $stemPath) {
-                $this->deleteFromR2Bucket($stemPath, 'r2_public');
-            }
-        }
-    }
-
-    /**
-     * Delete file from R2 bucket.
-     */
-    private function deleteFromR2Bucket(?string $path, string $disk, ?string $warningMessage = null): void
-    {
-        if (! $path) {
-            return;
-        }
-
-        if (Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->delete($path);
-        } elseif ($warningMessage) {
-            Log::warning($warningMessage);
-        }
-    }
-
-    /**
-     * Delete local files.
-     */
-    private function deleteLocalFiles(Upload $upload, string $disk): void
-    {
-        $storageDisk = $disk === 'local' ? 'private' : $disk;
-
-        Log::info('Deleting local files for upload', [
-            'upload_id' => $upload->id,
-            'storage_disk' => $storageDisk,
-            'original_path' => $upload->path,
-            'stream_path' => $upload->stream_path,
-        ]);
-
-        // Delete original file
-        if ($upload->path && Storage::disk($storageDisk)->exists($upload->path)) {
-            Storage::disk($storageDisk)->delete($upload->path);
-            Log::info('Deleted original file', ['path' => $upload->path]);
-        } elseif ($upload->path) {
-            Log::warning("Original file not found for upload ID: {$upload->id}", [
-                'path' => $upload->path,
-                'disk' => $storageDisk,
-            ]);
-        }
-
-        // Delete stream file
-        if ($upload->stream_path && Storage::disk('public')->exists($upload->stream_path)) {
-            Storage::disk('public')->delete($upload->stream_path);
-            Log::info('Deleted stream file', ['path' => $upload->stream_path]);
-        } elseif ($upload->stream_path) {
-            Log::warning("Stream file not found for upload ID: {$upload->id}", [
-                'stream_path' => $upload->stream_path,
-            ]);
-        }
-    }
 }

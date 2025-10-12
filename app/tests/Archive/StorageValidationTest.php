@@ -17,7 +17,7 @@ use Tests\TestCase;
 
 class StorageValidationTest extends TestCase
 {
-    use RefreshDatabase, OptimizedTestTrait;
+    use OptimizedTestTrait, RefreshDatabase;
 
     protected function setUp(): void
     {
