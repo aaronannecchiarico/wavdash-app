@@ -13,7 +13,7 @@ use Inertia\Inertia;
 
 class ContestController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): \Inertia\Response
     {
         $contests = Contest::query()
             ->with('user')

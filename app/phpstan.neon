@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # Start at level 5, progressively increase to 8
+    level: 5
+
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
+        - '#Access to an undefined property (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)::\$#'
+        - '#Call to static method make\(\) on an unknown class Filament\\Schemas\\Components#'
+        - '#Relation .+ is not found in App\\Models\\.+ model#'
+        - '#Call to an undefined method (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)#'

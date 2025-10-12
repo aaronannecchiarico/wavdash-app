@@ -23,6 +23,7 @@
         "brianium/paratest": "^7.8",
         "fakerphp/faker": "^1.23",
         "jasonmccreary/laravel-test-assertions": "^2.8",
+        "larastan/larastan": "^3.0",
         "laravel-shift/blueprint": "^2.12",
         "laravel/boost": "^1.0",
         "laravel/pail": "^1.2.2",
@@ -77,6 +78,9 @@
         "test:sequential": [
             "@php artisan config:clear --ansi",
             "@php -d memory_limit=512M artisan test"
+        ],
+        "analyse": [
+            "@php vendor/bin/phpstan analyse"
         ]
     },
     "extra": {
