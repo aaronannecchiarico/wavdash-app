@@ -38,84 +38,34 @@ class UploadController extends Controller
         if (! $user instanceof User) {
             abort(401);
         }
-        $query = $user->uploads();
 
-        // Filtering by basic properties
-        if ($request->has('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        if ($request->has('type')) {
-            $query->where('mime_type', 'like', 'audio/'.$request->input('type'));
-        }
+        $query = $user->uploads()
+            ->when($request->filled('status'),
+                fn ($q) => $q->where('status', $request->input('status')))
+            ->when($request->filled('type'),
+                fn ($q) => $q->where('mime_type', 'like', 'audio/'.$request->input('type')))
+            ->when($request->filled('analysis_status'),
+                fn ($q) => $q->withAnalysisStatus($request->input('analysis_status')))
+            ->when($request->filled('stems_status'),
+                fn ($q) => $q->withStemsStatus($request->input('stems_status')))
+            ->when($request->filled('tempo_status'),
+                fn ($q) => $q->withTempoStatus($request->input('tempo_status')))
+            ->userSort(
+                $request->input('sort', 'updated_at'),
+                $request->input('direction', 'desc')
+            );
 
-        // Filtering by processing status
-        if ($request->has('analysis_status')) {
-            $analysisStatus = $request->input('analysis_status');
-            if ($analysisStatus === 'completed') {
-                $query->whereHas('analysis');
-            } elseif ($analysisStatus === 'not_completed') {
-                $query->whereDoesntHave('analysis');
-            } elseif ($analysisStatus === 'in_progress') {
-                $query->whereHas('analysisTask', function ($q) {
-                    $q->whereIn('status', ['pending', 'processing']);
-                });
-            }
-        }
-
-        if ($request->has('stems_status')) {
-            $stemsStatus = $request->input('stems_status');
-            if ($stemsStatus === 'completed') {
-                $query->whereHas('stems');
-            } elseif ($stemsStatus === 'not_completed') {
-                $query->whereDoesntHave('stems');
-            } elseif ($stemsStatus === 'in_progress') {
-                $query->whereHas('stemTask', function ($q) {
-                    $q->whereIn('status', ['pending', 'processing']);
-                });
-            }
-        }
-
-        if ($request->has('tempo_status')) {
-            $tempoStatus = $request->input('tempo_status');
-            if ($tempoStatus === 'completed') {
-                $query->whereHas('tempos');
-            } elseif ($tempoStatus === 'not_completed') {
-                $query->whereDoesntHave('tempos');
-            } elseif ($tempoStatus === 'in_progress') {
-                $query->whereHas('tempoTask', function ($q) {
-                    $q->whereIn('status', ['pending', 'processing']);
-                });
-            }
-        }
-
-        // Sorting
-        $sort = $request->input('sort', 'updated_at');
-        $direction = $request->input('direction', 'desc');
-        if (in_array($sort, ['title', 'size', 'duration', 'updated_at'])) {
-            $query->orderBy($sort, $direction);
-        } else {
-            $query->latest('updated_at');
-        }
-
-        $uploads = $query->with(['analysisTask', 'analysis', 'stemTask', 'stems', 'tempoTask', 'tempos'])->paginate(10)->withQueryString();
-
-        $statuses = Upload::distinct()->pluck('status')->toArray();
-        $types = Upload::distinct()->pluck('mime_type')->map(function ($mime) {
-            return explode('/', $mime)[1];
-        })->unique()->toArray();
+        $uploads = $query->with([
+            'analysisTask', 'analysis', 'stemTask', 'stems', 'tempoTask', 'tempos',
+        ])->paginate(10)->withQueryString();
 
         return inertia('uploads/index', [
             'uploads' => UploadResource::collection($uploads),
-            'filters' => $request->only(['sort', 'direction', 'status', 'type', 'analysis_status', 'stems_status', 'tempo_status']),
-            'filterOptions' => [
-                'statuses' => $statuses,
-                'types' => $types,
-                'processingStatuses' => [
-                    'completed' => 'Completed',
-                    'not_completed' => 'Not Completed',
-                    'in_progress' => 'In Progress',
-                ],
-            ],
+            'filters' => $request->only([
+                'sort', 'direction', 'status', 'type',
+                'analysis_status', 'stems_status', 'tempo_status',
+            ]),
+            'filterOptions' => $this->getFilterOptions(),
         ]);
     }
 
@@ -386,6 +336,27 @@ class UploadController extends Controller
             'id' => $upload->id,
             'storage' => config('filesystems.default'),
         ]);
+    }
+
+    /**
+     * Get filter options for the upload index page.
+     *
+     * @return array<string, mixed>
+     */
+    private function getFilterOptions(): array
+    {
+        return [
+            'statuses' => Upload::distinct()->pluck('status')->toArray(),
+            'types' => Upload::distinct()->pluck('mime_type')
+                ->map(fn ($mime) => explode('/', $mime)[1])
+                ->unique()
+                ->toArray(),
+            'processingStatuses' => [
+                'completed' => 'Completed',
+                'not_completed' => 'Not Completed',
+                'in_progress' => 'In Progress',
+            ],
+        ];
     }
 
     /**

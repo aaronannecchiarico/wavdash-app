@@ -54,6 +54,59 @@ class Upload extends Model
     }
 
     /**
+     * Scope: Filter by analysis status.
+     */
+    public function scopeWithAnalysisStatus(\Illuminate\Database\Eloquent\Builder $query, string $status): \Illuminate\Database\Eloquent\Builder
+    {
+        return match ($status) {
+            'completed' => $query->whereHas('analysis'),
+            'not_completed' => $query->whereDoesntHave('analysis'),
+            'in_progress' => $query->whereHas('analysisTask', fn ($q) => $q->whereIn('status', ['pending', 'processing'])),
+            default => $query
+        };
+    }
+
+    /**
+     * Scope: Filter by stems status.
+     */
+    public function scopeWithStemsStatus(\Illuminate\Database\Eloquent\Builder $query, string $status): \Illuminate\Database\Eloquent\Builder
+    {
+        return match ($status) {
+            'completed' => $query->whereHas('stems'),
+            'not_completed' => $query->whereDoesntHave('stems'),
+            'in_progress' => $query->whereHas('stemTask', fn ($q) => $q->whereIn('status', ['pending', 'processing'])),
+            default => $query
+        };
+    }
+
+    /**
+     * Scope: Filter by tempo status.
+     */
+    public function scopeWithTempoStatus(\Illuminate\Database\Eloquent\Builder $query, string $status): \Illuminate\Database\Eloquent\Builder
+    {
+        return match ($status) {
+            'completed' => $query->whereHas('tempos'),
+            'not_completed' => $query->whereDoesntHave('tempos'),
+            'in_progress' => $query->whereHas('tempoTask', fn ($q) => $q->whereIn('status', ['pending', 'processing'])),
+            default => $query
+        };
+    }
+
+    /**
+     * Scope: Apply user-defined sorting.
+     */
+    public function scopeUserSort(\Illuminate\Database\Eloquent\Builder $query, string $sort, string $direction): \Illuminate\Database\Eloquent\Builder
+    {
+        $allowedSorts = ['title', 'size', 'duration', 'updated_at'];
+
+        if (in_array($sort, $allowedSorts)) {
+            return $query->orderBy($sort, $direction);
+        }
+
+        return $query->latest('updated_at');
+    }
+
+    /**
      * Get the user that owns the upload.
      */
     public function user(): BelongsTo
