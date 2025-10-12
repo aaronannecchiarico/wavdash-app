@@ -252,7 +252,7 @@ class MigrateFreshWithMicroservice extends Command
             $clearedFiles = 0;
 
             // Clear audio-private bucket
-            $privateBucket = env('R2_PRIVATE_BUCKET', 'audio-private');
+            $privateBucket = config('filesystems.disks.r2.bucket', 'audio-private');
             $result = $s3Client->listObjectsV2(['Bucket' => $privateBucket]);
             if (isset($result['Contents']) && count($result['Contents']) > 0) {
                 $objects = array_map(fn ($obj) => ['Key' => $obj['Key']], $result['Contents']);
@@ -267,7 +267,7 @@ class MigrateFreshWithMicroservice extends Command
             }
 
             // Clear audio-public bucket
-            $publicBucket = env('R2_PUBLIC_BUCKET', 'audio-public');
+            $publicBucket = config('filesystems.disks.r2_public.bucket', 'audio-public');
             $result = $s3Client->listObjectsV2(['Bucket' => $publicBucket]);
             if (isset($result['Contents']) && count($result['Contents']) > 0) {
                 $objects = array_map(fn ($obj) => ['Key' => $obj['Key']], $result['Contents']);

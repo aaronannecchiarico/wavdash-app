@@ -73,6 +73,19 @@ class SystemHealthOverview extends StatsOverviewWidget
             $disk = Storage::disk('local');
             $totalSpace = disk_total_space(storage_path());
             $freeSpace = disk_free_space(storage_path());
+
+            // Handle false returns from disk functions
+            if ($totalSpace === false || $freeSpace === false) {
+                return [
+                    'used' => 0,
+                    'free' => 0,
+                    'total' => 0,
+                    'usage_percent' => 0,
+                    'formatted' => 'Unknown',
+                    'free_formatted' => 'Unknown',
+                ];
+            }
+
             $usedSpace = $totalSpace - $freeSpace;
             $usagePercent = $totalSpace > 0 ? round(($usedSpace / $totalSpace) * 100, 1) : 0;
 
@@ -164,9 +177,9 @@ class SystemHealthOverview extends StatsOverviewWidget
         }
     }
 
-    private function formatBytes(int $size, int $precision = 2): string
+    private function formatBytes(float|int $size, int $precision = 2): string
     {
-        if ($size === 0) {
+        if ($size === 0 || $size === 0.0) {
             return '0 B';
         }
 

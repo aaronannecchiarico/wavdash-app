@@ -75,6 +75,7 @@ class AudioAnalysisService
             }
 
             // Create the analysis task record
+            /** @var UploadAnalysisTask $analysisTask */
             $analysisTask = $upload->analysisTask()->create([
                 'task_id' => $taskId,
                 'status' => $result['status'] ?? 'pending',
@@ -299,7 +300,7 @@ class AudioAnalysisService
         $analysis = $upload->analysis;
 
         if (! $analysis) {
-            return collect();
+            return Upload::query()->whereRaw('1 = 0')->get();
         }
 
         return Upload::whereHas('analysis', function ($query) use ($analysis) {
@@ -476,6 +477,7 @@ class AudioAnalysisService
             }
 
             // Create the stem task record
+            /** @var UploadStemTask $stemTask */
             $stemTask = $upload->stemTask()->create([
                 'task_id' => $taskId,
                 'status' => $result['status'] ?? 'pending',
