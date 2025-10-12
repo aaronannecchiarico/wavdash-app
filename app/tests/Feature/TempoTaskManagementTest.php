@@ -5,6 +5,7 @@ use App\Models\UploadTempoTask;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class TempoTaskManagementTest extends TestCase
@@ -19,6 +20,9 @@ class TempoTaskManagementTest extends TestCase
         Log::shouldReceive('info')->andReturn(true);
         Log::shouldReceive('warning')->andReturn(true);
         Log::shouldReceive('error')->andReturn(true);
+
+        // Fake the queue to prevent jobs from actually running
+        Queue::fake();
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
