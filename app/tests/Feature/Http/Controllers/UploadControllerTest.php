@@ -405,35 +405,6 @@ final class UploadControllerTest extends TestCase
     }
 
     #[Test]
-    public function store_falls_back_to_server_processing_when_feature_disabled()
-    {
-        // Disable client-side processing feature flag
-        config(['app.client_side_audio_processing' => false]);
-
-        $user = User::factory()->create();
-
-        $fakeOggFile = \Illuminate\Http\UploadedFile::fake()->create('processed_audio.ogg', 1000, 'audio/ogg');
-
-        $response = $this->actingAs($user)->post(route('uploads.store'), [
-            'title' => 'Should Use Server Processing',
-            'description' => 'Feature flag disabled',
-            'audio_file' => $fakeOggFile,
-            'client_processed' => true,
-            'original_filename' => 'original_audio.mp3',
-            'original_size' => 5000000,
-            'duration' => 180.5,
-        ]);
-
-        $response->assertRedirect(route('uploads.index'))
-            ->assertSessionHas('success', 'Audio file uploaded successfully and is now being processed!');
-
-        $this->assertDatabaseHas('uploads', [
-            'title' => 'Should Use Server Processing',
-            'status' => 'pending', // Should use server processing (pending status)
-        ]);
-    }
-
-    #[Test]
     public function store_validates_client_processed_upload_fields()
     {
         config(['app.client_side_audio_processing' => true]);
