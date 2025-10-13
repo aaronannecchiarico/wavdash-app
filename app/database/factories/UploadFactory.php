@@ -41,6 +41,21 @@ class UploadFactory extends Factory
     }
 
     /**
+     * Indicate that the upload should not copy real files (for unit tests).
+     */
+    public function withoutFiles(): static
+    {
+        $newInstance = $this->newInstance([]);
+
+        return $newInstance->state(function (array $attributes) {
+            return [
+                'status' => 'ready',
+                'duration_seconds' => $attributes['duration_seconds'] ?? 180,
+            ];
+        })->configure(fn () => $newInstance);  // Override configure to skip file copying
+    }
+
+    /**
      * Configure the model factory to use the test audio file.
      */
     public function configure()

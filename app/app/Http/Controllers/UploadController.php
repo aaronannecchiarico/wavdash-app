@@ -90,22 +90,8 @@ class UploadController extends Controller
             ->with(['analysis', 'stems'])
             ->get();
 
-        // Add computed properties for the frontend
-        $uploads = $uploads->map(function ($upload) {
-            return [
-                'id' => $upload->id,
-                'title' => $upload->title,
-                'filename' => $upload->filename,
-                'description' => $upload->description,
-                'status' => $upload->status,
-                'created_at' => $upload->created_at,
-                'has_stems' => $upload->hasStems(),
-                'has_analysis' => $upload->hasAnalysis(),
-            ];
-        });
-
         return response()->json([
-            'uploads' => $uploads,
+            'uploads' => UploadResource::collection($uploads),
         ]);
     }
 

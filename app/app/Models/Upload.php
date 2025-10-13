@@ -100,7 +100,10 @@ class Upload extends Model
         $allowedSorts = ['title', 'size', 'duration', 'updated_at'];
 
         if (in_array($sort, $allowedSorts)) {
-            return $query->orderBy($sort, $direction);
+            // Map 'duration' to the actual column name
+            $column = $sort === 'duration' ? 'duration_seconds' : $sort;
+
+            return $query->orderBy($column, $direction);
         }
 
         return $query->latest('updated_at');
