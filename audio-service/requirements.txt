@@ -57,3 +57,6 @@ python-jose[cryptography]==3.3.0
 
 # Health checks
 psutil==5.9.6
+
+# Cloud Storage (S3-compatible: R2, S3, MinIO, etc.)
+boto3>=1.26.0
