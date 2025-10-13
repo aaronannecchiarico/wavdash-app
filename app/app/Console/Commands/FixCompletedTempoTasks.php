@@ -46,6 +46,7 @@ class FixCompletedTempoTasks extends Command
             $this->info("Processing task {$task->task_id} for upload '{$task->upload->title}'...");
 
             try {
+                /** @var array<string, mixed> $options */
                 $options = $task->processing_options ?? [];
 
                 // Simulate the file path that would have been created

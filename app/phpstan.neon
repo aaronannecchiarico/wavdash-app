@@ -8,15 +8,25 @@ parameters:
     # Start at level 5, progressively increase to 8
     level: 5
 
+    # Trust PHPDoc types from casts (needed for Laravel's automatic type casting)
+    treatPhpDocTypesAsCertain: false
+
     ignoreErrors:
         # Laravel/Eloquent false positives
-        - '#Unsafe usage of new static#'
         - '#Access to an undefined property (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)::\$#'
         - '#Call to an undefined method (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)#'
         - '#Relation .+ is not found in App\\Models\\.+ model#'
 
+        # Laravel Console Command false positives
+        - '#Call to an undefined method App\\Console\\Commands\\.+::(warning|line)\(\)#'
+
+        # Laravel Resource/Collection map() unresolvable type (Larastan limitation)
+        - '#Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection<.+>::map\(\) contains unresolvable type#'
+        - '#Parameter \#1 \$condition of method Illuminate\\Http\\Resources\\Json\\JsonResource::when\(\) expects bool, .+ given#'
+
         # Filament false positives
         - '#Call to static method make\(\) on an unknown class Filament\\Schemas\\Components#'
+        - '#Anonymous function never returns string so it can be removed from the return type#'
 
         # Model $fillable property type variance (Laravel 11+ uses list<string>, older uses array)
         - '#PHPDoc type .+ of property .+::\$fillable is not covariant with PHPDoc type .+ of overridden property#'

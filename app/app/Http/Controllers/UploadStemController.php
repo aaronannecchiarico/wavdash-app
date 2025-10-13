@@ -144,7 +144,9 @@ class UploadStemController extends Controller
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
-        $success = $this->analysisService->deleteStemTask($upload->stemTask);
+        /** @var \App\Models\UploadStemTask $stemTask */
+        $stemTask = $upload->stemTask;
+        $success = $this->analysisService->deleteStemTask($stemTask);
 
         if ($success) {
             Log::info('Stem separation task deleted via user action', [

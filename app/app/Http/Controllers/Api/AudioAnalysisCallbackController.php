@@ -72,7 +72,7 @@ class AudioAnalysisCallbackController extends Controller
             }
 
             // If no task found or task ID mismatch, try to find by callback task_id
-            if (! $task || ($task && $task->task_id !== $data['task_id'])) {
+            if (! $task || $task->task_id !== $data['task_id']) {
                 if ($task) {
                     Log::warning('Task ID mismatch found, attempting recovery', [
                         'upload_id' => $upload->id,
@@ -132,10 +132,13 @@ class AudioAnalysisCallbackController extends Controller
 
             if ($data['status'] === 'completed') {
                 if ($data['processing_type'] === 'features') {
+                    /** @var UploadAnalysisTask $task */
                     $this->handleCompletedAnalysis($upload, $task, $data);
                 } elseif ($data['processing_type'] === 'stems') {
+                    /** @var UploadStemTask $task */
                     $this->handleCompletedStemSeparation($upload, $task, $data);
                 } elseif ($data['processing_type'] === 'tempo') {
+                    /** @var UploadTempoTask $task */
                     $this->handleCompletedTempoProcessing($upload, $task, $data);
                 }
             } elseif ($data['status'] === 'failed') {
@@ -199,24 +202,14 @@ class AudioAnalysisCallbackController extends Controller
         ]);
 
         try {
-            // Handle different processing types
-            if ($data['processing_type'] === 'features') {
-                Log::info('Processing features completion', [
-                    'upload_id' => $upload->id,
-                    'task_id' => $task->task_id,
-                    'has_analysis_summary' => isset($data['analysis_summary']),
-                    'analysis_data' => $data['analysis_summary'] ?? null,
-                ]);
-                $this->handleFeaturesCompletion($upload, $task, $data);
-            } elseif ($data['processing_type'] === 'stems') {
-                Log::info('Processing stems completion', [
-                    'upload_id' => $upload->id,
-                    'task_id' => $task->task_id,
-                    'has_storage_paths' => isset($data['storage_paths']),
-                    'storage_paths' => $data['storage_paths'] ?? null,
-                ]);
-                $this->handleStemsCompletion($upload, $task, $data);
-            }
+            // Handle features processing
+            Log::info('Processing features completion', [
+                'upload_id' => $upload->id,
+                'task_id' => $task->task_id,
+                'has_analysis_summary' => isset($data['analysis_summary']),
+                'analysis_data' => $data['analysis_summary'] ?? null,
+            ]);
+            $this->handleFeaturesCompletion($upload, $task, $data);
 
             // Update task completion
             $task->update([

@@ -277,23 +277,6 @@ class UploadController extends Controller
     }
 
     /**
-     * Prepare upload data from request and file.
-     *
-     * @return array<string, mixed>
-     */
-    private function prepareUploadData(StoreUploadRequest $request, UploadedFile $file): array
-    {
-        return [
-            'title' => $request->input('title'),
-            'description' => $request->input('description', ''),
-            'filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'status' => 'pending',
-        ];
-    }
-
-    /**
      * Log upload start information.
      *
      * @param  array<string, mixed>  $uploadData
@@ -358,11 +341,4 @@ class UploadController extends Controller
             ],
         ];
     }
-
-    /**
-     * Delete all files associated with upload.
-     *
-     * @param  Upload  $upload
-     * @return void
-     */
 }

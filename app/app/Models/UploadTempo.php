@@ -137,12 +137,14 @@ class UploadTempo extends Model
      */
     public function getPitchDescription(): string
     {
-        if (! $this->pitch_shift_semitones || $this->pitch_shift_semitones === 0.0) {
+        $pitchShift = (float) $this->pitch_shift_semitones;
+
+        if ($pitchShift === 0.0) {
             return 'Original pitch';
-        } elseif ($this->pitch_shift_semitones > 0) {
-            return "+{$this->pitch_shift_semitones} semitones";
+        } elseif ($pitchShift > 0) {
+            return "+{$pitchShift} semitones";
         } else {
-            return "{$this->pitch_shift_semitones} semitones";
+            return "{$pitchShift} semitones";
         }
     }
 

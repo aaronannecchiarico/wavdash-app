@@ -143,7 +143,9 @@ class UploadAnalysisController extends Controller
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
-        $success = $this->analysisService->deleteTask($upload->analysisTask);
+        /** @var \App\Models\UploadAnalysisTask $analysisTask */
+        $analysisTask = $upload->analysisTask;
+        $success = $this->analysisService->deleteTask($analysisTask);
 
         if ($success) {
             Log::info('Analysis task deleted via user action', [

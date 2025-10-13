@@ -196,7 +196,9 @@ class UploadTempoController extends Controller
             return redirect()->back()->with('error', 'Audio processing service is currently unavailable.');
         }
 
-        $success = $this->analysisService->deleteTempoTask($upload->tempoTask);
+        /** @var \App\Models\UploadTempoTask $tempoTask */
+        $tempoTask = $upload->tempoTask;
+        $success = $this->analysisService->deleteTempoTask($tempoTask);
 
         if ($success) {
             Log::info('Tempo processing task deleted via user action', [
