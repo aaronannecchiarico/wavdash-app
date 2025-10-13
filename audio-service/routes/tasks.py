@@ -122,25 +122,6 @@ async def get_task_status(task_id: str, include_result: bool = False):
         return {"task_id": task_id, "status": "error", "error": f"Unable to retrieve task status: {str(e)}"}
 
 
-@router.get("/result/{task_id}")
-async def get_task_result(task_id: str):
-    """
-    Get the full task result data. Warning: May be very large for audio features.
-    """
-    task = celery_app.AsyncResult(task_id)
-    
-    if task.state == 'SUCCESS':
-        return {"task_id": task_id, "status": "completed", "result": task.result}
-    elif task.state == 'PENDING':
-        raise HTTPException(status_code=202, detail="Task is still pending")
-    elif task.state == 'PROGRESS':
-        raise HTTPException(status_code=202, detail="Task is still in progress")
-    elif task.state == 'FAILURE':
-        raise HTTPException(status_code=500, detail=f"Task failed: {str(task.info)}")
-    else:
-        raise HTTPException(status_code=404, detail=f"Task not found or in unknown state: {task.state}")
-
-
 @router.get("/summary/{task_id}")
 async def get_task_summary(task_id: str):
     """

@@ -9,7 +9,6 @@ from contextlib import asynccontextmanager
 from config import settings
 from celery_app import celery_app
 from routes.tempo_processing import router as tempo_router
-from routes.audio_processing import router as audio_router
 from routes.storage import router as storage_router
 from routes.tasks import router as tasks_router
 from routes.health import router as health_router
@@ -42,7 +41,6 @@ app.add_middleware(
 
 # Include all routers
 app.include_router(health_router)
-app.include_router(audio_router)
 app.include_router(storage_router)
 app.include_router(tasks_router)
 app.include_router(tempo_router)

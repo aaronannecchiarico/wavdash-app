@@ -148,34 +148,25 @@ class TestCeleryTaskAvailability:
         """
         Ensure all tempo processing Celery tasks have the delay method
         """
-        from tasks.tempo_processing import process_tempo_from_storage, process_tempo_direct
-        
+        from tasks.tempo_processing import process_tempo_from_storage
+
         # Test that tasks have delay method (indicating they're properly decorated)
         assert hasattr(process_tempo_from_storage, 'delay'), \
             "process_tempo_from_storage should have delay method"
-        
-        assert hasattr(process_tempo_direct, 'delay'), \
-            "process_tempo_direct should have delay method"
-        
+
         # Test that they're callable
         assert callable(process_tempo_from_storage), \
             "process_tempo_from_storage should be callable"
-        
-        assert callable(process_tempo_direct), \
-            "process_tempo_direct should be callable"
 
     def test_celery_task_names(self):
         """
         Test that Celery tasks have proper names for queue routing
         """
-        from tasks.tempo_processing import process_tempo_from_storage, process_tempo_direct
-        
+        from tasks.tempo_processing import process_tempo_from_storage
+
         # Check task names
         assert process_tempo_from_storage.name == 'tasks.tempo_processing.process_tempo_from_storage', \
             f"Expected task name 'tasks.tempo_processing.process_tempo_from_storage', got {process_tempo_from_storage.name}"
-        
-        assert process_tempo_direct.name == 'tasks.tempo_processing.process_tempo_direct', \
-            f"Expected task name 'tasks.tempo_processing.process_tempo_direct', got {process_tempo_direct.name}"
 
 
 class TestTempoTaskImports:
@@ -259,25 +250,24 @@ class TestTempoTaskImports:
             import importlib
             import tasks.tempo_processing
             importlib.reload(tasks.tempo_processing)
-            
+
             # Test that we can access key functions without errors
             from tasks.tempo_processing import (
-                process_tempo_from_storage, 
-                process_tempo_direct,
+                process_tempo_from_storage,
                 apply_tempo_processing,
                 get_performance_cache,
                 get_performance_monitor,
                 audio_hash
             )
-            
+
             # Verify they're all callable
             callables = [
-                process_tempo_from_storage, process_tempo_direct, apply_tempo_processing,
+                process_tempo_from_storage, apply_tempo_processing,
                 get_performance_cache, get_performance_monitor, audio_hash
             ]
-            
+
             for func in callables:
                 assert callable(func), f"{func.__name__} should be callable"
-                
+
         except ImportError as e:
             pytest.fail(f"Import error in tempo_processing module: {e}")

@@ -13,7 +13,6 @@ sys.path.insert(0, str(project_root))
 
 from models.tempo_models import (
     TempoPresetEnum,
-    TempoProcessingRequest,
     StorageTempoProcessingRequest,
     TempoProcessingResponse,
     TempoPresetConfig,
@@ -27,87 +26,11 @@ class TestTempoModels:
     def test_tempo_preset_enum_values(self):
         """Test that all tempo preset enum values are valid"""
         expected_values = ["custom", "sped_up", "slowed_reverb", "nightcore", "chopped_screwed", "time_stretched"]
-        
+
         for value in expected_values:
             preset = TempoPresetEnum(value)
             assert preset.value == value
-    
-    def test_tempo_processing_request_valid(self):
-        """Test creating valid TempoProcessingRequest"""
-        request = TempoProcessingRequest(
-            filename="test.wav",
-            preset=TempoPresetEnum.SLOWED_REVERB,
-            tempo_factor=0.8,
-            pitch_shift_semitones=-1.5,
-            preserve_pitch=False,
-            add_reverb=True,
-            use_stems=False,
-            async_processing=True
-        )
-        
-        assert request.filename == "test.wav"
-        assert request.preset == TempoPresetEnum.SLOWED_REVERB
-        assert request.tempo_factor == 0.8
-        assert request.pitch_shift_semitones == -1.5
-        assert request.preserve_pitch == False
-        assert request.add_reverb == True
-        assert request.use_stems == False
-        assert request.async_processing == True
-    
-    def test_tempo_processing_request_defaults(self):
-        """Test TempoProcessingRequest with default values"""
-        request = TempoProcessingRequest(filename="test.wav")
-        
-        assert request.filename == "test.wav"
-        assert request.preset == TempoPresetEnum.CUSTOM
-        assert request.tempo_factor == 1.0
-        assert request.pitch_shift_semitones == 0.0
-        assert request.preserve_pitch == False
-        assert request.add_reverb == False
-        assert request.use_stems == False
-        assert request.async_processing == True
-    
-    def test_tempo_processing_request_invalid_filename(self):
-        """Test TempoProcessingRequest with invalid filename"""
-        with pytest.raises(ValidationError):
-            TempoProcessingRequest(filename="")  # Empty filename
-    
-    def test_tempo_processing_request_invalid_tempo_factor(self):
-        """Test TempoProcessingRequest with invalid tempo factor"""
-        with pytest.raises(ValidationError):
-            TempoProcessingRequest(filename="test.wav", tempo_factor=0.1)  # Too low
-        
-        with pytest.raises(ValidationError):
-            TempoProcessingRequest(filename="test.wav", tempo_factor=5.0)  # Too high
-    
-    def test_tempo_processing_request_invalid_pitch_shift(self):
-        """Test TempoProcessingRequest with invalid pitch shift"""
-        with pytest.raises(ValidationError):
-            TempoProcessingRequest(filename="test.wav", pitch_shift_semitones=-15.0)  # Too low
-        
-        with pytest.raises(ValidationError):
-            TempoProcessingRequest(filename="test.wav", pitch_shift_semitones=15.0)  # Too high
-    
-    def test_tempo_processing_request_boundary_values(self):
-        """Test TempoProcessingRequest with boundary values"""
-        # Test minimum values
-        request_min = TempoProcessingRequest(
-            filename="test.wav",
-            tempo_factor=0.25,
-            pitch_shift_semitones=-12.0
-        )
-        assert request_min.tempo_factor == 0.25
-        assert request_min.pitch_shift_semitones == -12.0
-        
-        # Test maximum values
-        request_max = TempoProcessingRequest(
-            filename="test.wav", 
-            tempo_factor=4.0,
-            pitch_shift_semitones=12.0
-        )
-        assert request_max.tempo_factor == 4.0
-        assert request_max.pitch_shift_semitones == 12.0
-    
+
     def test_storage_tempo_processing_request_valid(self):
         """Test creating valid StorageTempoProcessingRequest"""
         request = StorageTempoProcessingRequest(

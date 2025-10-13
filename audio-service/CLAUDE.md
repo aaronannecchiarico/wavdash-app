@@ -83,7 +83,7 @@ curl -X POST http://localhost:8001/migration/seed-only
 
 **FastAPI Application (`main.py`)**
 - RESTful API with automatic OpenAPI documentation
-- Modular router organization (health, audio, storage, tasks, tempo)
+- Modular router organization (health, storage, tasks, tempo, migration)
 - Comprehensive request validation and error handling
 - Clean separation of concerns with dedicated route modules
 
@@ -100,10 +100,6 @@ curl -X POST http://localhost:8001/migration/seed-only
 
 ### Task Processing Architecture
 
-**Audio Processing Tasks (`tasks/audio_processing.py`)**
-- Direct file upload processing (sync/async)
-- Temporary file management and cleanup
-
 **Storage Processing Tasks (`tasks/storage_processing.py`)**
 - Process files already in storage (recommended for Laravel integration)
 - Callback-based completion notifications
@@ -119,15 +115,16 @@ curl -X POST http://localhost:8001/migration/seed-only
 ### Data Models
 
 **Request/Response Models (`models/`)**
-- `audio_models.py`: Direct upload processing models
 - `storage_models.py`: Storage-based processing models (Laravel integration)
+- `tempo_models.py`: Tempo processing models
+- `effects_models.py`: Audio effects processing models
 
 **Route Organization (`routes/`)**
 - `health.py`: Health checks and system status endpoints
-- `audio_processing.py`: Direct file upload processing routes
-- `storage.py`: Storage-based processing routes
+- `storage.py`: Storage-based processing routes (Laravel integration)
 - `tasks.py`: Task status and lifecycle management routes
-- `tempo_processing.py`: Advanced tempo analysis features
+- `tempo_processing.py`: Tempo modification and preset features
+- `effects_processing.py`: Audio effects processing features
 - `migration.py`: Migration and maintenance endpoints (development only)
 
 ### Key Processing Flow

@@ -18,47 +18,6 @@ class TempoPresetEnum(str, Enum):
     TIME_STRETCHED = "time_stretched"
 
 
-class TempoProcessingRequest(BaseModel):
-    """Request model for direct file upload tempo processing"""
-    filename: str = Field(..., min_length=1, description="Name of the audio file")
-    preset: TempoPresetEnum = Field(default=TempoPresetEnum.CUSTOM, description="Processing preset")
-    tempo_factor: float = Field(default=1.0, ge=0.25, le=4.0, description="Tempo multiplication factor (0.25-4.0)")
-    pitch_shift_semitones: float = Field(default=0.0, ge=-12.0, le=12.0, description="Pitch shift in semitones (-12 to +12)")
-    preserve_pitch: bool = Field(default=False, description="Use time stretching to preserve pitch")
-    add_reverb: bool = Field(default=False, description="Add reverb effect")
-    use_stems: bool = Field(default=False, description="Process stems separately for higher quality")
-    async_processing: bool = Field(default=True, description="Whether to process asynchronously")
-    
-    @field_validator('tempo_factor')
-    @classmethod
-    def validate_tempo_factor(cls, v):
-        if not 0.25 <= v <= 4.0:
-            raise ValueError('Tempo factor must be between 0.25 and 4.0')
-        return v
-    
-    @field_validator('pitch_shift_semitones')
-    @classmethod
-    def validate_pitch_shift(cls, v):
-        if not -12.0 <= v <= 12.0:
-            raise ValueError('Pitch shift must be between -12 and +12 semitones')
-        return v
-    
-    model_config = ConfigDict(
-        json_schema_extra = {
-            "example": {
-                "filename": "song.wav",
-                "preset": "slowed_reverb",
-                "tempo_factor": 0.75,
-                "pitch_shift_semitones": -2.0,
-                "preserve_pitch": False,
-                "add_reverb": True,
-                "use_stems": False,
-                "async_processing": True
-            }
-        }
-    )
-
-
 class StorageTempoProcessingRequest(BaseModel):
     """Request model for storage-based tempo processing"""
     storage_path: str = Field(..., min_length=1, description="Path to audio file in storage")

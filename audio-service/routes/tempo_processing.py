@@ -8,109 +8,20 @@ import time
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from models.tempo_models import (
-    TempoProcessingRequest, StorageTempoProcessingRequest, 
+    StorageTempoProcessingRequest,
     TempoProcessingResponse, TempoPresetEnum
 )
 from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
 from services.tempo_presets import get_tempo_presets_service
 from celery_app import celery_app
-from tasks.tempo_processing import process_tempo_from_storage, process_tempo_direct
+from tasks.tempo_processing import process_tempo_from_storage
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tempo", tags=["Tempo Processing"])
-
-
-@router.post("/process", response_model=TempoProcessingResponse)
-async def process_tempo(
-    audio_file: UploadFile = File(...),
-    preset: TempoPresetEnum = TempoPresetEnum.CUSTOM,
-    tempo_factor: float = 1.0,
-    pitch_shift_semitones: float = 0.0,
-    preserve_pitch: bool = False,
-    add_reverb: bool = False,
-    use_stems: bool = False,
-    async_processing: bool = True
-):
-    """
-    Process audio file with tempo/pitch modifications (direct upload)
-    
-    This endpoint accepts direct file uploads and applies tempo/pitch processing.
-    For production use with Laravel, consider using the storage-based endpoint instead.
-    """
-    try:
-        # Validate file
-        if not audio_file.content_type or not audio_file.content_type.startswith('audio/'):
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Invalid file type: {audio_file.content_type}. Please upload an audio file."
-            )
-        
-        # Create request model for validation
-        request_data = TempoProcessingRequest(
-            filename=audio_file.filename,
-            preset=preset,
-            tempo_factor=tempo_factor,
-            pitch_shift_semitones=pitch_shift_semitones,
-            preserve_pitch=preserve_pitch,
-            add_reverb=add_reverb,
-            use_stems=use_stems,
-            async_processing=async_processing
-        )
-        
-        if async_processing:
-            # Submit to Celery
-            task = process_tempo_direct.delay(
-                task_id=str(uuid.uuid4()),  # Generate unique task ID for internal tracking
-                audio_data=await audio_file.read(),
-                filename=audio_file.filename,
-                **request_data.model_dump(exclude={'filename', 'async_processing'})
-            )
-            
-            # Return Celery task ID for status tracking (consistent with main endpoints)
-            return TempoProcessingResponse(
-                task_id=task.id,
-                status="processing",
-                message=f"Tempo processing started for {audio_file.filename} with preset '{preset.value}'"
-            )
-        else:
-            # Synchronous processing (not implemented in Phase 1)
-            raise HTTPException(
-                status_code=501,
-                detail="Synchronous processing not yet implemented. Please use async_processing=true."
-            )
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in tempo processing: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-
-@router.post("/process-sync", response_model=TempoProcessingResponse)
-async def process_tempo_sync(
-    audio_file: UploadFile = File(...),
-    preset: TempoPresetEnum = TempoPresetEnum.CUSTOM,
-    tempo_factor: float = 1.0,
-    pitch_shift_semitones: float = 0.0,
-    preserve_pitch: bool = False,
-    add_reverb: bool = False,
-    use_stems: bool = False
-):
-    """
-    Process audio file with tempo/pitch modifications (synchronous)
-    
-    Processes the audio synchronously and returns results immediately.
-    Recommended only for short audio files (< 60 seconds).
-    """
-    # Placeholder - will be implemented in Phase 1
-    raise HTTPException(
-        status_code=501,
-        detail="Synchronous tempo processing not yet implemented"
-    )
 
 
 @router.post("/storage/process", response_model=TempoProcessingResponse)
