@@ -7,18 +7,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Environment Setup
 ```bash
 # Initialize the project (installs dependencies, creates venv, configures .env)
-python install.py
+python scripts/install.py
 
 # Activate virtual environment
 source beatforge-audio-extraction-service-local/bin/activate
 
 # For fresh deployments: Run migration and seeding
-python migrate_fresh.py  # Clears Redis, cache, initializes storage
-python seed_data.py      # Seeds system with default data
+python scripts/migrate_fresh.py  # Clears Redis, cache, initializes storage
+python scripts/seed_data.py      # Seeds system with default data
 
 # Start development environment (requires 2 terminals)
 # Terminal 1: Start Celery worker
-python start_worker.py
+python scripts/start_worker.py
 
 # Terminal 2: Start FastAPI server on 8001 for local
 uvicorn main:app --reload --port 8001
@@ -27,13 +27,13 @@ uvicorn main:app --reload --port 8001
 ### Testing
 ```bash
 # Run all tests (unit + feature)
-./run_tests.sh
+./scripts/run_tests.sh
 
 # Run only unit tests (no external dependencies)
-./run_tests.sh unit
+./scripts/run_tests.sh unit
 
 # Run only feature tests (requires Redis + Celery worker)
-./run_tests.sh feature
+./scripts/run_tests.sh feature
 
 # Run specific test file
 python -m pytest tests/unit/test_analysis_summary.py -v
@@ -45,13 +45,13 @@ python -m pytest tests/unit/test_storage_structure.py::TestLocalStorageStructure
 ### Migration and Maintenance
 ```bash
 # Fresh deployment migration (clears all data)
-python migrate_fresh.py
+python scripts/migrate_fresh.py
 
 # Seed system with default data
-python seed_data.py
+python scripts/seed_data.py
 
 # Validate setup and dependencies
-python validate_setup.py
+python scripts/validate_setup.py
 
 # Check configuration and device detection
 python -c "from config import settings; print(f'Redis: {settings.REDIS_URL}')"
