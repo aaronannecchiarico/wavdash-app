@@ -6,6 +6,10 @@ Validate the application setup and test structure
 import sys
 from pathlib import Path
 
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 def check_directory_structure():
     """Check that all required directories exist"""
     print("🔍 Checking directory structure...")
@@ -47,7 +51,7 @@ def check_required_files():
         "config.py",
         "requirements.txt",
         "pytest.ini",
-        "run_tests.sh",
+        "scripts/run_tests.sh",
         "tests/fixtures/test_audio.wav",
         "tests/fixtures/audio_fixtures.py"
     ]
@@ -192,7 +196,7 @@ def main():
     if all_passed:
         print("🎉 All validation checks passed!")
         print("\\n🚀 Ready to run tests:")
-        print("   ./run_tests.sh")
+        print("   ./scripts/run_tests.sh")
         return 0
     else:
         print("💥 Some validation checks failed")

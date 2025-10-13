@@ -18,6 +18,11 @@ import shutil
 import argparse
 from pathlib import Path
 from typing import Optional
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 import redis
 from config import settings
 
@@ -172,9 +177,10 @@ def initialize_storage_directories() -> bool:
 def run_validation() -> bool:
     """Run setup validation"""
     print("🔍 Running setup validation...")
-    
+
     try:
-        result = subprocess.run([sys.executable, "validate_setup.py"], 
+        validate_script = project_root / "scripts" / "validate_setup.py"
+        result = subprocess.run([sys.executable, str(validate_script)],
                               capture_output=True, text=True)
         
         if result.returncode == 0:
@@ -196,10 +202,11 @@ def run_validation() -> bool:
 def run_tests() -> bool:
     """Run test suite to verify everything works"""
     print("🧪 Running test suite...")
-    
+
     try:
         # Run unit tests only (no external dependencies)
-        result = subprocess.run(["./run_tests.sh", "unit"], 
+        test_script = project_root / "scripts" / "run_tests.sh"
+        result = subprocess.run([str(test_script), "unit"],
                               capture_output=True, text=True)
         
         if result.returncode == 0:

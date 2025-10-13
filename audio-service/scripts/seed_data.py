@@ -16,6 +16,11 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, Any
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 import numpy as np
 import soundfile as sf
 
