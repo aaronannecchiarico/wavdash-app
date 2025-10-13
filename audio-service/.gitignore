@@ -223,12 +223,15 @@ stems/
 *.mp3.tmp
 *.flac.tmp
 
-# Model cache and downloads
-models/
+# AI/ML model files (NOT our application models/ directory!)
 *.pth
 *.pt
 *.onnx
 *.pb
+demucs_models/
+checkpoint_*.pth
+pretrained_models/
+ai_models/
 
 # Redis dump files
 dump.rdb
@@ -314,9 +317,6 @@ feature_cache/
 *.wma
 !tests/fixtures/test_audio.wav
 
-# AI model files
-demucs_models/
-checkpoint_*.pth
 
 # Monitoring and metrics
 prometheus/
@@ -332,5 +332,18 @@ docker-compose.local.yml
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 
+# Sphinx documentation build output only
+docs/_build/
+docs/.build/
+
+# Development environment files
 .claude
 .serena
+
+# Generated summary and result files
+migration_summary.md
+migration-summary.md
+*_summary.md
+bpm_accuracy_results.csv
+*_results.csv
+*_output.log
