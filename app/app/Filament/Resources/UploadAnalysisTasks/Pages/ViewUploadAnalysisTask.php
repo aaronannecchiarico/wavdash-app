@@ -10,6 +10,9 @@ class ViewUploadAnalysisTask extends ViewRecord
 {
     protected static string $resource = UploadAnalysisTaskResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [

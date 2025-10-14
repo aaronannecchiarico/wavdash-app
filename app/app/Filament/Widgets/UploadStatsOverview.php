@@ -8,6 +8,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class UploadStatsOverview extends StatsOverviewWidget
 {
+    /**
+     * @return array<string, mixed>
+     */
     protected function getStats(): array
     {
         // Get upload statistics

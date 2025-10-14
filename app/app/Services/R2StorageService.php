@@ -201,6 +201,9 @@ class R2StorageService
 
     /**
      * Upload multiple files (like stems) to R2 with organized paths.
+     *
+     * @param  array<string, string>  $stemFiles
+     * @return array<string, string>
      */
     public function uploadStems(array $stemFiles, string $basePath): array
     {
@@ -240,6 +243,8 @@ class R2StorageService
 
     /**
      * Get storage information and statistics.
+     *
+     * @return array{enabled: bool, disk: string, bucket: mixed, endpoint: mixed, public_url: mixed}
      */
     public function getStorageInfo(): array
     {

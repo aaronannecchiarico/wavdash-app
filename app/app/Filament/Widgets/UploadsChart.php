@@ -10,6 +10,9 @@ class UploadsChart extends ChartWidget
 {
     protected ?string $heading = 'Daily Uploads (Last 30 Days)';
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getData(): array
     {
         // Get the last 30 days of data
@@ -53,6 +56,9 @@ class UploadsChart extends ChartWidget
         return 'line';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getOptions(): array
     {
         return [

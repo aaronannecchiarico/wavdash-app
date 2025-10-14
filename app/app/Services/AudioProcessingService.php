@@ -8,17 +8,18 @@ use Illuminate\Support\Facades\Log;
 class AudioProcessingService
 {
     /**
-     * Phase 4: Client-side processing is always used.
+     * Client-side processing is always used.
      */
     public function shouldUseClientSideProcessing(): bool
     {
-        // Phase 4: Always use client-side processing
+        // Always use client-side processing
         return true;
     }
 
     /**
      * Log performance metrics for audio processing.
-     * Phase 4: Always log metrics for client-side processing.
+     *
+     * @param  array<string, mixed>  $metrics
      */
     public function logPerformanceMetrics(array $metrics): void
     {
@@ -33,7 +34,7 @@ class AudioProcessingService
 
     /**
      * Log processing error.
-     * Phase 4: No fallback - client-side processing is required.
+     * No fallback - client-side processing is required.
      */
     public function logProcessingError(string $error, string $processingType): bool
     {
@@ -52,6 +53,8 @@ class AudioProcessingService
     /**
      * Log processing success with metrics.
      * Always log success and performance metrics.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function logProcessingSuccess(array $data): void
     {
@@ -70,7 +73,9 @@ class AudioProcessingService
 
     /**
      * Get processing configuration for the frontend.
-     * Phase 4: Simplified config - always client-side processing.
+     * Simplified config - always client-side processing.
+     *
+     * @return array{client_side_processing_enabled: bool, should_use_client_processing: bool, monitor_performance: bool}
      */
     public function getFrontendConfig(): array
     {

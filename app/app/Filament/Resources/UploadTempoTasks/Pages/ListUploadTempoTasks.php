@@ -10,6 +10,9 @@ class ListUploadTempoTasks extends ListRecords
 {
     protected static string $resource = UploadTempoTaskResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [

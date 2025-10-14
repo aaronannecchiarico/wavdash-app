@@ -25,7 +25,7 @@ class FixCompletedTempoTasks extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Finding completed tempo tasks without corresponding tempo records...');
 

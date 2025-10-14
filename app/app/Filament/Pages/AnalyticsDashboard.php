@@ -34,6 +34,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
 
     protected static ?int $navigationSort = 2;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderWidgets(): array
     {
         return [
@@ -41,6 +44,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getFooterWidgets(): array
     {
         return [
@@ -48,6 +54,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getViewData(): array
     {
         return [
@@ -58,6 +67,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getUploadTrends(): array
     {
         // Get uploads for the last 12 months
@@ -82,6 +94,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
         return compact('labels', 'data');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getUserGrowth(): array
     {
         // Get user registrations for the last 12 months
@@ -109,6 +124,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
         return compact('labels', 'data');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getTopUsers(): array
     {
         return User::withCount('uploads')
@@ -239,6 +257,9 @@ class AnalyticsDashboard extends Page implements HasInfolists
             ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getGenreStats(): array
     {
         $stats = Upload::query()

@@ -9,6 +9,9 @@ class ManageFailedJobs extends ListRecords
 {
     protected static string $resource = FailedJobResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [

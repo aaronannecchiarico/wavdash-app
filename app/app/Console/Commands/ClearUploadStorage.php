@@ -24,7 +24,7 @@ class ClearUploadStorage extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         if (! $this->option('force') && ! $this->confirm('This will permanently delete all upload files. Are you sure?')) {
             $this->info('Operation cancelled.');

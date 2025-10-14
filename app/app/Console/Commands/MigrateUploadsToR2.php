@@ -25,7 +25,7 @@ class MigrateUploadsToR2 extends Command
     /**
      * Execute the console command.
      */
-    public function handle(R2StorageService $r2Service)
+    public function handle(R2StorageService $r2Service): int
     {
         if (! $r2Service->isEnabled()) {
             $this->error('R2 storage is not enabled. Please configure R2 settings in your .env file.');

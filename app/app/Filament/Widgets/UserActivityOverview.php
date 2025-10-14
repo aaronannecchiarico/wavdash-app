@@ -9,6 +9,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class UserActivityOverview extends StatsOverviewWidget
 {
+    /**
+     * @return array<string, mixed>
+     */
     protected function getStats(): array
     {
         // Total users

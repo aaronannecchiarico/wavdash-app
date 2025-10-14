@@ -16,6 +16,8 @@ class AudioMicroserviceClient
 
     /**
      * Extract features from an audio file using the new storage-based API.
+     *
+     * @param  array<string, mixed>  $options
      */
     public function extractFeatures(string $storagePath, array $options = []): array
     {
@@ -35,6 +37,8 @@ class AudioMicroserviceClient
 
     /**
      * Separate stems from an audio file using the new storage-based API.
+     *
+     * @param  array<string, mixed>  $options
      */
     public function separateStems(string $storagePath, array $options = []): array
     {
@@ -157,6 +161,8 @@ class AudioMicroserviceClient
 
     /**
      * Process tempo effects on an audio file using the storage-based API.
+     *
+     * @param  array<string, mixed>  $options
      */
     public function processTempo(string $storagePath, array $options = []): array
     {
@@ -222,6 +228,8 @@ class AudioMicroserviceClient
 
     /**
      * Get smart tempo preset suggestions based on audio characteristics.
+     *
+     * @param  array<string, mixed>  $params
      */
     public function getTempoSuggestions(array $params = []): array
     {

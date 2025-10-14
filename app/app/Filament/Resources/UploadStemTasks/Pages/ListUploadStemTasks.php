@@ -10,6 +10,9 @@ class ListUploadStemTasks extends ListRecords
 {
     protected static string $resource = UploadStemTaskResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [

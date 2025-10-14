@@ -10,6 +10,9 @@ class ListContests extends ListRecords
 {
     protected static string $resource = ContestResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [

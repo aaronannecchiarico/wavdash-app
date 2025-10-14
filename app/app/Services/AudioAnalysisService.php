@@ -599,6 +599,8 @@ class AudioAnalysisService
 
     /**
      * Submit an audio file for tempo processing using the storage-based API.
+     *
+     * @param  array<string, mixed>  $processingOptions
      */
     public function submitForTempoProcessing(Upload $upload, array $processingOptions = []): ?UploadTempoTask
     {

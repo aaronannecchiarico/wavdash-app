@@ -40,6 +40,8 @@ class AudioMicroserviceMigrationService
 
     /**
      * Get migration status from the microservice
+     *
+     * @return array{success: bool, data?: mixed, message?: string, details?: mixed}
      */
     public function getStatus(): array
     {
@@ -75,6 +77,8 @@ class AudioMicroserviceMigrationService
 
     /**
      * Run complete fresh migration (migration + seeding)
+     *
+     * @return array{success: bool, message: string, details: mixed}
      */
     public function runFreshMigration(): array
     {
@@ -121,6 +125,8 @@ class AudioMicroserviceMigrationService
 
     /**
      * Run migration only (without seeding)
+     *
+     * @return array{success: bool, message: string, details: mixed}
      */
     public function runMigrationOnly(): array
     {
@@ -167,6 +173,8 @@ class AudioMicroserviceMigrationService
 
     /**
      * Run seeding only (without migration)
+     *
+     * @return array{success: bool, message: string, details: mixed}
      */
     public function runSeedingOnly(): array
     {

@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Storage;
 
 class SystemHealthOverview extends StatsOverviewWidget
 {
+    /**
+     * @return array<string, mixed>
+     */
     protected function getStats(): array
     {
         // Queue statistics
@@ -67,6 +70,9 @@ class SystemHealthOverview extends StatsOverviewWidget
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getStorageUsage(): array
     {
         try {
@@ -109,6 +115,9 @@ class SystemHealthOverview extends StatsOverviewWidget
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getDatabaseStatus(): array
     {
         try {
@@ -148,6 +157,9 @@ class SystemHealthOverview extends StatsOverviewWidget
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getCacheStatus(): array
     {
         try {

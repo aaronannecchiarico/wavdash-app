@@ -191,6 +191,8 @@ class AudioAnalysisCallbackController extends Controller
 
     /**
      * Handle successful analysis completion.
+     *
+     * @param  array<string, mixed>  $data
      */
     private function handleCompletedAnalysis(Upload $upload, UploadAnalysisTask $task, array $data): void
     {
@@ -244,6 +246,8 @@ class AudioAnalysisCallbackController extends Controller
 
     /**
      * Handle features extraction completion.
+     *
+     * @param  array<string, mixed>  $data
      */
     private function handleFeaturesCompletion(Upload $upload, UploadAnalysisTask $task, array $data): void
     {
@@ -331,6 +335,9 @@ class AudioAnalysisCallbackController extends Controller
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function handleCompletedStemSeparation(Upload $upload, UploadStemTask $task, array $data): void
     {
         $storagePaths = $data['storage_paths'] ?? [];
@@ -430,6 +437,9 @@ class AudioAnalysisCallbackController extends Controller
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function handleCompletedTempoProcessing(Upload $upload, UploadTempoTask $task, array $data): void
     {
         Log::info('Starting to handle completed tempo processing', [
@@ -605,6 +615,8 @@ class AudioAnalysisCallbackController extends Controller
 
     /**
      * Handle failed task (analysis or stem separation).
+     *
+     * @param  array<string, mixed>  $data
      */
     private function handleFailedTask($task, array $data): void
     {

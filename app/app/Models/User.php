@@ -110,6 +110,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->app_authentication_recovery_codes;
     }
 
+    /**
+     * @param  array<string, mixed>  $codes
+     */
     public function saveAppAuthenticationRecoveryCodes(?array $codes): void
     {
         $this->app_authentication_recovery_codes = $codes;

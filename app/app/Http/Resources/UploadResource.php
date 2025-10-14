@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Storage;
  */
 class UploadResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [

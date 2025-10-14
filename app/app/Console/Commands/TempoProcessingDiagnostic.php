@@ -25,7 +25,7 @@ class TempoProcessingDiagnostic extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Running Tempo Processing Diagnostic...');
         $this->newLine();

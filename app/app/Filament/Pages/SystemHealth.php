@@ -34,6 +34,9 @@ class SystemHealth extends Page implements HasInfolists
 
     protected static ?int $navigationSort = 1;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderWidgets(): array
     {
         return [
@@ -317,6 +320,9 @@ class SystemHealth extends Page implements HasInfolists
             ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getViewData(): array
     {
         return [
@@ -327,6 +333,9 @@ class SystemHealth extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getServiceStatus(): array
     {
         return [
@@ -343,6 +352,9 @@ class SystemHealth extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function checkCacheService(): array
     {
         try {
@@ -369,6 +381,9 @@ class SystemHealth extends Page implements HasInfolists
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function checkDatabaseService(): array
     {
         try {
@@ -392,6 +407,9 @@ class SystemHealth extends Page implements HasInfolists
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function checkStorageService(): array
     {
         try {
@@ -419,6 +437,9 @@ class SystemHealth extends Page implements HasInfolists
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getQueueStatus(): array
     {
         return [
@@ -428,6 +449,9 @@ class SystemHealth extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getStorageStatus(): array
     {
         $storagePath = storage_path();
@@ -443,6 +467,9 @@ class SystemHealth extends Page implements HasInfolists
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getDatabaseStatus(): array
     {
         try {

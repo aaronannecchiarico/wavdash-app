@@ -10,6 +10,9 @@ class ViewUpload extends ViewRecord
 {
     protected static string $resource = UploadResource::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getHeaderActions(): array
     {
         return [
