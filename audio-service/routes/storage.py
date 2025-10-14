@@ -3,7 +3,7 @@ Storage Routes
 Handles storage-based processing for files already in configured storage
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 import logging
 
 from models.storage_models import (
@@ -16,7 +16,12 @@ from tasks.storage_processing import (
     separate_audio_stems_from_storage,
     batch_process_from_storage
 )
-from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
+from services.storage_service import (
+    get_storage_service as _get_storage_service,
+    is_storage_enabled,
+    get_storage_type,
+    StorageService
+)
 from utils.route_helpers import (
     generate_task_id,
     validate_storage_enabled,
@@ -24,6 +29,11 @@ from utils.route_helpers import (
     get_storage_type_value,
     handle_route_error,
     validate_required_field
+)
+from utils.dependencies import (
+    get_storage_service,
+    get_storage_type_dependency,
+    StorageValidator
 )
 
 router = APIRouter(prefix="/storage", tags=["Storage Processing"])
@@ -139,17 +149,15 @@ async def separate_stems_from_storage(request: StorageStemSeparationRequest, bac
 
 
 @router.get("/file-info/{storage_path:path}", response_model=StorageFileInfo)
-async def get_storage_file_info(storage_path: str):
+def get_storage_file_info(
+    storage_path: str,
+    storage: StorageService = Depends(get_storage_service),
+    validator: StorageValidator = Depends()
+):
     """Get information about a file in configured storage"""
     try:
-        validate_storage_enabled()
-
-        storage = get_storage_service()
-
-        file_info = storage.get_file_info(storage_path)
-        if not file_info:
-            raise HTTPException(status_code=404, detail=f"File not found in storage: {storage_path}")
-
+        # Use validator to get file info (includes existence check)
+        file_info = validator.get_file_info(storage_path)
         public_url = storage.get_public_url(storage_path)
 
         # Convert timestamp for consistency
@@ -177,13 +185,13 @@ async def get_storage_file_info(storage_path: str):
 
 
 @router.get("/list-files")
-async def list_storage_files(prefix: str = "", max_keys: int = 100):
+def list_storage_files(
+    prefix: str = "",
+    max_keys: int = 100,
+    storage: StorageService = Depends(get_storage_service)
+):
     """List files in configured storage with optional prefix filter"""
     try:
-        validate_storage_enabled()
-
-        storage = get_storage_service()
-
         files = storage.list_files(prefix=prefix, max_keys=min(max_keys, 1000))
 
         # Add public URLs if available
