@@ -13,6 +13,7 @@ from routes.storage import router as storage_router
 from routes.tasks import router as tasks_router
 from routes.health import router as health_router
 from routes.migration import router as migration_router
+from utils.exception_handlers import register_exception_handlers
 
 
 
@@ -30,6 +31,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Register custom exception handlers
+register_exception_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -43,33 +47,13 @@ app.include_router(health_router)
 app.include_router(storage_router)
 app.include_router(tasks_router)
 app.include_router(tempo_router)
-app.include_router(migration_router)
 
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle request validation errors with detailed logging"""
-    request_body = None
-    try:
-        request_body = await request.body()
-        if request_body:
-            request_body = request_body.decode('utf-8')
-    except Exception:
-        request_body = "Unable to read request body"
-    
-    logging.error(f"422 Validation Error on {request.method} {request.url}")
-    logging.error(f"Request body: {request_body}")
-    logging.error(f"Validation errors: {exc.errors()}")
-    
-    return JSONResponse(
-        status_code=422,
-        content={
-            "detail": exc.errors(),
-            "body": request_body if request_body != "Unable to read request body" else None
-        }
-    )
-
-
+# Only include migration router in development/debug mode
+if settings.DEBUG:
+    app.include_router(migration_router)
+    logging.info("🔧 Migration endpoints enabled (DEBUG=true)")
+else:
+    logging.info("🔒 Migration endpoints disabled (production mode)")
 
 
 if __name__ == "__main__":

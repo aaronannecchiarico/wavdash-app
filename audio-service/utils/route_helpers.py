@@ -10,6 +10,11 @@ from fastapi import HTTPException
 
 from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
 from services.storage_service import StorageType
+from utils.exceptions import (
+    StorageNotEnabledError,
+    FileNotFoundError,
+    InvalidRequestError
+)
 
 
 logger = logging.getLogger(__name__)
@@ -30,14 +35,10 @@ def validate_storage_enabled() -> None:
     Validate that storage service is properly configured and enabled
 
     Raises:
-        HTTPException: 503 error if storage is not enabled
+        StorageNotEnabledError: If storage is not enabled
     """
     if not is_storage_enabled():
-        logger.error("Storage is not properly configured")
-        raise HTTPException(
-            status_code=503,
-            detail="Storage is not properly configured"
-        )
+        raise StorageNotEnabledError()
 
 
 def validate_file_exists(storage_path: str) -> None:
@@ -48,15 +49,11 @@ def validate_file_exists(storage_path: str) -> None:
         storage_path: Path to the file in storage
 
     Raises:
-        HTTPException: 404 error if file not found
+        FileNotFoundError: If file not found in storage
     """
     storage = get_storage_service()
     if not storage.file_exists(storage_path):
-        logger.error(f"File not found in storage: {storage_path}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"File not found in storage: {storage_path}"
-        )
+        raise FileNotFoundError(storage_path)
 
 
 def validate_storage_and_file(storage_path: str) -> None:
@@ -67,7 +64,8 @@ def validate_storage_and_file(storage_path: str) -> None:
         storage_path: Path to the file in storage
 
     Raises:
-        HTTPException: 503 if storage not enabled, 404 if file not found
+        StorageNotEnabledError: If storage not enabled
+        FileNotFoundError: If file not found
     """
     validate_storage_enabled()
     validate_file_exists(storage_path)
@@ -96,12 +94,14 @@ def handle_route_error(error: Exception, context: str, log_details: Optional[dic
         HTTPException: Properly formatted HTTP exception
 
     Notes:
-        - HTTPExceptions are re-raised as-is
+        - HTTPExceptions and custom AudioServiceExceptions are re-raised as-is
         - Other exceptions are wrapped in 500 errors
         - All errors are logged with context
     """
-    # Re-raise HTTP exceptions without wrapping
-    if isinstance(error, HTTPException):
+    from utils.exceptions import AudioServiceException
+
+    # Re-raise HTTP exceptions and custom exceptions without wrapping
+    if isinstance(error, (HTTPException, AudioServiceException)):
         raise error
 
     # Log the error with context
@@ -125,14 +125,10 @@ def validate_required_field(value: Optional[str], field_name: str) -> None:
         field_name: Name of the field for error messages
 
     Raises:
-        HTTPException: 422 error if field is missing or empty
+        InvalidRequestError: If field is missing or empty
     """
     if not value:
-        logger.error(f"Missing required field: {field_name}")
-        raise HTTPException(
-            status_code=422,
-            detail=f"{field_name} is required"
-        )
+        raise InvalidRequestError(field_name, "field is required")
 
 
 def create_processing_response(
