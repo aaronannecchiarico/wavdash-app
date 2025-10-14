@@ -5,7 +5,6 @@ Handles sped-up and slowed-down audio processing
 
 import logging
 import time
-import uuid
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -19,6 +18,12 @@ from services.storage_service import get_storage_service, is_storage_enabled, ge
 from services.tempo_presets import get_tempo_presets_service
 from celery_app import celery_app
 from tasks.tempo_processing import process_tempo_from_storage
+from utils.route_helpers import (
+    generate_task_id,
+    validate_storage_and_file,
+    get_storage_type_value,
+    handle_route_error
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tempo", tags=["Tempo Processing"])
@@ -28,47 +33,35 @@ router = APIRouter(prefix="/tempo", tags=["Tempo Processing"])
 async def process_tempo_from_storage_route(request: StorageTempoProcessingRequest):
     """
     Process audio file with tempo/pitch modifications (storage-based)
-    
+
     This is the recommended endpoint for Laravel integration.
     Processes files already stored in the configured storage system.
     """
     try:
-        # Validate storage is enabled
-        if not is_storage_enabled():
-            raise HTTPException(
-                status_code=503,
-                detail="Storage service is not enabled. Check storage configuration."
-            )
-        
-        # Get storage service and verify file exists
-        storage = get_storage_service()
-        if not storage.file_exists(request.storage_path):
-            raise HTTPException(
-                status_code=404,
-                detail=f"File not found in storage: {request.storage_path}"
-            )
-        
+        # Validate storage and file existence
+        validate_storage_and_file(request.storage_path)
+
         # Generate unique task ID
-        task_id = str(uuid.uuid4())
-        
+        task_id = generate_task_id()
+
         # Submit to Celery - use the imported task function
         task = process_tempo_from_storage.delay(
             task_id=task_id,
             **request.model_dump()
         )
-        
+
         return TempoProcessingResponse(
             task_id=task_id,
-            status="processing", 
+            status="processing",
             message=f"Tempo processing started for {request.storage_path} with preset '{request.preset.value}'",
-            storage_type=get_storage_type().value
+            storage_type=get_storage_type_value()
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in storage-based tempo processing: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        handle_route_error(e, "storage-based tempo processing")
 
 
 @router.get("/presets")

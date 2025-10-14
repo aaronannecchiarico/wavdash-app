@@ -37,8 +37,8 @@ class TestTempoProcessingRoutes:
         assert not hasattr(route_func, 'delay'), \
             "Route function should not have 'delay' method"
 
-    @patch('routes.tempo_processing.is_storage_enabled')
-    @patch('routes.tempo_processing.get_storage_service')
+    @patch('utils.route_helpers.is_storage_enabled')
+    @patch('utils.route_helpers.get_storage_service')
     @patch('routes.tempo_processing.process_tempo_from_storage')
     def test_storage_tempo_processing_calls_correct_task(self, mock_task, mock_storage_service, mock_storage_enabled):
         """
@@ -82,7 +82,7 @@ class TestTempoProcessingRoutes:
         assert "task_id" in call_args.kwargs
         assert call_args.kwargs["storage_path"] == "uploads/test/file.mp3"
 
-    @patch('routes.tempo_processing.is_storage_enabled')
+    @patch('utils.route_helpers.is_storage_enabled')
     def test_storage_disabled_error(self, mock_storage_enabled):
         """
         Test that proper error is returned when storage is not enabled
@@ -95,12 +95,12 @@ class TestTempoProcessingRoutes:
         }
         
         response = client.post("/tempo/storage/process", json=request_data)
-        
-        assert response.status_code == 503
-        assert "Storage service is not enabled" in response.json()["detail"]
 
-    @patch('routes.tempo_processing.is_storage_enabled')
-    @patch('routes.tempo_processing.get_storage_service')
+        assert response.status_code == 503
+        assert "Storage is not properly configured" in response.json()["detail"]
+
+    @patch('utils.route_helpers.is_storage_enabled')
+    @patch('utils.route_helpers.get_storage_service')
     def test_file_not_found_error(self, mock_storage_service, mock_storage_enabled):
         """
         Test that proper error is returned when file doesn't exist in storage
