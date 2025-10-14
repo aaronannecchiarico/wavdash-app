@@ -117,14 +117,12 @@ curl -X POST http://localhost:8001/migration/seed-only
 **Request/Response Models (`models/`)**
 - `storage_models.py`: Storage-based processing models (Laravel integration)
 - `tempo_models.py`: Tempo processing models
-- `effects_models.py`: Audio effects processing models
 
 **Route Organization (`routes/`)**
 - `health.py`: Health checks and system status endpoints
 - `storage.py`: Storage-based processing routes (Laravel integration)
 - `tasks.py`: Task status and lifecycle management routes
 - `tempo_processing.py`: Tempo modification and preset features
-- `effects_processing.py`: Audio effects processing features
 - `migration.py`: Migration and maintenance endpoints (development only)
 
 ### Key Processing Flow

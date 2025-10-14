@@ -13,7 +13,6 @@ from routes.storage import router as storage_router
 from routes.tasks import router as tasks_router
 from routes.health import router as health_router
 from routes.migration import router as migration_router
-from routes.effects_processing import router as effects_router
 
 
 
@@ -44,7 +43,6 @@ app.include_router(health_router)
 app.include_router(storage_router)
 app.include_router(tasks_router)
 app.include_router(tempo_router)
-app.include_router(effects_router)
 app.include_router(migration_router)
 
 

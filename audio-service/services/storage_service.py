@@ -72,21 +72,6 @@ class StorageService(ABC):
     def upload_stems(self, stems_dict: Dict[str, str], base_path: str, metadata: Optional[Dict[str, str]] = None, user_id: Optional[str] = None) -> Dict[str, str]:
         """Upload separated audio stems"""
         pass
-    
-    @abstractmethod
-    def check_stems_exist(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, bool]:
-        """Check which stems exist for a given base path"""
-        pass
-    
-    @abstractmethod
-    def find_existing_stems(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, str]:
-        """Find existing stems and return their storage paths"""
-        pass
-    
-    @abstractmethod
-    def save_processed_audio(self, audio_data: np.ndarray, sample_rate: int, storage_path: str, user_id: Optional[str] = None, suffix: str = "processed", format: str = "wav") -> Optional[str]:
-        """Save processed audio to storage"""
-        pass
 
 
 class LocalStorageService(StorageService):
@@ -313,111 +298,11 @@ class LocalStorageService(StorageService):
             
             logger.info(f"Uploaded {len(uploaded_stems)} stems to local storage: {stems_dir}")
             return uploaded_stems
-            
+
         except Exception as e:
             logger.error(f"Failed to upload stems: {e}")
             return {}
-    
-    def check_stems_exist(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, bool]:
-        """Check which stems exist for a given base path"""
-        try:
-            stem_names = ["vocals", "drums", "bass", "other"]
-            stem_status = {}
-            
-            # Search for stems in storage
-            existing_stems = self.find_existing_stems(base_path, user_id)
-            
-            for stem_name in stem_names:
-                stem_status[stem_name] = stem_name in existing_stems
-            
-            return stem_status
-            
-        except Exception as e:
-            logger.error(f"Failed to check stems existence: {e}")
-            return {stem: False for stem in ["vocals", "drums", "bass", "other"]}
-    
-    def find_existing_stems(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, str]:
-        """Find existing stems and return their storage paths"""
-        try:
-            stem_names = ["vocals", "drums", "bass", "other"]
-            found_stems = {}
-            
-            # Search pattern: stems/{user_id}/YYYY/MM/DD/{base_path}/{stem_name}.wav
-            if user_id:
-                search_prefix = f"stems/{user_id}"
-            else:
-                search_prefix = "stems"
-            
-            # List files in stems directory
-            files = self.list_files(prefix=search_prefix)
-            
-            for file_info in files:
-                file_path = file_info['key']
-                
-                # Check if this file belongs to our base_path
-                if f"/{base_path}/" in file_path:
-                    # Extract stem name from filename
-                    filename = Path(file_path).name
-                    stem_name = Path(filename).stem
-                    
-                    if stem_name in stem_names:
-                        found_stems[stem_name] = file_path
-                        logger.debug(f"Found existing stem: {stem_name} at {file_path}")
-            
-            if found_stems:
-                logger.info(f"Found {len(found_stems)} existing stems for {base_path}: {list(found_stems.keys())}")
-            
-            return found_stems
-            
-        except Exception as e:
-            logger.error(f"Failed to find existing stems: {e}")
-            return {}
-    
-    def save_processed_audio(self, audio_data: np.ndarray, sample_rate: int, storage_path: str, user_id: Optional[str] = None, suffix: str = "processed", format: str = "wav") -> Optional[str]:
-        """Save processed audio to storage"""
-        try:
-            import tempfile
-            import soundfile as sf
-            from datetime import datetime
-            
-            # Generate output path
-            base_path = Path(storage_path).stem
-            timestamp = datetime.now().strftime("%Y/%m/%d")
-            
-            if user_id:
-                output_dir = f"processed/{user_id}/{timestamp}"
-            else:
-                output_dir = f"processed/{timestamp}"
-            
-            output_filename = f"{base_path}_{suffix}.{format}"
-            output_path = f"{output_dir}/{output_filename}"
-            
-            # Save to temporary file first
-            with tempfile.NamedTemporaryFile(suffix=f'.{format}', delete=False) as temp_file:
-                temp_file_path = temp_file.name
-                
-                # Write audio data to temporary file
-                sf.write(temp_file_path, audio_data, sample_rate)
-                
-                # Upload to storage
-                if self.upload_file(temp_file_path, output_path):
-                    logger.info(f"Saved processed audio to storage: {output_path}")
-                    return output_path
-                else:
-                    logger.error(f"Failed to upload processed audio to storage")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"Failed to save processed audio: {e}")
-            return None
-        finally:
-            # Cleanup temporary file
-            try:
-                if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
-                    os.unlink(temp_file_path)
-            except Exception as cleanup_error:
-                logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
-    
+
     def _get_content_type(self, file_path: Path) -> str:
         """Get MIME type for file"""
         import mimetypes
@@ -656,113 +541,11 @@ class CloudStorageService(StorageService):
             
             logger.info(f"Uploaded {len(uploaded_stems)} stems to cloud storage: {stems_dir}")
             return uploaded_stems
-            
+
         except Exception as e:
             logger.error(f"Failed to upload stems: {e}")
             return {}
     
-    def check_stems_exist(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, bool]:
-        """Check which stems exist for a given base path"""
-        try:
-            stem_names = ["vocals", "drums", "bass", "other"]
-            stem_status = {}
-            
-            # Search for stems in storage
-            existing_stems = self.find_existing_stems(base_path, user_id)
-            
-            for stem_name in stem_names:
-                stem_status[stem_name] = stem_name in existing_stems
-            
-            return stem_status
-            
-        except Exception as e:
-            logger.error(f"Failed to check stems existence: {e}")
-            return {stem: False for stem in ["vocals", "drums", "bass", "other"]}
-    
-    def find_existing_stems(self, base_path: str, user_id: Optional[str] = None) -> Dict[str, str]:
-        """Find existing stems and return their storage paths"""
-        try:
-            stem_names = ["vocals", "drums", "bass", "other"]
-            found_stems = {}
-            
-            # Search pattern: stems/{user_id}/YYYY/MM/DD/{base_path}/
-            if user_id:
-                search_prefix = f"stems/{user_id}"
-            else:
-                search_prefix = "stems"
-            
-            # List files in stems directory
-            files = self.list_files(prefix=search_prefix)
-            
-            for file_info in files:
-                file_path = file_info['key']
-                
-                # Check if this file belongs to our base_path
-                if f"/{base_path}/" in file_path:
-                    # Extract stem name from filename
-                    from pathlib import Path
-                    filename = Path(file_path).name
-                    stem_name = Path(filename).stem
-                    
-                    if stem_name in stem_names:
-                        found_stems[stem_name] = file_path
-                        logger.debug(f"Found existing stem: {stem_name} at {file_path}")
-            
-            if found_stems:
-                logger.info(f"Found {len(found_stems)} existing stems for {base_path}: {list(found_stems.keys())}")
-            
-            return found_stems
-            
-        except Exception as e:
-            logger.error(f"Failed to find existing stems: {e}")
-            return {}
-    
-    def save_processed_audio(self, audio_data: np.ndarray, sample_rate: int, storage_path: str, user_id: Optional[str] = None, suffix: str = "processed", format: str = "wav") -> Optional[str]:
-        """Save processed audio to cloud storage"""
-        try:
-            import tempfile
-            import soundfile as sf
-            from datetime import datetime
-            from pathlib import Path
-            import os
-            
-            # Generate output path
-            base_path = Path(storage_path).stem
-            timestamp = datetime.now().strftime("%Y/%m/%d")
-            
-            if user_id:
-                output_dir = f"processed/{user_id}/{timestamp}"
-            else:
-                output_dir = f"processed/{timestamp}"
-            
-            output_filename = f"{base_path}_{suffix}.{format}"
-            output_path = f"{output_dir}/{output_filename}"
-            
-            # Save to temporary file first
-            with tempfile.NamedTemporaryFile(suffix=f'.{format}', delete=False) as temp_file:
-                temp_file_path = temp_file.name
-                
-                # Write audio data to temporary file
-                sf.write(temp_file_path, audio_data, sample_rate)
-                
-                # Upload to cloud storage
-                if self.upload_file(temp_file_path, output_path):
-                    logger.info(f"Saved processed audio to cloud storage: {output_path}")
-                    return output_path
-                else:
-                    logger.error(f"Failed to upload processed audio to cloud storage")
-                    return None
-                    
-        except Exception as e:
-            logger.error(f"Failed to save processed audio: {e}")
-            return None
-        finally:
-            # Cleanup temporary file
-            try:
-                if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
-                    os.unlink(temp_file_path)
-            except Exception as cleanup_error:
-                logger.warning(f"Failed to cleanup temp file: {cleanup_error}")
 
 
 
