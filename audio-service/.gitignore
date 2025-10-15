@@ -68,8 +68,8 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
+# Documentation directory (completely ignored)
+docs/
 
 # PyBuilder
 .pybuilder/
@@ -332,9 +332,7 @@ docker-compose.local.yml
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 
-# Sphinx documentation build output only
-docs/_build/
-docs/.build/
+# Note: docs/ directory is ignored globally (see line 72)
 
 # Development environment files
 .claude
