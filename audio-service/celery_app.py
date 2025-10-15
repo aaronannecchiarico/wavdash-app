@@ -1,15 +1,16 @@
-import sys
 import os
 from pathlib import Path
+import sys
 
 # Ensure project root is in Python path for worker processes
 project_root = Path(__file__).parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+import logging
+
 from celery import Celery
 from celery.signals import worker_ready, worker_shutting_down
-import logging
 
 from config import settings
 

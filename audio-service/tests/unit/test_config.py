@@ -2,11 +2,12 @@
 Unit tests for config module
 """
 
-import pytest
-import sys
-from pathlib import Path
-from unittest.mock import patch
 import os
+from pathlib import Path
+import sys
+from unittest.mock import patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -103,6 +104,7 @@ class TestConfig:
         """Test DEBUG environment variable parsing (True)"""
         # Need to reimport to pick up env change
         import importlib
+
         import config
 
         importlib.reload(config)
@@ -113,6 +115,7 @@ class TestConfig:
     def test_debug_env_var_false(self):
         """Test DEBUG environment variable parsing (False)"""
         import importlib
+
         import config
 
         importlib.reload(config)
@@ -123,6 +126,7 @@ class TestConfig:
     def test_port_env_var(self):
         """Test PORT environment variable parsing"""
         import importlib
+
         import config
 
         importlib.reload(config)
@@ -133,6 +137,7 @@ class TestConfig:
     def test_redis_host_env_var(self):
         """Test REDIS_HOST environment variable"""
         import importlib
+
         import config
 
         importlib.reload(config)
@@ -144,6 +149,7 @@ class TestConfig:
     def test_redis_port_env_var(self):
         """Test REDIS_PORT environment variable"""
         import importlib
+
         import config
 
         importlib.reload(config)
@@ -155,6 +161,7 @@ class TestConfig:
     def test_demucs_device_env_var(self):
         """Test DEMUCS_DEVICE environment variable"""
         import importlib
+
         import config
 
         importlib.reload(config)

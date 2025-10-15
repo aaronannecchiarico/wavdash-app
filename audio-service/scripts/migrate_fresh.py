@@ -11,12 +11,12 @@ This script performs a complete fresh migration/deployment setup:
 Use this for fresh deployments or when you need to completely reset the system state.
 """
 
+import argparse
+import logging
+from pathlib import Path
+import shutil
 import subprocess
 import sys
-import logging
-import shutil
-import argparse
-from pathlib import Path
 from typing import Optional
 
 # Add project root to path for imports
@@ -24,8 +24,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import redis
-from config import settings
 
+from config import settings
 
 # Setup logging
 logging.basicConfig(

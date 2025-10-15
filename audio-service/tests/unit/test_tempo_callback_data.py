@@ -2,8 +2,10 @@
 Tests for enhanced tempo processing callback data structure
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from models.tempo_models import TempoCallbackData
 
 
@@ -192,26 +194,17 @@ class TestCallbackDataIntegration:
         from tasks.tempo_processing import process_tempo_from_storage
 
         # Mock all the dependencies
-        with patch(
-            "tasks.tempo_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.tempo_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.tempo_processing.librosa.load"
-        ) as mock_load, patch(
-            "tasks.tempo_processing.librosa.beat.tempo"
-        ) as mock_tempo, patch(
-            "tasks.tempo_processing.apply_tempo_processing"
-        ) as mock_apply, patch(
-            "tasks.tempo_processing.sf.write"
-        ) as mock_sf_write, patch(
-            "tasks.tempo_processing.get_performance_cache"
-        ) as mock_cache, patch(
-            "tasks.tempo_processing.tempfile.NamedTemporaryFile"
-        ) as mock_temp, patch(
-            "tasks.tempo_processing.os.unlink"
-        ), patch(
-            "tasks.tempo_processing.current_task"
+        with (
+            patch("tasks.tempo_processing.get_storage_service") as mock_storage_service,
+            patch("tasks.tempo_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.tempo_processing.librosa.load") as mock_load,
+            patch("tasks.tempo_processing.librosa.beat.tempo") as mock_tempo,
+            patch("tasks.tempo_processing.apply_tempo_processing") as mock_apply,
+            patch("tasks.tempo_processing.sf.write") as mock_sf_write,
+            patch("tasks.tempo_processing.get_performance_cache") as mock_cache,
+            patch("tasks.tempo_processing.tempfile.NamedTemporaryFile") as mock_temp,
+            patch("tasks.tempo_processing.os.unlink"),
+            patch("tasks.tempo_processing.current_task"),
         ):
 
             # Setup mocks

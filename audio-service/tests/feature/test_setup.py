@@ -3,10 +3,11 @@
 Test script to verify the audio processing service setup
 """
 
+from pathlib import Path
 import sys
 import time
+
 import numpy as np
-from pathlib import Path
 
 
 def test_imports():

@@ -2,11 +2,12 @@
 Audio test fixtures and utilities
 """
 
-import numpy as np
-import tempfile
 import os
 from pathlib import Path
-from typing import Tuple, Optional
+import tempfile
+from typing import Optional, Tuple
+
+import numpy as np
 import soundfile as sf
 
 

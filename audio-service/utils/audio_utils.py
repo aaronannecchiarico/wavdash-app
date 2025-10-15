@@ -1,10 +1,12 @@
+import io
 import os
 import tempfile
+from typing import Optional, Tuple
+
 import librosa
 import numpy as np
-from typing import Tuple, Optional
 import soundfile as sf
-import io
+
 from config import settings
 
 

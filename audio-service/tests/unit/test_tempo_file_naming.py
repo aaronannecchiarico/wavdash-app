@@ -2,15 +2,16 @@
 Tests for improved tempo file naming conventions and callback data structure
 """
 
-import pytest
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 # Import the functions we're testing
 from tasks.tempo_processing import (
-    generate_tempo_filename,
     build_tempo_file_path,
     calculate_processing_quality_score,
+    generate_tempo_filename,
     get_processing_warnings,
 )
 

@@ -3,11 +3,12 @@
 Generate test audio files with known BPM values for testing enhanced BPM detection
 """
 
-import numpy as np
-import soundfile as sf
-import librosa
 from pathlib import Path
 import sys
+
+import librosa
+import numpy as np
+import soundfile as sf
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

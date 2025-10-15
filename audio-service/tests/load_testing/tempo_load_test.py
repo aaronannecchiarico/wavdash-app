@@ -4,19 +4,20 @@ Load Testing Script for Tempo Processing API
 Tests performance under various load conditions and validates rate limiting
 """
 
-import asyncio
-import aiohttp
-import time
-import random
-import logging
-import json
-import statistics
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
-from pathlib import Path
-import numpy as np
 import argparse
+import asyncio
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+import json
+import logging
+from pathlib import Path
+import random
+import statistics
+import time
+from typing import Any, Dict, List, Optional
+
+import aiohttp
+import numpy as np
 
 # Configure logging
 logging.basicConfig(

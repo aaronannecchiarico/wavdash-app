@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import subprocess
-import sys
 import logging
 import os
 from pathlib import Path
+import subprocess
+import sys
 
 # Ensure project root is in Python path
 project_root = Path(__file__).parent.parent

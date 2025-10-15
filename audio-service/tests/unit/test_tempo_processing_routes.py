@@ -2,9 +2,11 @@
 Tests for tempo processing routes to prevent naming conflicts and ensure proper Celery task integration
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from fastapi.testclient import TestClient
+import pytest
+
 from main import app
 
 client = TestClient(app)
@@ -283,17 +285,18 @@ class TestTempoTaskImports:
         try:
             # Re-import to catch any import-time errors
             import importlib
+
             import tasks.tempo_processing
 
             importlib.reload(tasks.tempo_processing)
 
             # Test that we can access key functions without errors
             from tasks.tempo_processing import (
-                process_tempo_from_storage,
                 apply_tempo_processing,
+                audio_hash,
                 get_performance_cache,
                 get_performance_monitor,
-                audio_hash,
+                process_tempo_from_storage,
             )
 
             # Verify they're all callable

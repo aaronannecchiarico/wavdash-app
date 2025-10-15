@@ -2,18 +2,19 @@
 Unit tests for tempo processing functionality
 """
 
-import pytest
-import sys
-import numpy as np
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+import sys
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from tasks.tempo_processing import apply_tempo_processing, TEMPO_PRESETS
 from models.tempo_models import TempoPresetEnum
+from tasks.tempo_processing import TEMPO_PRESETS, apply_tempo_processing
 
 
 class TestTempoProcessingFunctions:

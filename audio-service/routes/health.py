@@ -6,7 +6,7 @@ Handles health checks, system status, and general API information
 from fastapi import APIRouter
 
 from celery_app import celery_app
-from services.storage_service import is_storage_enabled, get_storage_type
+from services.storage_service import get_storage_type, is_storage_enabled
 
 router = APIRouter(tags=["Health & System"])
 

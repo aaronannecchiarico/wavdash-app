@@ -1,7 +1,8 @@
-import os
 import logging
-from decouple import config
+import os
 from typing import List
+
+from decouple import config
 
 
 class Settings:

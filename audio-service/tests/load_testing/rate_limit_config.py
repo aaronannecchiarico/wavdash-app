@@ -3,17 +3,18 @@ Rate Limiting Configuration for Tempo Processing API
 Optimized rate limits based on processing complexity and resource usage
 """
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-from fastapi import Request, HTTPException
+from functools import wraps
+import logging
+import time
+from typing import Any, Dict, Optional
+
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 import redis
-import logging
-from typing import Dict, Any, Optional
-import time
-from functools import wraps
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 logger = logging.getLogger(__name__)
 

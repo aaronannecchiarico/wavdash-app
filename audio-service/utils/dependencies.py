@@ -5,17 +5,17 @@ Reusable dependencies for route handlers
 
 import logging
 from typing import Optional
+
 from fastapi import Depends, HTTPException
 
 from services.storage_service import (
-    get_storage_service as _get_storage_service,
-    is_storage_enabled as _is_storage_enabled,
-    get_storage_type as _get_storage_type,
     StorageService,
     StorageType,
 )
+from services.storage_service import get_storage_service as _get_storage_service
+from services.storage_service import get_storage_type as _get_storage_type
+from services.storage_service import is_storage_enabled as _is_storage_enabled
 from utils.exceptions import StorageNotEnabledError
-
 
 logger = logging.getLogger(__name__)
 

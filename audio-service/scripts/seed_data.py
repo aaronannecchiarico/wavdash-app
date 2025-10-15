@@ -11,11 +11,11 @@ This script seeds the system with necessary data and configurations:
 This is run as part of fresh migrations or can be run standalone.
 """
 
-import sys
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any
+import sys
+from typing import Any, Dict
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
@@ -36,8 +36,8 @@ def verify_tempo_presets() -> bool:
     print("🎵 Verifying tempo presets...")
 
     try:
-        from services.tempo_presets import get_tempo_presets_service
         from models.tempo_models import TempoPresetEnum
+        from services.tempo_presets import get_tempo_presets_service
 
         service = get_tempo_presets_service()
         all_presets = service.get_all_presets()
@@ -248,8 +248,8 @@ def run_seeding_tests() -> bool:
 
     try:
         # Test tempo presets
-        from services.tempo_presets import get_tempo_presets_service
         from models.tempo_models import TempoPresetEnum
+        from services.tempo_presets import get_tempo_presets_service
 
         service = get_tempo_presets_service()
 

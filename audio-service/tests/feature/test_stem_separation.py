@@ -3,10 +3,10 @@
 Test stem separation functionality with MPS compatibility fixes
 """
 
-import sys
-import time
 import logging
 from pathlib import Path
+import sys
+import time
 
 
 def test_stem_separation():

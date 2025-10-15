@@ -3,21 +3,23 @@
 Unit tests for task management API endpoints
 """
 
-import sys
-import pytest
-import time
 import json
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import sys
+import time
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from fastapi.testclient import TestClient
+
+from celery_app import celery_app
 from main import app
 from routes.tasks import get_redis_client, is_task_deleted
-from celery_app import celery_app
 
 
 @pytest.fixture
@@ -264,9 +266,10 @@ def test_integration_delete_then_get_status():
     client = TestClient(app)
     task_id = "integration-test-123"
 
-    with patch("main.celery_app.AsyncResult") as mock_async_result, patch(
-        "routes.tasks.redis_client"
-    ) as mock_redis:
+    with (
+        patch("main.celery_app.AsyncResult") as mock_async_result,
+        patch("routes.tasks.redis_client") as mock_redis,
+    ):
 
         mock_task = MagicMock()
         mock_async_result.return_value = mock_task

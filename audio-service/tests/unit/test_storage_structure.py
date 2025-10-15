@@ -3,15 +3,16 @@
 Unit tests for storage folder structure with user_id
 """
 
-import sys
-import pytest
-import tempfile
-import shutil
-import os
-import json
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 from datetime import datetime
+import json
+import os
+from pathlib import Path
+import shutil
+import sys
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -223,18 +224,17 @@ class TestStorageProcessingIntegration(TestStorageStructure):
         from tasks.storage_processing import process_audio_features_from_storage
 
         # Mock all dependencies
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_get_storage, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_get_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_create_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch("tasks.storage_processing.get_storage_service") as mock_get_storage,
+            patch("tasks.storage_processing.get_storage_type") as mock_get_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_create_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -294,18 +294,17 @@ class TestStorageProcessingIntegration(TestStorageStructure):
         """Test that missing user_id is handled gracefully"""
         from tasks.storage_processing import process_audio_features_from_storage
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_get_storage, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_get_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_create_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch("tasks.storage_processing.get_storage_service") as mock_get_storage,
+            patch("tasks.storage_processing.get_storage_type") as mock_get_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_create_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks

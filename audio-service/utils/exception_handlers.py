@@ -3,19 +3,19 @@ Exception Handlers
 Custom exception handlers for FastAPI to provide consistent error responses
 """
 
-import logging
 from datetime import datetime, timezone
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
+import logging
 
-from utils.exceptions import AudioServiceException
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 from models.error_models import (
     ErrorResponse,
     ValidationErrorResponse,
     get_utc_timestamp,
 )
-
+from utils.exceptions import AudioServiceException
 
 logger = logging.getLogger(__name__)
 

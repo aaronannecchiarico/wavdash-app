@@ -2,12 +2,13 @@
 Unit tests for enhanced BPM detection methods
 """
 
-import pytest
-import numpy as np
-import tempfile
-import soundfile as sf
 from pathlib import Path
 import sys
+import tempfile
+
+import numpy as np
+import pytest
+import soundfile as sf
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent

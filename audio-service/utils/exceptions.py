@@ -3,7 +3,7 @@ Custom Exceptions
 Application-specific exceptions for better error handling
 """
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class AudioServiceException(Exception):

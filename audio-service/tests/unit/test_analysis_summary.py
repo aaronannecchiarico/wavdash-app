@@ -3,12 +3,13 @@
 Unit tests for analysis summary generation in storage processing
 """
 
-import sys
-import pytest
-import tempfile
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import sys
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -33,18 +34,19 @@ class TestAnalysisSummary:
             },
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -111,18 +113,19 @@ class TestAnalysisSummary:
             },
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -183,18 +186,19 @@ class TestAnalysisSummary:
             },
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -245,18 +249,19 @@ class TestAnalysisSummary:
             "error": "Feature extraction failed",
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -300,18 +305,19 @@ class TestAnalysisSummary:
             },
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks
@@ -380,18 +386,19 @@ class TestAnalysisSummary:
             },
         }
 
-        with patch(
-            "tasks.storage_processing.get_storage_service"
-        ) as mock_storage_service, patch(
-            "tasks.storage_processing.get_storage_type"
-        ) as mock_storage_type, patch(
-            "tasks.storage_processing.current_task"
-        ) as mock_current_task, patch(
-            "tasks.storage_processing.create_feature_extractor"
-        ) as mock_extractor, patch(
-            "tasks.storage_processing.tempfile.NamedTemporaryFile"
-        ) as mock_tempfile, patch(
-            "tasks.storage_processing.os.unlink"
+        with (
+            patch(
+                "tasks.storage_processing.get_storage_service"
+            ) as mock_storage_service,
+            patch("tasks.storage_processing.get_storage_type") as mock_storage_type,
+            patch("tasks.storage_processing.current_task") as mock_current_task,
+            patch(
+                "tasks.storage_processing.create_feature_extractor"
+            ) as mock_extractor,
+            patch(
+                "tasks.storage_processing.tempfile.NamedTemporaryFile"
+            ) as mock_tempfile,
+            patch("tasks.storage_processing.os.unlink"),
         ):
 
             # Setup mocks

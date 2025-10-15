@@ -10,24 +10,24 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
+from celery_app import celery_app
 from models.tempo_models import (
     StorageTempoProcessingRequest,
-    TempoProcessingResponse,
     TempoPresetEnum,
+    TempoProcessingResponse,
 )
 from services.storage_service import (
     get_storage_service,
-    is_storage_enabled,
     get_storage_type,
+    is_storage_enabled,
 )
 from services.tempo_presets import get_tempo_presets_service
-from celery_app import celery_app
 from tasks.tempo_processing import process_tempo_from_storage
 from utils.route_helpers import (
     generate_task_id,
-    validate_storage_and_file,
     get_storage_type_value,
     handle_route_error,
+    validate_storage_and_file,
 )
 
 logger = logging.getLogger(__name__)
@@ -190,8 +190,8 @@ def get_performance_metrics():
     """
     try:
         from services.performance_cache import (
-            get_performance_monitor,
             get_performance_cache,
+            get_performance_monitor,
         )
 
         monitor = get_performance_monitor()
@@ -227,8 +227,9 @@ def clear_performance_cache(cache_type: str = "all"):
     - cache_type: Type of cache to clear ("all", "audio", "bpm", "preset")
     """
     try:
-        from services.performance_cache import get_performance_cache
         import shutil
+
+        from services.performance_cache import get_performance_cache
 
         cache = get_performance_cache()
 

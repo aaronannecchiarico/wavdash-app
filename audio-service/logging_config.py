@@ -2,6 +2,7 @@ import logging
 import logging.config
 import os
 from pathlib import Path
+
 from config import settings
 
 # Ensure log directory exists

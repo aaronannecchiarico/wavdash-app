@@ -3,49 +3,50 @@ Tempo Processing Tasks
 Handles sped-up and slowed-down audio processing
 """
 
-import os
-import tempfile
 import logging
-import time
-import requests
-from typing import Dict, Any, Optional
-import numpy as np
-import librosa
-import soundfile as sf
-from celery import current_task
+import os
 from pathlib import Path
+import tempfile
+import time
+from typing import Any, Dict, Optional
+
+from celery import current_task
+import librosa
+import numpy as np
+import requests
+import soundfile as sf
 
 from celery_app import celery_app
 from config import settings
-from utils.audio_utils import save_audio_file, load_audio_from_bytes
+from models.tempo_models import TempoCallbackData, TempoPresetEnum
+from services.audio_feature_extraction import create_feature_extractor
 from services.storage_service import (
+    StorageError,
+    StorageType,
     get_storage_service,
     get_storage_type,
-    StorageType,
-    StorageError,
 )
-from services.audio_feature_extraction import create_feature_extractor
-from models.tempo_models import TempoCallbackData, TempoPresetEnum
+from utils.audio_utils import load_audio_from_bytes, save_audio_file
 
 logger = logging.getLogger(__name__)
 
 # Performance cache imports
 from services.performance_cache import (
+    audio_hash,
     get_performance_cache,
     get_performance_monitor,
-    audio_hash,
 )
 
 # Phase 2: Enhanced audio processing imports
 try:
     from pedalboard import (
-        Pedalboard,
-        Reverb,
-        PitchShift,
+        Chorus,
+        Compressor,
         HighShelfFilter,
         LowShelfFilter,
-        Compressor,
-        Chorus,
+        Pedalboard,
+        PitchShift,
+        Reverb,
     )
 
     PEDALBOARD_AVAILABLE = True

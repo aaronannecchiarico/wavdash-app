@@ -3,11 +3,12 @@
 Test BPM detection accuracy against known ground truth values
 """
 
-import sys
 from pathlib import Path
-import pandas as pd
-import numpy as np
+import sys
 from typing import Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

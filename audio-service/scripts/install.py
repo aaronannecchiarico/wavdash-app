@@ -4,9 +4,9 @@ Installation script for audio processing microservice
 Installs all required packages with proper error handling and platform detection
 """
 
+import platform
 import subprocess
 import sys
-import platform
 
 
 def run_pip_install(packages, description):

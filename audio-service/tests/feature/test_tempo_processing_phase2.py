@@ -3,21 +3,22 @@ Feature tests for Phase 2 tempo processing enhancements
 Tests the enhanced pedalboard integration, stem-aware processing, and BPM suggestions
 """
 
-import pytest
-import numpy as np
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
+import numpy as np
+import pytest
+
+from models.tempo_models import TempoPresetEnum
 from tasks.tempo_processing import (
+    TEMPO_PRESETS,
     apply_tempo_processing,
     calculate_optimal_tempo_factor,
-    get_smart_preset_suggestions,
-    validate_tempo_processing_params,
     check_system_compatibility,
-    process_stems_individually,
+    get_smart_preset_suggestions,
     mix_processed_stems,
-    TEMPO_PRESETS,
+    process_stems_individually,
+    validate_tempo_processing_params,
 )
-from models.tempo_models import TempoPresetEnum
 
 
 class TestPhase2Enhancements:

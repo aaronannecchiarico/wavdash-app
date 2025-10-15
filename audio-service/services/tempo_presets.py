@@ -4,8 +4,9 @@ Centralized management of tempo processing presets and configurations
 """
 
 import logging
-from typing import Dict, Any, Optional
-from models.tempo_models import TempoPresetEnum, TempoPresetConfig
+from typing import Any, Dict, Optional
+
+from models.tempo_models import TempoPresetConfig, TempoPresetEnum
 
 logger = logging.getLogger(__name__)
 

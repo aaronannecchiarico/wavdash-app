@@ -2,33 +2,34 @@
 Unit tests for utils.audio_utils module
 """
 
-import pytest
-import numpy as np
-import tempfile
 import os
 from pathlib import Path
 import sys
+import tempfile
+
+import numpy as np
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from utils.audio_utils import (
-    load_audio_from_bytes,
-    save_audio_file,
-    validate_audio_format,
-    get_audio_duration,
-    normalize_audio,
-    resample_audio,
-    convert_stereo_to_mono,
-    apply_fade,
-    detect_silence,
-    trim_silence,
-)
 from tests.fixtures.audio_fixtures import (
-    AudioFixtures,
     TEST_AUDIO_MONO_1S,
     TEST_AUDIO_STEREO_1S,
+    AudioFixtures,
+)
+from utils.audio_utils import (
+    apply_fade,
+    convert_stereo_to_mono,
+    detect_silence,
+    get_audio_duration,
+    load_audio_from_bytes,
+    normalize_audio,
+    resample_audio,
+    save_audio_file,
+    trim_silence,
+    validate_audio_format,
 )
 
 

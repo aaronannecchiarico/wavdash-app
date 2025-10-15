@@ -3,13 +3,14 @@ Unified Storage Service
 Handles local file system storage
 """
 
-import os
-import logging
-import numpy as np
-from typing import Optional, Dict, List, Union, BinaryIO
-from pathlib import Path
 from abc import ABC, abstractmethod
 from enum import Enum
+import logging
+import os
+from pathlib import Path
+from typing import BinaryIO, Dict, List, Optional, Union
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -292,8 +293,8 @@ class LocalStorageService(StorageService):
     ) -> Optional[str]:
         """Upload analysis results to local storage"""
         try:
-            import json
             from datetime import datetime
+            import json
 
             # Create timestamped path with user_id
             timestamp = datetime.now().strftime("%Y/%m/%d")
@@ -377,6 +378,7 @@ class CloudStorageService(StorageService):
         try:
             import boto3
             from botocore.config import Config
+
             from config import settings
 
             self.storage_type = settings.STORAGE_TYPE
@@ -565,9 +567,9 @@ class CloudStorageService(StorageService):
     ) -> Optional[str]:
         """Upload analysis results to cloud storage"""
         try:
+            from datetime import datetime
             import json
             import tempfile
-            from datetime import datetime
 
             # Create timestamped path with user_id
             timestamp = datetime.now().strftime("%Y/%m/%d")

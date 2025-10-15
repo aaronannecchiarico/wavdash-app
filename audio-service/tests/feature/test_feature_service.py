@@ -3,8 +3,8 @@
 Test script for the new audio feature extraction service
 """
 
-import sys
 from pathlib import Path
+import sys
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -143,8 +143,9 @@ def test_api_integration():
     print("-" * 50)
 
     try:
-        from services.audio_feature_extraction import create_feature_extractor
         from io import BytesIO
+
+        from services.audio_feature_extraction import create_feature_extractor
 
         # Test BytesIO input (simulating file upload)
         test_file = Path("tests/fixtures/test_audio.wav")

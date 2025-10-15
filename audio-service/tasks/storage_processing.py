@@ -3,32 +3,33 @@ Unified Storage Processing Tasks
 Works with both local and R2 storage
 """
 
-import os
-import tempfile
+import io
 import logging
+import os
+from pathlib import Path
+import tempfile
 import time
-import requests
-from typing import Dict, Any, List, Optional
-import numpy as np
-import librosa
+from typing import Any, Dict, List, Optional
+
 from celery import current_task
 from demucs import pretrained
 from demucs.apply import apply_model
+import librosa
+import numpy as np
+import requests
 import torch
-import io
-from pathlib import Path
 
 from celery_app import celery_app
 from config import settings
-from utils.audio_utils import save_audio_file, load_audio_from_bytes
+from models.storage_models import StorageCallbackData
+from services.audio_feature_extraction import create_feature_extractor
 from services.storage_service import (
+    StorageError,
+    StorageType,
     get_storage_service,
     get_storage_type,
-    StorageType,
-    StorageError,
 )
-from services.audio_feature_extraction import create_feature_extractor
-from models.storage_models import StorageCallbackData
+from utils.audio_utils import load_audio_from_bytes, save_audio_file
 
 logger = logging.getLogger(__name__)
 

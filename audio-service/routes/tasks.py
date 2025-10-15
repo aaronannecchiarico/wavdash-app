@@ -3,8 +3,9 @@ Task Management Routes
 Handles task status, results, and task lifecycle management
 """
 
-from fastapi import APIRouter, HTTPException
 import logging
+
+from fastapi import APIRouter, HTTPException
 import redis
 
 from celery_app import celery_app

@@ -2,23 +2,24 @@
 Unit tests for utils.device_utils module
 """
 
-import pytest
-import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from utils.device_utils import (
-    get_optimal_device,
-    get_device_info,
-    setup_device_for_model,
-    optimize_for_inference,
-    clear_gpu_memory,
-    get_memory_usage,
     check_device_compatibility,
+    clear_gpu_memory,
+    get_device_info,
+    get_memory_usage,
+    get_optimal_device,
+    optimize_for_inference,
+    setup_device_for_model,
 )
 
 
@@ -30,8 +31,9 @@ class TestDeviceUtils:
         with patch("utils.device_utils.settings") as mock_settings:
             mock_settings.DEMUCS_DEVICE = "auto"
 
-            with patch("torch.cuda.is_available", return_value=False), patch(
-                "torch.backends.mps.is_available", return_value=False
+            with (
+                patch("torch.cuda.is_available", return_value=False),
+                patch("torch.backends.mps.is_available", return_value=False),
             ):
 
                 device = get_optimal_device()
@@ -50,8 +52,9 @@ class TestDeviceUtils:
         with patch("utils.device_utils.settings") as mock_settings:
             mock_settings.DEMUCS_DEVICE = "auto"
 
-            with patch("torch.cuda.is_available", return_value=True), patch(
-                "torch.cuda.device_count", return_value=1
+            with (
+                patch("torch.cuda.is_available", return_value=True),
+                patch("torch.cuda.device_count", return_value=1),
             ):
 
                 device = get_optimal_device()
@@ -73,8 +76,9 @@ class TestDeviceUtils:
 
     def test_get_device_info_basic(self):
         """Test getting basic device information"""
-        with patch("torch.cuda.is_available", return_value=False), patch(
-            "utils.device_utils.get_optimal_device", return_value="cpu"
+        with (
+            patch("torch.cuda.is_available", return_value=False),
+            patch("utils.device_utils.get_optimal_device", return_value="cpu"),
         ):
 
             info = get_device_info()
@@ -112,9 +116,10 @@ class TestDeviceUtils:
         mock_model = MagicMock()
         mock_model.to.return_value = mock_model
 
-        with patch("utils.device_utils.get_optimal_device", return_value="cpu"), patch(
-            "torch.device"
-        ) as mock_torch_device:
+        with (
+            patch("utils.device_utils.get_optimal_device", return_value="cpu"),
+            patch("torch.device") as mock_torch_device,
+        ):
 
             mock_device = MagicMock()
             mock_torch_device.return_value = mock_device
@@ -147,9 +152,10 @@ class TestDeviceUtils:
         mock_model = MagicMock()
         mock_model.eval.return_value = mock_model
 
-        with patch("torch.__version__", "2.1.0"), patch(
-            "torch.compile"
-        ) as mock_compile:
+        with (
+            patch("torch.__version__", "2.1.0"),
+            patch("torch.compile") as mock_compile,
+        ):
 
             mock_compile.return_value = mock_model
 
@@ -175,8 +181,9 @@ class TestDeviceUtils:
         mock_model = MagicMock()
         mock_model.eval.return_value = mock_model
 
-        with patch("torch.__version__", "2.1.0"), patch(
-            "torch.compile", side_effect=RuntimeError("Compile failed")
+        with (
+            patch("torch.__version__", "2.1.0"),
+            patch("torch.compile", side_effect=RuntimeError("Compile failed")),
         ):
 
             optimized_model = optimize_for_inference(mock_model)
@@ -186,9 +193,10 @@ class TestDeviceUtils:
 
     def test_clear_gpu_memory_cuda(self):
         """Test clearing CUDA GPU memory"""
-        with patch("torch.cuda.is_available", return_value=True), patch(
-            "torch.cuda.empty_cache"
-        ) as mock_empty_cache:
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.empty_cache") as mock_empty_cache,
+        ):
 
             clear_gpu_memory()
 
@@ -199,9 +207,11 @@ class TestDeviceUtils:
         mock_backends = MagicMock()
         mock_backends.mps.is_available.return_value = True
 
-        with patch("torch.cuda.is_available", return_value=False), patch(
-            "torch.backends", mock_backends
-        ), patch("torch.mps.empty_cache") as mock_mps_empty_cache:
+        with (
+            patch("torch.cuda.is_available", return_value=False),
+            patch("torch.backends", mock_backends),
+            patch("torch.mps.empty_cache") as mock_mps_empty_cache,
+        ):
 
             clear_gpu_memory()
 
@@ -215,13 +225,13 @@ class TestDeviceUtils:
 
     def test_get_memory_usage_cuda(self):
         """Test getting CUDA memory usage"""
-        with patch("torch.cuda.is_available", return_value=True), patch(
-            "torch.cuda.device_count", return_value=1
-        ), patch("torch.cuda.memory_allocated", return_value=1000), patch(
-            "torch.cuda.memory_reserved", return_value=2000
-        ), patch(
-            "torch.cuda.get_device_properties"
-        ) as mock_props:
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.device_count", return_value=1),
+            patch("torch.cuda.memory_allocated", return_value=1000),
+            patch("torch.cuda.memory_reserved", return_value=2000),
+            patch("torch.cuda.get_device_properties") as mock_props,
+        ):
 
             mock_props.return_value.total_memory = 8000
 
@@ -241,8 +251,9 @@ class TestDeviceUtils:
         mock_backends = MagicMock()
         mock_backends.mps.is_available.return_value = True
 
-        with patch("torch.cuda.is_available", return_value=False), patch(
-            "torch.backends", mock_backends
+        with (
+            patch("torch.cuda.is_available", return_value=False),
+            patch("torch.backends", mock_backends),
         ):
 
             usage = get_memory_usage()
@@ -254,9 +265,10 @@ class TestDeviceUtils:
 
     def test_check_device_compatibility_basic(self):
         """Test basic device compatibility check"""
-        with patch("utils.device_utils.get_optimal_device", return_value="cpu"), patch(
-            "utils.device_utils.get_device_info"
-        ) as mock_device_info:
+        with (
+            patch("utils.device_utils.get_optimal_device", return_value="cpu"),
+            patch("utils.device_utils.get_device_info") as mock_device_info,
+        ):
 
             mock_device_info.return_value = {
                 "platform": "Darwin",
@@ -291,9 +303,11 @@ class TestDeviceUtils:
             },
         }
 
-        with patch("utils.device_utils.get_optimal_device", return_value="cuda"), patch(
-            "utils.device_utils.get_device_info", return_value=mock_device_info
-        ), patch("torch.cuda.is_available", return_value=True):
+        with (
+            patch("utils.device_utils.get_optimal_device", return_value="cuda"),
+            patch("utils.device_utils.get_device_info", return_value=mock_device_info),
+            patch("torch.cuda.is_available", return_value=True),
+        ):
 
             result = check_device_compatibility(required_memory_mb=500)
 

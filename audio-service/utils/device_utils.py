@@ -2,9 +2,11 @@
 Device detection and management utilities
 """
 
-import torch
-import platform
 import logging
+import platform
+
+import torch
+
 from config import settings
 
 logger = logging.getLogger(__name__)

@@ -2,21 +2,22 @@
 Unit tests for models.tempo_models module
 """
 
-import pytest
-import sys
 from pathlib import Path
+import sys
+
 from pydantic import ValidationError
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from models.tempo_models import (
-    TempoPresetEnum,
     StorageTempoProcessingRequest,
-    TempoProcessingResponse,
-    TempoPresetConfig,
     TempoCallbackData,
+    TempoPresetConfig,
+    TempoPresetEnum,
+    TempoProcessingResponse,
 )
 
 

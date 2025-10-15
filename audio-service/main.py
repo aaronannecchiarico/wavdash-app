@@ -1,18 +1,19 @@
+from contextlib import asynccontextmanager
+import logging
+
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
-import logging
-from contextlib import asynccontextmanager
 
-from config import settings
 from celery_app import celery_app
-from routes.tempo_processing import router as tempo_router
-from routes.storage import router as storage_router
-from routes.tasks import router as tasks_router
+from config import settings
 from routes.health import router as health_router
 from routes.migration import router as migration_router
+from routes.storage import router as storage_router
+from routes.tasks import router as tasks_router
+from routes.tempo_processing import router as tempo_router
 from utils.exception_handlers import register_exception_handlers
 
 

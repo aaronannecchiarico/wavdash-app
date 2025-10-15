@@ -2,16 +2,17 @@
 Unit tests for services.tempo_presets module
 """
 
-import pytest
-import sys
 from pathlib import Path
+import sys
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+from models.tempo_models import TempoPresetConfig, TempoPresetEnum
 from services.tempo_presets import TempoPresetsService, get_tempo_presets_service
-from models.tempo_models import TempoPresetEnum, TempoPresetConfig
 
 
 class TestTempoPresetsService:

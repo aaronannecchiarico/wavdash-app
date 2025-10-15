@@ -5,18 +5,19 @@ Provides comprehensive audio analysis with efficient processing and structured o
 optimized for API consumption without large dataset transfers.
 """
 
-import librosa
-import numpy as np
-import soundfile as sf
-from typing import Dict, Any, Union, Optional, List, Tuple
-from io import BytesIO
-from pathlib import Path
-import logging
-import time
-import signal
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
+from io import BytesIO
+import logging
+from pathlib import Path
+import signal
+import time
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import librosa
+import numpy as np
+import soundfile as sf
 
 from config import settings
 

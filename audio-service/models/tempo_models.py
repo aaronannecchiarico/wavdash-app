@@ -3,9 +3,10 @@ Tempo Processing Models
 Models for sped-up and slowed-down audio processing
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional, Dict, Any, List
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TempoPresetEnum(str, Enum):

@@ -4,12 +4,13 @@ Handles fresh migrations and system maintenance operations
 Only available in development/local environments (DEBUG=true)
 """
 
+import logging
+from pathlib import Path
 import subprocess
 import sys
-from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-import logging
 
 from config import settings
 
