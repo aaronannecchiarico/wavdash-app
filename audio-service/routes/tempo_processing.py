@@ -30,7 +30,7 @@ router = APIRouter(prefix="/tempo", tags=["Tempo Processing"])
 
 
 @router.post("/storage/process", response_model=TempoProcessingResponse)
-async def process_tempo_from_storage_route(request: StorageTempoProcessingRequest):
+def process_tempo_from_storage_route(request: StorageTempoProcessingRequest):
     """
     Process audio file with tempo/pitch modifications (storage-based)
 
@@ -65,7 +65,7 @@ async def process_tempo_from_storage_route(request: StorageTempoProcessingReques
 
 
 @router.get("/presets")
-async def get_tempo_presets():
+def get_tempo_presets():
     """
     Get available tempo processing presets
     
@@ -110,7 +110,7 @@ async def get_tempo_presets():
     }
 
 @router.get("/system/compatibility")
-async def check_system_compatibility():
+def check_system_compatibility():
     """
     Check system compatibility for tempo processing
     
@@ -136,7 +136,7 @@ async def check_system_compatibility():
 
 
 @router.get("/suggest-presets")
-async def suggest_presets_for_audio(
+def suggest_presets_for_audio(
     current_bpm: float,
     duration_seconds: float
 ):
@@ -178,7 +178,7 @@ async def suggest_presets_for_audio(
         }
 
 @router.get("/performance/metrics")
-async def get_performance_metrics():
+def get_performance_metrics():
     """
     Get performance metrics and cache statistics
     
@@ -213,7 +213,7 @@ async def get_performance_metrics():
 
 
 @router.post("/performance/cache/clear")
-async def clear_performance_cache(cache_type: str = "all"):
+def clear_performance_cache(cache_type: str = "all"):
     """
     Clear performance cache
     

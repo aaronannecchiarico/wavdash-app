@@ -47,7 +47,7 @@ def is_task_deleted(task_id: str) -> bool:
 
 
 @router.get("/status/{task_id}")
-async def get_task_status(task_id: str, include_result: bool = False):
+def get_task_status(task_id: str, include_result: bool = False):
     """
     Get task status. Use include_result=true to get full results (may be large).
     """
@@ -123,7 +123,7 @@ async def get_task_status(task_id: str, include_result: bool = False):
 
 
 @router.get("/summary/{task_id}")
-async def get_task_summary(task_id: str):
+def get_task_summary(task_id: str):
     """
     Get a lightweight summary of audio processing results - optimized for Laravel integration.
     Returns only essential metrics without large feature arrays.
@@ -234,7 +234,7 @@ async def get_task_summary(task_id: str):
 
 
 @router.delete("/{task_id}")
-async def delete_task(task_id: str):
+def delete_task(task_id: str):
     """
     Delete a corrupted or stuck task from Redis
     """

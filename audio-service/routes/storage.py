@@ -40,7 +40,7 @@ router = APIRouter(prefix="/storage", tags=["Storage Processing"])
 
 
 @router.get("/status")
-async def storage_status():
+def storage_status():
     """Check storage configuration and status"""
     try:
         if not is_storage_enabled():
@@ -63,16 +63,19 @@ async def storage_status():
 
 
 @router.post("/extract-features", response_model=StorageProcessingResponse)
-async def extract_features_from_storage(request: StorageProcessingRequest, background_tasks: BackgroundTasks):
+def extract_features_from_storage(
+    request: StorageProcessingRequest,
+    background_tasks: BackgroundTasks,
+    storage: StorageService = Depends(get_storage_service),
+    validator: StorageValidator = Depends()
+):
     """Extract audio features from file in configured storage (async)"""
     logging.info(f"Received storage feature extraction request: {request}")
 
     try:
-        # Validate required fields
+        # Validate required fields and file existence
         validate_required_field(request.storage_path, "storage_path")
-
-        # Validate storage and file existence
-        validate_storage_and_file(request.storage_path)
+        validator.validate_file_exists(request.storage_path)
 
         logging.info(f"Processing request for storage path: {request.storage_path}")
 
@@ -110,11 +113,16 @@ async def extract_features_from_storage(request: StorageProcessingRequest, backg
 
 
 @router.post("/separate-stems", response_model=StorageStemSeparationResponse)
-async def separate_stems_from_storage(request: StorageStemSeparationRequest, background_tasks: BackgroundTasks):
+def separate_stems_from_storage(
+    request: StorageStemSeparationRequest,
+    background_tasks: BackgroundTasks,
+    storage: StorageService = Depends(get_storage_service),
+    validator: StorageValidator = Depends()
+):
     """Separate audio stems from file in configured storage (async)"""
     try:
-        # Validate storage and file existence
-        validate_storage_and_file(request.storage_path)
+        # Validate file existence
+        validator.validate_file_exists(request.storage_path)
 
         # Generate task ID
         task_id = generate_task_id()
@@ -216,13 +224,16 @@ def list_storage_files(
 
 
 @router.delete("/file/{storage_path:path}")
-async def delete_storage_file(storage_path: str):
+def delete_storage_file(
+    storage_path: str,
+    storage: StorageService = Depends(get_storage_service),
+    validator: StorageValidator = Depends()
+):
     """Delete a file from configured storage"""
     try:
-        # Validate storage and file existence
-        validate_storage_and_file(storage_path)
+        # Validate file existence
+        validator.validate_file_exists(storage_path)
 
-        storage = get_storage_service()
         storage_type_value = get_storage_type_value()
 
         if storage.delete_file(storage_path):
@@ -242,12 +253,13 @@ async def delete_storage_file(storage_path: str):
 
 
 @router.post("/batch-process")
-async def batch_process_storage(request: StorageBatchProcessingRequest, background_tasks: BackgroundTasks):
+def batch_process_storage(
+    request: StorageBatchProcessingRequest,
+    background_tasks: BackgroundTasks,
+    storage: StorageService = Depends(get_storage_service)
+):
     """Process multiple files from configured storage in batch"""
     try:
-        validate_storage_enabled()
-
-        storage = get_storage_service()
         storage_type_value = get_storage_type_value()
 
         # Verify all files exist
