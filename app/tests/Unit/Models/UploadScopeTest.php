@@ -210,64 +210,64 @@ class UploadScopeTest extends TestCase
     public function it_applies_custom_sorting_by_title_asc(): void
     {
         $user = User::factory()->create();
-        $upload1 = Upload::factory()->for($user)->create(['title' => 'Z Track']);
-        $upload2 = Upload::factory()->for($user)->create(['title' => 'A Track']);
-        $upload3 = Upload::factory()->for($user)->create(['title' => 'M Track']);
+        $uploadZ = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'Z Track']);
+        $uploadA = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'A Track']);
+        $uploadM = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'M Track']);
 
         $results = Upload::userSort('title', 'asc')->get();
 
-        $this->assertEquals($upload2->id, $results->first()->id);
-        $this->assertEquals($upload3->id, $results->get(1)->id);
-        $this->assertEquals($upload1->id, $results->last()->id);
+        $this->assertCount(3, $results);
+        $this->assertTrue($results->first()->is($uploadA));
+        $this->assertTrue($results->get(1)->is($uploadM));
+        $this->assertTrue($results->last()->is($uploadZ));
     }
 
     #[Test]
     public function it_applies_custom_sorting_by_title_desc(): void
     {
         $user = User::factory()->create();
-        $upload1 = Upload::factory()->for($user)->create(['title' => 'A Track']);
-        $upload2 = Upload::factory()->for($user)->create(['title' => 'Z Track']);
-        $upload3 = Upload::factory()->for($user)->create(['title' => 'M Track']);
+        $uploadA = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'A Track']);
+        $uploadZ = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'Z Track']);
+        $uploadM = Upload::factory()->withoutFiles()->for($user)->create(['title' => 'M Track']);
 
         $results = Upload::userSort('title', 'desc')->get();
 
-        $this->assertEquals($upload2->id, $results->first()->id);
-        $this->assertEquals($upload3->id, $results->get(1)->id);
-        $this->assertEquals($upload1->id, $results->last()->id);
+        $this->assertCount(3, $results);
+        $this->assertTrue($results->first()->is($uploadZ));
+        $this->assertTrue($results->get(1)->is($uploadM));
+        $this->assertTrue($results->last()->is($uploadA));
     }
 
     #[Test]
     public function it_applies_custom_sorting_by_size(): void
     {
-        $this->markTestIncomplete('Fix the size sorting test - it fails intermittently.');
-
         $user = User::factory()->create();
-        $upload1 = Upload::factory()->withoutFiles()->for($user)->create(['size' => 3000000]);
-        $upload2 = Upload::factory()->withoutFiles()->for($user)->create(['size' => 1000000]);
-        $upload3 = Upload::factory()->withoutFiles()->for($user)->create(['size' => 2000000]);
+        $uploadLarge = Upload::factory()->withoutFiles()->for($user)->create(['size' => 3000000]);
+        $uploadSmall = Upload::factory()->withoutFiles()->for($user)->create(['size' => 1000000]);
+        $uploadMedium = Upload::factory()->withoutFiles()->for($user)->create(['size' => 2000000]);
 
         $results = $user->uploads()->userSort('size', 'asc')->get();
 
-        $this->assertEquals($upload2->id, $results->first()->id);
-        $this->assertEquals($upload3->id, $results->get(1)->id);
-        $this->assertEquals($upload1->id, $results->last()->id);
+        $this->assertCount(3, $results);
+        $this->assertTrue($results->first()->is($uploadSmall));
+        $this->assertTrue($results->get(1)->is($uploadMedium));
+        $this->assertTrue($results->last()->is($uploadLarge));
     }
 
     #[Test]
     public function it_applies_custom_sorting_by_duration(): void
     {
-        $this->markTestIncomplete('Fix the duration sorting test - it fails intermittently.');
-
         $user = User::factory()->create();
-        $upload1 = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 300]);
-        $upload2 = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 100]);
-        $upload3 = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 200]);
+        $uploadLong = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 300]);
+        $uploadShort = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 100]);
+        $uploadMedium = Upload::factory()->withoutFiles()->for($user)->create(['duration_seconds' => 200]);
 
         $results = $user->uploads()->userSort('duration', 'asc')->get();
 
-        $this->assertEquals($upload2->id, $results->first()->id);
-        $this->assertEquals($upload3->id, $results->get(1)->id);
-        $this->assertEquals($upload1->id, $results->last()->id);
+        $this->assertCount(3, $results);
+        $this->assertTrue($results->first()->is($uploadShort));
+        $this->assertTrue($results->get(1)->is($uploadMedium));
+        $this->assertTrue($results->last()->is($uploadLong));
     }
 
     #[Test]
@@ -280,34 +280,39 @@ class UploadScopeTest extends TestCase
 
         $results = $user->uploads()->userSort('updated_at', 'desc')->get();
 
-        $this->assertEquals($upload3->id, $results->first()->id);
-        $this->assertEquals($upload2->id, $results->get(1)->id);
-        $this->assertEquals($upload1->id, $results->last()->id);
+        $this->assertCount(3, $results);
+        $this->assertTrue($results->first()->is($upload3));
+        $this->assertTrue($results->get(1)->is($upload2));
+        $this->assertTrue($results->last()->is($upload1));
     }
 
     #[Test]
     public function it_defaults_to_latest_updated_for_invalid_sort_column(): void
     {
         $user = User::factory()->create();
-        Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()->subDay()]);
+        $older = Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()->subDay()]);
         $latest = Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()]);
 
         $results = $user->uploads()->userSort('invalid_column', 'asc')->get();
 
-        $this->assertEquals($latest->id, $results->first()->id);
+        $this->assertCount(2, $results);
+        $this->assertTrue($results->first()->is($latest));
+        $this->assertTrue($results->last()->is($older));
     }
 
     #[Test]
     public function it_defaults_to_latest_updated_for_disallowed_sort_column(): void
     {
         $user = User::factory()->create();
-        Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()->subDay()]);
+        $older = Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()->subDay()]);
         $latest = Upload::factory()->withoutFiles()->for($user)->create(['updated_at' => now()]);
 
         // Attempt to sort by a column that exists but isn't in allowed list
         $results = $user->uploads()->userSort('id', 'asc')->get();
 
-        $this->assertEquals($latest->id, $results->first()->id);
+        $this->assertCount(2, $results);
+        $this->assertTrue($results->first()->is($latest));
+        $this->assertTrue($results->last()->is($older));
     }
 
     #[Test]

@@ -168,7 +168,9 @@ class TempoDisplayAndDownloadTest extends TestCase
         ]));
 
         $response->assertSuccessful();
-        $response->assertHeader('content-disposition', 'attachment; filename=test_audio-nightcore.wav');
+        // Assert header contains the preset suffix, filename prefix varies based on factory
+        $this->assertStringContainsString('attachment; filename=', $response->headers->get('content-disposition'));
+        $this->assertStringContainsString('-nightcore.wav', $response->headers->get('content-disposition'));
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

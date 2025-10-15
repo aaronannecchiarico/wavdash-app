@@ -45,14 +45,11 @@ class UploadFactory extends Factory
      */
     public function withoutFiles(): static
     {
-        $newInstance = $this->newInstance([]);
-
-        return $newInstance->state(function (array $attributes) {
+        return $this->state(function (array $attributes) {
             return [
                 'status' => 'ready',
-                'duration_seconds' => $attributes['duration_seconds'] ?? 180,
             ];
-        })->configure(fn () => $newInstance);  // Override configure to skip file copying
+        });
     }
 
     /**
@@ -61,6 +58,11 @@ class UploadFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (\App\Models\Upload $upload) {
+            // Skip if already marked as 'ready' - indicates withoutFiles() was used
+            if ($upload->status === 'ready') {
+                return;
+            }
+
             $sourcePath = base_path('test_audio.wav');
 
             if (file_exists($sourcePath)) {
