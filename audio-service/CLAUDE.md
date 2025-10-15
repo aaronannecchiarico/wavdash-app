@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Commit Preferences
+
+**IMPORTANT**: When creating git commits:
+- Do NOT include "Co-Authored-By: Claude" lines
+- Do NOT include Claude Code attribution links in commit messages
+- Keep commit messages clean and professional without AI co-authorship attribution
+
 ## Development Commands
 
 ### Environment Setup

@@ -345,3 +345,5 @@ migration-summary.md
 bpm_accuracy_results.csv
 *_results.csv
 *_output.log
+
+docs/
