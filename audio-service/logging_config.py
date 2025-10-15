@@ -147,17 +147,14 @@ def setup_logging():
         # Fallback to basic logging if JSON logger is not available
         logging.basicConfig(
             level=getattr(logging, settings.LOG_LEVEL),
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
-            handlers=[
-                logging.FileHandler(settings.LOG_FILE),
-                logging.StreamHandler()
-            ]
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            handlers=[logging.FileHandler(settings.LOG_FILE), logging.StreamHandler()],
         )
         logger = logging.getLogger("audio_processing")
         logger.warning(f"Using fallback logging configuration due to: {e}")
         logger.info("Basic logging configuration loaded successfully")
-    
+
     return logger
 
 
@@ -171,47 +168,55 @@ def log_performance(func):
     """Decorator to log function execution time"""
     import functools
     import time
-    
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         logger = get_logger(f"performance.{func.__module__}.{func.__name__}")
         start_time = time.time()
-        
+
         try:
             result = func(*args, **kwargs)
             execution_time = time.time() - start_time
-            logger.info(f"Function executed successfully in {execution_time:.4f} seconds")
+            logger.info(
+                f"Function executed successfully in {execution_time:.4f} seconds"
+            )
             return result
         except Exception as e:
             execution_time = time.time() - start_time
-            logger.error(f"Function failed after {execution_time:.4f} seconds: {str(e)}")
+            logger.error(
+                f"Function failed after {execution_time:.4f} seconds: {str(e)}"
+            )
             raise
-    
+
     return wrapper
 
 
 # Context manager for request logging
 class RequestLogger:
     """Context manager for logging request processing"""
-    
+
     def __init__(self, request_id: str, operation: str):
         self.request_id = request_id
         self.operation = operation
         self.logger = get_logger("request")
         self.start_time = None
-    
+
     def __enter__(self):
         self.start_time = time.time()
         self.logger.info(f"Request {self.request_id}: Starting {self.operation}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         execution_time = time.time() - self.start_time
-        
+
         if exc_type is None:
-            self.logger.info(f"Request {self.request_id}: {self.operation} completed in {execution_time:.4f} seconds")
+            self.logger.info(
+                f"Request {self.request_id}: {self.operation} completed in {execution_time:.4f} seconds"
+            )
         else:
-            self.logger.error(f"Request {self.request_id}: {self.operation} failed after {execution_time:.4f} seconds: {exc_val}")
+            self.logger.error(
+                f"Request {self.request_id}: {self.operation} failed after {execution_time:.4f} seconds: {exc_val}"
+            )
 
 
 # Initialize logging when module is imported

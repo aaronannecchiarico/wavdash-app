@@ -8,12 +8,16 @@ import logging
 from typing import Optional
 from fastapi import HTTPException
 
-from services.storage_service import get_storage_service, is_storage_enabled, get_storage_type
+from services.storage_service import (
+    get_storage_service,
+    is_storage_enabled,
+    get_storage_type,
+)
 from services.storage_service import StorageType
 from utils.exceptions import (
     StorageNotEnabledError,
     FileNotFoundError,
-    InvalidRequestError
+    InvalidRequestError,
 )
 
 
@@ -81,7 +85,9 @@ def get_storage_type_value() -> str:
     return get_storage_type().value
 
 
-def handle_route_error(error: Exception, context: str, log_details: Optional[dict] = None) -> HTTPException:
+def handle_route_error(
+    error: Exception, context: str, log_details: Optional[dict] = None
+) -> HTTPException:
     """
     Standardized error handling for route exceptions
 
@@ -110,10 +116,7 @@ def handle_route_error(error: Exception, context: str, log_details: Optional[dic
         logger.error(f"Additional details: {log_details}")
 
     # Return wrapped exception
-    raise HTTPException(
-        status_code=500,
-        detail=f"Processing error: {str(error)}"
-    )
+    raise HTTPException(status_code=500, detail=f"Processing error: {str(error)}")
 
 
 def validate_required_field(value: Optional[str], field_name: str) -> None:
@@ -132,10 +135,7 @@ def validate_required_field(value: Optional[str], field_name: str) -> None:
 
 
 def create_processing_response(
-    task_id: str,
-    status: str,
-    message: str,
-    **additional_fields
+    task_id: str, status: str, message: str, **additional_fields
 ) -> dict:
     """
     Create a standardized processing response dictionary
@@ -153,7 +153,7 @@ def create_processing_response(
         "task_id": task_id,
         "status": status,
         "message": message,
-        "storage_type": get_storage_type_value()
+        "storage_type": get_storage_type_value(),
     }
     response.update(additional_fields)
     return response

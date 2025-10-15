@@ -10,13 +10,19 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from utils.exceptions import AudioServiceException
-from models.error_models import ErrorResponse, ValidationErrorResponse, get_utc_timestamp
+from models.error_models import (
+    ErrorResponse,
+    ValidationErrorResponse,
+    get_utc_timestamp,
+)
 
 
 logger = logging.getLogger(__name__)
 
 
-async def audio_service_exception_handler(request: Request, exc: AudioServiceException) -> JSONResponse:
+async def audio_service_exception_handler(
+    request: Request, exc: AudioServiceException
+) -> JSONResponse:
     """
     Handle custom AudioServiceException and its subclasses
 
@@ -29,8 +35,8 @@ async def audio_service_exception_handler(request: Request, exc: AudioServiceExc
             "status_code": exc.status_code,
             "details": exc.details,
             "path": str(request.url.path),
-            "method": request.method
-        }
+            "method": request.method,
+        },
     )
 
     error_response = ErrorResponse(
@@ -38,16 +44,17 @@ async def audio_service_exception_handler(request: Request, exc: AudioServiceExc
         detail=exc.message,
         status_code=exc.status_code,
         timestamp=get_utc_timestamp(),
-        path=str(request.url.path)
+        path=str(request.url.path),
     )
 
     return JSONResponse(
-        status_code=exc.status_code,
-        content=error_response.model_dump()
+        status_code=exc.status_code, content=error_response.model_dump()
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """
     Handle Pydantic validation errors with detailed field information
 
@@ -58,7 +65,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     try:
         request_body = await request.body()
         if request_body:
-            request_body = request_body.decode('utf-8')
+            request_body = request_body.decode("utf-8")
     except Exception:
         request_body = "Unable to read request body"
 
@@ -68,19 +75,19 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "validation_errors": exc.errors(),
             "body": request_body,
             "path": str(request.url.path),
-            "method": request.method
-        }
+            "method": request.method,
+        },
     )
 
     error_response = ValidationErrorResponse(
         detail="Request validation failed",
         timestamp=get_utc_timestamp(),
-        validation_errors=exc.errors()
+        validation_errors=exc.errors(),
     )
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=error_response.model_dump()
+        content=error_response.model_dump(),
     )
 
 
@@ -95,8 +102,8 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         extra={
             "exception_type": type(exc).__name__,
             "path": str(request.url.path),
-            "method": request.method
-        }
+            "method": request.method,
+        },
     )
 
     error_response = ErrorResponse(
@@ -104,13 +111,10 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         detail="An unexpected error occurred. Please try again later.",
         status_code=500,
         timestamp=get_utc_timestamp(),
-        path=str(request.url.path)
+        path=str(request.url.path),
     )
 
-    return JSONResponse(
-        status_code=500,
-        content=error_response.model_dump()
-    )
+    return JSONResponse(status_code=500, content=error_response.model_dump())
 
 
 def register_exception_handlers(app):

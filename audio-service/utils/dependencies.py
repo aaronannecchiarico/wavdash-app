@@ -12,7 +12,7 @@ from services.storage_service import (
     is_storage_enabled as _is_storage_enabled,
     get_storage_type as _get_storage_type,
     StorageService,
-    StorageType
+    StorageType,
 )
 from utils.exceptions import StorageNotEnabledError
 
@@ -146,7 +146,9 @@ class RequestValidator:
             raise InvalidStoragePathError(storage_path, "path cannot contain '..'")
 
         if storage_path.startswith("/"):
-            raise InvalidStoragePathError(storage_path, "path should not start with '/'")
+            raise InvalidStoragePathError(
+                storage_path, "path should not start with '/'"
+            )
 
 
 def get_logger(name: str = __name__) -> logging.Logger:

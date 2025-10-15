@@ -13,29 +13,31 @@ if str(project_root) not in sys.path:
 
 from logging_config import setup_logging
 
+
 def main():
     """Start Celery worker with proper configuration"""
     setup_logging()
     logger = logging.getLogger("worker_startup")
-    
+
     try:
         # Celery worker command
         cmd = [
             "celery",
-            "-A", "celery_app",
+            "-A",
+            "celery_app",
             "worker",
             "--loglevel=info",
             "--concurrency=2",
             "--queues=audio_features,stem_separation,tempo_processing",
             "--max-tasks-per-child=100",
-            "--prefetch-multiplier=1"
+            "--prefetch-multiplier=1",
         ]
-        
+
         logger.info("Starting Celery worker with command: %s", " ".join(cmd))
-        
+
         # Start worker
         process = subprocess.run(cmd, check=True)
-        
+
     except subprocess.CalledProcessError as e:
         logger.error("Failed to start Celery worker: %s", e)
         sys.exit(1)
@@ -45,6 +47,7 @@ def main():
     except Exception as e:
         logger.error("Unexpected error starting worker: %s", e)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

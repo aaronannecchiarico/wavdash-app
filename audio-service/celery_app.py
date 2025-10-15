@@ -21,7 +21,7 @@ celery_app = Celery(
         "tasks.audio_processing",
         "tasks.storage_processing",
         "tasks.tempo_processing",
-    ]
+    ],
 )
 
 celery_app.conf.update(
@@ -38,42 +38,61 @@ celery_app.conf.update(
     worker_max_tasks_per_child=1000,
     result_expires=3600,
     task_routes={
-        'tasks.audio_processing.process_audio_features': {'queue': 'audio_features'},
-        'tasks.audio_processing.separate_audio_stems': {'queue': 'stem_separation'},
-        'tasks.storage_processing.process_audio_features_from_storage': {'queue': 'audio_features'},
-        'tasks.storage_processing.separate_audio_stems_from_storage': {'queue': 'stem_separation'},
-        'tasks.storage_processing.batch_process_from_storage': {'queue': 'audio_features'},
-        'tasks.tempo_processing.process_tempo_from_storage': {'queue': 'tempo_processing'},
-        'tasks.tempo_processing.process_tempo_direct': {'queue': 'tempo_processing'},
+        "tasks.audio_processing.process_audio_features": {"queue": "audio_features"},
+        "tasks.audio_processing.separate_audio_stems": {"queue": "stem_separation"},
+        "tasks.storage_processing.process_audio_features_from_storage": {
+            "queue": "audio_features"
+        },
+        "tasks.storage_processing.separate_audio_stems_from_storage": {
+            "queue": "stem_separation"
+        },
+        "tasks.storage_processing.batch_process_from_storage": {
+            "queue": "audio_features"
+        },
+        "tasks.tempo_processing.process_tempo_from_storage": {
+            "queue": "tempo_processing"
+        },
+        "tasks.tempo_processing.process_tempo_direct": {"queue": "tempo_processing"},
     },
     task_annotations={
-        'tasks.audio_processing.process_audio_features': {'rate_limit': '10/m'},
-        'tasks.audio_processing.separate_audio_stems': {'rate_limit': '5/m'},
-        'tasks.storage_processing.process_audio_features_from_storage': {'rate_limit': '10/m'},
-        'tasks.storage_processing.separate_audio_stems_from_storage': {'rate_limit': '5/m'},
-        'tasks.storage_processing.batch_process_from_storage': {'rate_limit': '3/m'},
-        'tasks.tempo_processing.process_tempo_from_storage': {'rate_limit': '3/m'},
-        'tasks.tempo_processing.process_tempo_direct': {'rate_limit': '3/m'},
-    }
+        "tasks.audio_processing.process_audio_features": {"rate_limit": "10/m"},
+        "tasks.audio_processing.separate_audio_stems": {"rate_limit": "5/m"},
+        "tasks.storage_processing.process_audio_features_from_storage": {
+            "rate_limit": "10/m"
+        },
+        "tasks.storage_processing.separate_audio_stems_from_storage": {
+            "rate_limit": "5/m"
+        },
+        "tasks.storage_processing.batch_process_from_storage": {"rate_limit": "3/m"},
+        "tasks.tempo_processing.process_tempo_from_storage": {"rate_limit": "3/m"},
+        "tasks.tempo_processing.process_tempo_direct": {"rate_limit": "3/m"},
+    },
 )
+
 
 @worker_ready.connect
 def worker_ready_handler(sender=None, **kwargs):
     # Force CPU for MPS compatibility in worker processes
     import os
+
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
     os.environ["PYTORCH_DISABLE_MPS_FALLBACK_WARNING"] = "1"
-    
+
     # Disable MPS for Celery workers to prevent crashes
     import torch
-    if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-        logging.warning("MPS detected but using CPU for Celery worker to avoid multiprocessing issues")
-    
+
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        logging.warning(
+            "MPS detected but using CPU for Celery worker to avoid multiprocessing issues"
+        )
+
     logging.info(f"Celery worker {sender.hostname} is ready")
+
 
 @worker_shutting_down.connect
 def worker_shutting_down_handler(sender=None, **kwargs):
     logging.info(f"Celery worker {sender.hostname} is shutting down")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     celery_app.start()

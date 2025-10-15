@@ -16,7 +16,6 @@ from routes.migration import router as migration_router
 from utils.exception_handlers import register_exception_handlers
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.info("Starting audio processing microservice")
@@ -28,7 +27,7 @@ app = FastAPI(
     title="Audio Processing Microservice",
     description="FastAPI microservice for audio feature extraction and stem separation",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Register custom exception handlers
@@ -62,5 +61,5 @@ if __name__ == "__main__":
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
+        log_level=settings.LOG_LEVEL.lower(),
     )
