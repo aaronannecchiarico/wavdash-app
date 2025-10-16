@@ -54,7 +54,7 @@ class MigrateFreshWithMicroservice extends Command
         $skipMicroservice = $this->option('skip-microservice');
         $microserviceOnly = $this->option('microservice-only');
 
-        $this->info('🚀 Beat Forge - Complete Fresh Migration');
+        $this->info('🚀 WavDash - Complete Fresh Migration');
         $this->line('This will reset Laravel database, clear all storage, and clean up microservice');
         $this->newLine();
 

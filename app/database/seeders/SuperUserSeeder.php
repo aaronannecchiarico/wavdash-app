@@ -51,7 +51,7 @@ class SuperUserSeeder extends Seeder
 
         // Get SuperUser credentials from environment
         $name = env('SUPER_USER_NAME', 'Super Administrator');
-        $email = env('SUPER_USER_EMAIL', 'admin@beatforge.com');
+        $email = env('SUPER_USER_EMAIL', 'admin@wavdash.com');
         $password = env('SUPER_USER_PASSWORD');
 
         // Validate required environment variables

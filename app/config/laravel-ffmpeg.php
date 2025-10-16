@@ -96,7 +96,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Directory for temporary HLS (HTTP Live Streaming) encrypted segments.
-    | Not currently used in Beat Forge but available for future features.
+    | Not currently used in WavDash but available for future features.
     |
     */
     'temporary_files_encrypted_hls' => env('FFMPEG_TEMPORARY_ENCRYPTED_HLS', env('FFMPEG_TEMPORARY_FILES_ROOT', sys_get_temp_dir())),

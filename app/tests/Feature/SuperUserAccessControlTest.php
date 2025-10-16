@@ -68,7 +68,7 @@ class SuperUserAccessControlTest extends TestCase
         // Create user
         $user = User::factory()->create([
             'name' => 'Super Administrator',
-            'email' => 'admin@beatforge.com',
+            'email' => 'admin@wavdash.com',
             'password' => Hash::make('secure-password'),
             'email_verified_at' => now(),
         ]);
@@ -267,7 +267,7 @@ class SuperUserAccessControlTest extends TestCase
         // 3. Create SuperUser with role
         $superUser = User::create([
             'name' => 'Super Administrator',
-            'email' => 'admin@beatforge.com',
+            'email' => 'admin@wavdash.com',
             'password' => Hash::make('SecureAdminPassword123!'),
             'email_verified_at' => now(),
         ]);

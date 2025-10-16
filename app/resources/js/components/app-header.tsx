@@ -88,7 +88,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                         <div className="flex items-center space-x-6">
                             <AppLogoIcon className="neo-shadow h-10 w-10" />
-                            <h1 className="text-2xl font-black tracking-widest text-[var(--neo-black)] uppercase">Beat Forge</h1>
+                            <h1 className="text-2xl font-black tracking-widest text-[var(--neo-black)] uppercase">WavDash</h1>
                         </div>
 
                         {/* Brutalist navigation buttons */}

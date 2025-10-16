@@ -14,7 +14,7 @@ export function AppSidebar() {
         <aside className="neo-border-r flex w-64 flex-col bg-[var(--neo-black)]">
             {/* Brand Header */}
             <div className="border-b-2 border-border p-6">
-                <h1 className="font-heading text-xl font-black tracking-widest text-[var(--neo-white)] uppercase">Beat Forge</h1>
+                <h1 className="font-heading text-xl font-black tracking-widest text-[var(--neo-white)] uppercase">WavDash</h1>
             </div>
 
             {/* Navigation Items */}

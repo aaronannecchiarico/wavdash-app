@@ -127,7 +127,7 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                                 <Music className="mb-4 size-12 text-main-foreground" />
                                 <h3 className="mb-2 font-heading text-lg font-black text-main-foreground uppercase">NO UPLOADS YET</h3>
                                 <p className="mb-4 text-center font-base font-bold text-main-foreground">
-                                    UPLOAD YOUR FIRST SONG TO GET STARTED WITH BEAT FORGE.
+                                    UPLOAD YOUR FIRST SONG TO GET STARTED WITH WAVDASH.
                                 </p>
                                 <Button asChild className="font-heading font-black tracking-wider uppercase">
                                     <Link href="/uploads/create">UPLOAD A SONG</Link>

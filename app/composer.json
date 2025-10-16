@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "aannecchiarico/wavdash",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "The web application for Wavdash audio analysis platform.",
+    "keywords": ["laravel", "filament", "inertia", "react", "audio", "analysis", "platform", "aws", "s3", "ffmpeg"],
     "license": "MIT",
     "require": {
         "php": "^8.2",

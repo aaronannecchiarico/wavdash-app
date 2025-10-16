@@ -52,8 +52,8 @@ class MigrateAudioMicroservice extends Command
                 $this->warn('💡 Ensure the microservice is running with DEBUG=true');
                 $this->newLine();
                 $this->line('To start the microservice in development mode:');
-                $this->line('cd /path/to/beat-forge-audio-feature-extraction-service');
-                $this->line('source beatforge-audio-extraction-service-local/bin/activate');
+                $this->line('cd /path/to/wavdash-audio-feature-extraction-service');
+                $this->line('source wavdash-audio-extraction-service-local/bin/activate');
                 $this->line('uvicorn main:app --reload --port 8001');
             }
 

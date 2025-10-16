@@ -45,10 +45,10 @@ export default function BrutalistWelcome() {
 
     return (
         <>
-            <Head title="Beat Forge - Destroy Your Audio">
+            <Head title="WavDash - Destroy Your Audio">
                 <meta
                     name="description"
-                    content="Beat Forge - The ultimate audio processing platform. Analyze everything, extract stems, dominate the beats."
+                    content="WavDash - The ultimate audio processing platform. Analyze everything, extract stems, dominate the beats."
                 />
             </Head>
 
@@ -213,7 +213,7 @@ export default function BrutalistWelcome() {
                             <div className="mr-4 flex h-12 w-12 items-center justify-center border-2 border-border bg-chart-1 shadow-shadow">
                                 <Volume2 className="h-6 w-6 text-main-foreground" />
                             </div>
-                            <h3 className="font-heading text-2xl font-black tracking-widest text-foreground uppercase">BEAT FORGE</h3>
+                            <h3 className="font-heading text-2xl font-black tracking-widest text-foreground uppercase">WAVDASH</h3>
                         </div>
                         <p className="text-sm font-base font-bold tracking-wide text-foreground/70 uppercase">
                             FORGED WITH BRUTALITY • POWERED BY PASSION • BUILT FOR BEATS

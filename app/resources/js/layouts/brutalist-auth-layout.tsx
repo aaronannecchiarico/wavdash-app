@@ -33,7 +33,7 @@ export default function BrutalistAuthLayout({ children, title, description }: Pr
                     className="flex items-center gap-2 border-2 border-border bg-background p-3 shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none"
                 >
                     <Music className="h-5 w-5 text-foreground" />
-                    <span className="font-heading text-sm font-black tracking-wide text-foreground uppercase">BEAT FORGE</span>
+                    <span className="font-heading text-sm font-black tracking-wide text-foreground uppercase">WAVDASH</span>
                 </Link>
             </div>
 

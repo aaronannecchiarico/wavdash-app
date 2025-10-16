@@ -1,6 +1,6 @@
-# Claude Code Directives for Beat Forge
+# Claude Code Directives for WavDash
 
-This document provides essential context for working on the **Beat Forge** repository, a Laravel 12, React, and Inertia.js application with a Filament v4 admin panel.
+This document provides essential context for working on the **WavDash** repository, a Laravel 12, React, and Inertia.js application with a Filament v4 admin panel.
 
 ---
 
@@ -101,7 +101,7 @@ Follow these patterns to maintain code consistency and quality.
 * **Component Location:** Neobrutalism components are installed in `/resources/js/components/ui/neo/`
 * **Installation:** Use `npx shadcn@latest add https://neobrutalism.dev/r/[component].json` to install components
 * **CSS Variables Only:** Neobrutalism components use CSS variables, not utility classes
-* **Styling System:** Uses custom CSS variables defined in `resources/css/app.css` adapted to Beat Forge brand colors
+* **Styling System:** Uses custom CSS variables defined in `resources/css/app.css` adapted to WavDash brand colors
 * **Preferred Usage:** For redesign work, prefer neobrutalism components over standard shadcn/ui components
 
 ### **Client-Side Audio Processing (Phase 4)**
