@@ -127,7 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-beatforge-audio-extraction-service-local/
+wavdash-audio-extraction-service-local/
 
 # Spyder project settings
 .spyderproject

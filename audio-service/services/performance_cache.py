@@ -29,7 +29,7 @@ class PerformanceCache:
         self.cache_dir = (
             Path(cache_dir)
             if cache_dir
-            else Path(tempfile.gettempdir()) / "beatforge_cache"
+            else Path(tempfile.gettempdir()) / "wavdash_cache"
         )
         self.max_cache_size_mb = max_cache_size_mb
         self.cache_dir.mkdir(exist_ok=True)

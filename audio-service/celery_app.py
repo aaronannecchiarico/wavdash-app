@@ -19,7 +19,6 @@ celery_app = Celery(
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
     include=[
-        "tasks.audio_processing",
         "tasks.storage_processing",
         "tasks.tempo_processing",
     ],
@@ -39,8 +38,6 @@ celery_app.conf.update(
     worker_max_tasks_per_child=1000,
     result_expires=3600,
     task_routes={
-        "tasks.audio_processing.process_audio_features": {"queue": "audio_features"},
-        "tasks.audio_processing.separate_audio_stems": {"queue": "stem_separation"},
         "tasks.storage_processing.process_audio_features_from_storage": {
             "queue": "audio_features"
         },
@@ -56,8 +53,6 @@ celery_app.conf.update(
         "tasks.tempo_processing.process_tempo_direct": {"queue": "tempo_processing"},
     },
     task_annotations={
-        "tasks.audio_processing.process_audio_features": {"rate_limit": "10/m"},
-        "tasks.audio_processing.separate_audio_stems": {"rate_limit": "5/m"},
         "tasks.storage_processing.process_audio_features_from_storage": {
             "rate_limit": "10/m"
         },

@@ -138,7 +138,7 @@ class CallbackDeliveryService:
                 # Prepare headers optimized for Laravel
                 headers = {
                     "Content-Type": "application/json",
-                    "User-Agent": "BeatForge-AudioService/3.0",
+                    "User-Agent": "Wavdash-AudioService/3.0",
                     "X-Callback-Attempt": str(attempt + 1),
                     "X-Callback-Priority": priority.value,
                     "X-Service-Version": "3.0.0",

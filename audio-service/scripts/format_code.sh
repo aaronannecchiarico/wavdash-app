@@ -10,8 +10,8 @@ echo "================================"
 echo ""
 
 # Activate virtual environment if it exists
-if [ -d "beatforge-audio-extraction-service-local/bin" ]; then
-    source beatforge-audio-extraction-service-local/bin/activate
+if [ -d "wavdash-audio-extraction-service-local/bin" ]; then
+    source wavdash-audio-extraction-service-local/bin/activate
 fi
 
 # Check if tools are installed

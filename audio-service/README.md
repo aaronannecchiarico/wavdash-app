@@ -484,7 +484,7 @@ tests/
 **Manual pytest execution (ensure you're in the venv)**
 ```bash
 # Activate virtual environment
-source beatforge-audio-extraction-service-local/bin/activate
+source wavdash-audio-extraction-service-local/bin/activate
 
 # Run all tests
 pytest
@@ -522,7 +522,7 @@ pytest -m "not slow"        # Skip slow tests
 ```bash
 # 1. Install and activate environment
 python install.py
-source beatforge-audio-extraction-service-local/bin/activate
+source wavdash-audio-extraction-service-local/bin/activate
 
 # 2. Start Redis (if running feature tests)
 docker run -d -p 6379:6379 redis:alpine
@@ -538,7 +538,7 @@ python start_worker.py
 
 ```bash
 # Activate virtual environment first
-source beatforge-audio-extraction-service-local/bin/activate
+source wavdash-audio-extraction-service-local/bin/activate
 
 # Format code
 black .
@@ -550,7 +550,7 @@ flake8 .
 
 ```bash
 # Activate virtual environment first
-source beatforge-audio-extraction-service-local/bin/activate
+source wavdash-audio-extraction-service-local/bin/activate
 
 # Start development server
 uvicorn main:app --reload --log-level debug --port 8001

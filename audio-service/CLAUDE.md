@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python scripts/install.py
 
 # Activate virtual environment
-source beatforge-audio-extraction-service-local/bin/activate
+source wavdash-audio-extraction-service-local/bin/activate
 
 # For fresh deployments: Run migration and seeding
 python scripts/migrate_fresh.py  # Clears Redis, cache, initializes storage

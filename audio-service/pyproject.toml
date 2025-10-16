@@ -19,7 +19,7 @@ extend-exclude = '''
   | build
   | dist
   | node_modules
-  | beatforge-audio-extraction-service-local
+  | wavdash-audio-extraction-service-local
 )/
 '''
 
@@ -44,7 +44,7 @@ skip = [
     "build",
     "dist",
     "node_modules",
-    "beatforge-audio-extraction-service-local",
+    "wavdash-audio-extraction-service-local",
 ]
 
 # Group imports by type

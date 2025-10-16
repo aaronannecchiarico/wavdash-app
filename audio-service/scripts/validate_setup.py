@@ -148,7 +148,7 @@ def check_virtual_environment():
     """Check virtual environment"""
     print("\\n🔍 Checking virtual environment...")
 
-    venv_path = Path("beatforge-audio-extraction-service-local")
+    venv_path = Path("wavdash-audio-extraction-service-local")
     if not venv_path.exists():
         print("  ❌ Virtual environment not found")
         print("     Run: python install.py")
@@ -163,9 +163,7 @@ def check_virtual_environment():
         print("  ✅ Currently in virtual environment")
     else:
         print("  ⚠️  Not currently in virtual environment")
-        print(
-            "     Activate with: source beatforge-audio-extraction-service-local/bin/activate"
-        )
+        print("Activate with: source wavdash-audio-extraction-service-local/bin/activate")
 
     return True
 

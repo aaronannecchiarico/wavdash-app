@@ -11,7 +11,7 @@ exclude =
     .git,
     __pycache__,
     .venv,
-    beatforge-audio-extraction-service-local,
+    wavdash-audio-extraction-service-local,
     venv,
     env,
     build,

@@ -17,7 +17,7 @@ echo -e "${BLUE}🧪 Audio Processing Microservice Test Runner${NC}"
 echo "==========================================="
 
 # Check if virtual environment exists
-VENV_DIR="beatforge-audio-extraction-service-local"
+VENV_DIR="wavdash-audio-extraction-service-local"
 if [ ! -d "$VENV_DIR" ]; then
     echo -e "${RED}❌ Virtual environment not found: $VENV_DIR${NC}"
     echo "Please run: python install.py"
