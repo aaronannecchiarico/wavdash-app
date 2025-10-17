@@ -22,6 +22,11 @@ from models.tempo_models import TempoCallbackData, TempoPresetEnum
 from services.audio_feature_extraction import (  # noqa: F401 - Used in tests
     create_feature_extractor,
 )
+from services.performance_cache import (  # noqa: E402
+    audio_hash,
+    get_performance_cache,
+    get_performance_monitor,
+)
 from services.storage_service import StorageError, get_storage_service, get_storage_type
 from services.storage_service import StorageType  # noqa: F401 - Used in type hints
 from utils.audio_utils import (  # noqa: F401 - Used in tests
@@ -30,13 +35,6 @@ from utils.audio_utils import (  # noqa: F401 - Used in tests
 )
 
 logger = logging.getLogger(__name__)
-
-# Performance cache imports
-from services.performance_cache import (
-    audio_hash,
-    get_performance_cache,
-    get_performance_monitor,
-)
 
 # Phase 2: Enhanced audio processing imports
 try:

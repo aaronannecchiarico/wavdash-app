@@ -88,7 +88,7 @@ def main():
         else:
             failed.append(package)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("INSTALLATION SUMMARY")
     print("=" * 60)
     print(f"✓ Successful ({len(successful)}): {', '.join(successful)}")

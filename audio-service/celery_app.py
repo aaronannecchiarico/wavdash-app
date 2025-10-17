@@ -6,12 +6,12 @@ project_root = Path(__file__).parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-import logging
+import logging  # noqa: E402
 
-from celery import Celery
-from celery.signals import worker_ready, worker_shutting_down
+from celery import Celery  # noqa: E402
+from celery.signals import worker_ready, worker_shutting_down  # noqa: E402
 
-from config import settings
+from config import settings  # noqa: E402
 
 celery_app = Celery(
     "audio_processing",

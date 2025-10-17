@@ -298,7 +298,8 @@ def batch_process_storage(
         )
 
         logging.info(
-            f"Queued batch storage processing: {len(request.storage_paths)} files (batch: {batch_id}, storage: {storage_type_value})"
+            f"Queued batch storage processing: {len(request.storage_paths)} files "
+            f"(batch: {batch_id}, storage: {storage_type_value})"
         )
 
         return {

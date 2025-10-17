@@ -179,7 +179,9 @@ def process_audio_features_from_storage(
                 ),
             }
             logger.info(
-                f"Generated musical analysis: BPM={musical_analysis['bpm']:.1f}, Key={musical_analysis['key']}, Duration={musical_analysis['duration']:.1f}s"
+                f"Generated musical analysis: BPM={musical_analysis['bpm']:.1f}, "
+                f"Key={musical_analysis['key']}, "
+                f"Duration={musical_analysis['duration']:.1f}s"
             )
         else:
             logger.warning(
@@ -588,7 +590,7 @@ def batch_process_from_storage(
                 state="PROGRESS",
                 meta={
                     "progress": (i / total_files) * 100,
-                    "status": f"Processing file {i+1}/{total_files}",
+                    "status": f"Processing file {i + 1}/{total_files}",
                 },
             )
 

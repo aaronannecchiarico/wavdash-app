@@ -124,23 +124,37 @@ def test_celery_tasks():
     """Test Celery task imports"""
     print("\nTesting Celery tasks...")
 
-    from tasks.audio_processing import process_audio_features, separate_audio_stems
+    from tasks.storage_processing import (
+        batch_process_from_storage,
+        process_audio_features_from_storage,
+        separate_audio_stems_from_storage,
+    )
+    from tasks.tempo_processing import process_tempo_from_storage
 
-    print("✅ Audio processing tasks imported")
+    print("✅ Storage processing tasks imported")
+    print("✅ Tempo processing tasks imported")
 
     # Test task registration
     from celery_app import celery_app
 
     registered_tasks = list(celery_app.tasks.keys())
-    audio_tasks = [t for t in registered_tasks if "audio_processing" in t]
+    storage_tasks = [t for t in registered_tasks if "storage_processing" in t]
+    tempo_tasks = [t for t in registered_tasks if "tempo_processing" in t]
 
-    print(f"✅ Registered audio tasks: {len(audio_tasks)}")
-    for task in audio_tasks:
+    print(f"✅ Registered storage tasks: {len(storage_tasks)}")
+    for task in storage_tasks:
         print(f"  - {task}")
 
-    assert process_audio_features is not None
-    assert separate_audio_stems is not None
-    assert len(audio_tasks) >= 0
+    print(f"✅ Registered tempo tasks: {len(tempo_tasks)}")
+    for task in tempo_tasks:
+        print(f"  - {task}")
+
+    assert process_audio_features_from_storage is not None
+    assert separate_audio_stems_from_storage is not None
+    assert batch_process_from_storage is not None
+    assert process_tempo_from_storage is not None
+    assert len(storage_tasks) >= 0
+    assert len(tempo_tasks) >= 0
 
 
 def test_app_creation():
@@ -213,7 +227,7 @@ def main():
     test_audio_file = create_test_audio()
 
     # Summary
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("TEST SUMMARY")
     print("=" * 50)
 

@@ -204,28 +204,34 @@ def main():
     print(f"  Mean error: {np.mean(standard_errors):.1f}%")
     print(f"  Median error: {np.median(standard_errors):.1f}%")
     print(
-        f"  Within 5%: {standard_within_5}/{len(valid_results)} ({100*standard_within_5/len(valid_results):.1f}%)"
+        f"  Within 5%: {standard_within_5}/{len(valid_results)} "
+        f"({100 * standard_within_5 / len(valid_results):.1f}%)"
     )
     print(
-        f"  Within 10%: {standard_within_10}/{len(valid_results)} ({100*standard_within_10/len(valid_results):.1f}%)"
+        f"  Within 10%: {standard_within_10}/{len(valid_results)} "
+        f"({100 * standard_within_10 / len(valid_results):.1f}%)"
     )
 
     print("\n⚡ Enhanced BPM Detection:")
     print(f"  Mean error: {np.mean(enhanced_errors):.1f}%")
     print(f"  Median error: {np.median(enhanced_errors):.1f}%")
     print(
-        f"  Within 5%: {enhanced_within_5}/{len(valid_results)} ({100*enhanced_within_5/len(valid_results):.1f}%)"
+        f"  Within 5%: {enhanced_within_5}/{len(valid_results)} "
+        f"({100 * enhanced_within_5 / len(valid_results):.1f}%)"
     )
     print(
-        f"  Within 10%: {enhanced_within_10}/{len(valid_results)} ({100*enhanced_within_10/len(valid_results):.1f}%)"
+        f"  Within 10%: {enhanced_within_10}/{len(valid_results)} "
+        f"({100 * enhanced_within_10 / len(valid_results):.1f}%)"
     )
 
     print("\n🔧 Enhanced with Tempo Correction:")
     print(
-        f"  Within 5%: {enhanced_corrected_within_5}/{len(valid_results)} ({100*enhanced_corrected_within_5/len(valid_results):.1f}%)"
+        f"  Within 5%: {enhanced_corrected_within_5}/{len(valid_results)} "
+        f"({100 * enhanced_corrected_within_5 / len(valid_results):.1f}%)"
     )
     print(
-        f"  Within 10%: {enhanced_corrected_within_10}/{len(valid_results)} ({100*enhanced_corrected_within_10/len(valid_results):.1f}%)"
+        f"  Within 10%: {enhanced_corrected_within_10}/{len(valid_results)} "
+        f"({100 * enhanced_corrected_within_10 / len(valid_results):.1f}%)"
     )
 
     # Show improvement
