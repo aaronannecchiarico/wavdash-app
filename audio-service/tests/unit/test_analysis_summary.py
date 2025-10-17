@@ -48,7 +48,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage
@@ -127,7 +126,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage
@@ -200,7 +198,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage
@@ -263,7 +260,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage
@@ -319,7 +315,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage
@@ -400,7 +395,6 @@ class TestAnalysisSummary:
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_storage_service.return_value = mock_storage

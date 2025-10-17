@@ -109,7 +109,7 @@ class TestConfig:
 
         importlib.reload(config)
 
-        assert config.settings.DEBUG == True
+        assert config.settings.DEBUG is True
 
     @patch.dict(os.environ, {"DEBUG": "False"})
     def test_debug_env_var_false(self):
@@ -120,7 +120,7 @@ class TestConfig:
 
         importlib.reload(config)
 
-        assert config.settings.DEBUG == False
+        assert config.settings.DEBUG is False
 
     @patch.dict(os.environ, {"PORT": "9000"})
     def test_port_env_var(self):

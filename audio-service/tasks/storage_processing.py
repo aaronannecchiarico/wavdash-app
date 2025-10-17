@@ -3,7 +3,6 @@ Unified Storage Processing Tasks
 Works with both local and R2 storage
 """
 
-import io
 import logging
 import os
 from pathlib import Path
@@ -14,7 +13,6 @@ from typing import Any, Dict, List, Optional
 from celery import current_task
 from demucs import pretrained
 from demucs.apply import apply_model
-import librosa
 import numpy as np
 import requests
 import torch
@@ -142,7 +140,7 @@ def process_audio_features_from_storage(
         if "features" in feature_result:
             # Single chunk processing
             features = feature_result["features"]
-            logger.debug(f"Using single-chunk features")
+            logger.debug("Using single-chunk features")
         elif "aggregated_features" in feature_result:
             # Multi-chunk processing
             features = feature_result["aggregated_features"]

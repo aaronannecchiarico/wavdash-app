@@ -236,7 +236,6 @@ class TestStorageProcessingIntegration(TestStorageStructure):
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_get_storage.return_value = mock_storage
@@ -306,7 +305,6 @@ class TestStorageProcessingIntegration(TestStorageStructure):
             ) as mock_tempfile,
             patch("tasks.storage_processing.os.unlink"),
         ):
-
             # Setup mocks
             mock_storage = MagicMock()
             mock_get_storage.return_value = mock_storage

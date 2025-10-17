@@ -5,7 +5,7 @@ Test BPM detection accuracy against known ground truth values
 
 from pathlib import Path
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -232,12 +232,12 @@ def main():
     improvement_5 = enhanced_corrected_within_5 - standard_within_5
     improvement_10 = enhanced_corrected_within_10 - standard_within_10
 
-    print(f"\n📈 Improvement:")
+    print("\n📈 Improvement:")
     print(f"  +{improvement_5} files within 5% accuracy")
     print(f"  +{improvement_10} files within 10% accuracy")
 
     # Show worst performing files
-    print(f"\n❌ Files with highest error (Enhanced):")
+    print("\n❌ Files with highest error (Enhanced):")
     sorted_results = sorted(
         valid_results,
         key=lambda x: x["enhanced_accuracy"]["percent_error"],
@@ -250,7 +250,7 @@ def main():
         )
 
     # Show best performing files
-    print(f"\n✅ Most accurate results:")
+    print("\n✅ Most accurate results:")
     for result in sorted(
         valid_results, key=lambda x: x["enhanced_accuracy"]["percent_error"]
     )[:5]:
@@ -260,7 +260,7 @@ def main():
         )
 
     # Method analysis
-    print(f"\n🔍 Method Performance Analysis:")
+    print("\n🔍 Method Performance Analysis:")
     method_stats = {
         "standard": [],
         "percussive": [],
@@ -316,7 +316,7 @@ def main():
     except Exception as e:
         print(f"\n⚠️  Could not save results to CSV: {e}")
 
-    print(f"\n🎉 BPM accuracy testing complete!")
+    print("\n🎉 BPM accuracy testing complete!")
 
 
 if __name__ == "__main__":

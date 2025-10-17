@@ -51,7 +51,7 @@ def test_feature_extraction():
         # Display results summary
         if "metadata" in result:
             metadata = result["metadata"]
-            print(f"\n📊 Audio Metadata:")
+            print("\n📊 Audio Metadata:")
             print(f"   Duration: {metadata.get('duration', 0):.2f} seconds")
             print(f"   Sample Rate: {metadata.get('sample_rate', 0)} Hz")
             print(
@@ -63,7 +63,7 @@ def test_feature_extraction():
 
         if "features" in result:
             features = result["features"]
-            print(f"\n🎯 Musical Analysis:")
+            print("\n🎯 Musical Analysis:")
 
             # Key detection
             if "key" in features:
@@ -100,13 +100,13 @@ def test_feature_extraction():
                 print(f"   MFCC Coefficients: {mfcc_info.get('n_coefficients', 0)}")
                 print(f"   Timbral Complexity: {mfcc_info.get('overall_std', 0):.3f}")
 
-            print(f"\n🔍 Available Feature Categories:")
+            print("\n🔍 Available Feature Categories:")
             for category in features.keys():
                 if category != "extraction_error":
                     print(f"   • {category}")
 
         # Test chunked processing for demonstration
-        print(f"\n🧩 Testing Chunked Processing:")
+        print("\n🧩 Testing Chunked Processing:")
         result_chunked = extractor.extract_features(test_file, process_chunks=True)
 
         if "chunks" in result_chunked:
@@ -127,7 +127,7 @@ def test_feature_extraction():
                         f"   Key changes detected: {agg['key'].get('key_changes', 0)}"
                     )
 
-        print(f"\n✅ All tests passed! 🎉")
+        print("\n✅ All tests passed! 🎉")
         assert True  # Test passed
     except Exception as e:
         print(f"❌ Test failed: {e}")
@@ -139,7 +139,7 @@ def test_feature_extraction():
 
 def test_api_integration():
     """Test API integration scenarios"""
-    print(f"\n🌐 Testing API Integration Scenarios")
+    print("\n🌐 Testing API Integration Scenarios")
     print("-" * 50)
 
     try:
@@ -188,7 +188,7 @@ def test_api_integration():
                 print(f"❌ BytesIO processing failed: {result['error']}")
                 assert False, "Test failed"
 
-        print(f"\n🚀 API integration tests passed!")
+        print("\n🚀 API integration tests passed!")
         assert True  # Test passed
     except Exception as e:
         print(f"❌ API integration test failed: {e}")
@@ -217,7 +217,7 @@ def main():
         success2 = False
 
     if success1 and success2:
-        print(f"\n🎉 All tests completed successfully!")
+        print("\n🎉 All tests completed successfully!")
         print("\n📋 Summary:")
         print("✅ Feature extraction service working")
         print("✅ Musical analysis (key, tempo, energy) working")
@@ -226,14 +226,14 @@ def main():
         print("✅ Laravel-compatible API responses working")
         print("✅ Error handling and timeouts working")
 
-        print(f"\n🔗 Ready for Laravel Integration:")
+        print("\n🔗 Ready for Laravel Integration:")
         print("• Use /extract-features for async processing")
         print("• Use /task-summary/{task_id} for lightweight results")
         print("• Use /extract-features-sync for small files")
 
         return True
     else:
-        print(f"\n❌ Some tests failed!")
+        print("\n❌ Some tests failed!")
         return False
 
 

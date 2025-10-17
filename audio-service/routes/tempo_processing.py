@@ -5,21 +5,13 @@ Handles sped-up and slowed-down audio processing
 
 import logging
 import time
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
 
-from celery_app import celery_app
 from models.tempo_models import (
     StorageTempoProcessingRequest,
     TempoPresetEnum,
     TempoProcessingResponse,
-)
-from services.storage_service import (
-    get_storage_service,
-    get_storage_type,
-    is_storage_enabled,
 )
 from services.tempo_presets import get_tempo_presets_service
 from tasks.tempo_processing import process_tempo_from_storage
@@ -50,7 +42,7 @@ def process_tempo_from_storage_route(request: StorageTempoProcessingRequest):
         task_id = generate_task_id()
 
         # Submit to Celery - use the imported task function
-        task = process_tempo_from_storage.delay(task_id=task_id, **request.model_dump())
+        process_tempo_from_storage.delay(task_id=task_id, **request.model_dump())
 
         return TempoProcessingResponse(
             task_id=task_id,
@@ -170,7 +162,9 @@ def suggest_presets_for_audio(current_bpm: float, duration_seconds: float):
                 "classification": (
                     "fast"
                     if current_bpm > 140
-                    else "slow" if current_bpm < 80 else "moderate"
+                    else "slow"
+                    if current_bpm < 80
+                    else "moderate"
                 ),
             },
             "suggestions": serializable_suggestions,

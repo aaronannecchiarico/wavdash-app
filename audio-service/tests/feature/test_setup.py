@@ -109,7 +109,7 @@ def test_config():
 
     from config import settings
 
-    print(f"✅ Config loaded")
+    print("✅ Config loaded")
     print(f"✅ Host: {settings.HOST}:{settings.PORT}")
     print(f"✅ Redis: {settings.REDIS_URL}")
     print(f"✅ Device: {settings.DEMUCS_DEVICE}")

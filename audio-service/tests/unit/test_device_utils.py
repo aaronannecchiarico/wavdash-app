@@ -35,7 +35,6 @@ class TestDeviceUtils:
                 patch("torch.cuda.is_available", return_value=False),
                 patch("torch.backends.mps.is_available", return_value=False),
             ):
-
                 device = get_optimal_device()
                 assert device == "cpu"
 
@@ -56,7 +55,6 @@ class TestDeviceUtils:
                 patch("torch.cuda.is_available", return_value=True),
                 patch("torch.cuda.device_count", return_value=1),
             ):
-
                 device = get_optimal_device()
                 assert device == "cuda"
 
@@ -80,7 +78,6 @@ class TestDeviceUtils:
             patch("torch.cuda.is_available", return_value=False),
             patch("utils.device_utils.get_optimal_device", return_value="cpu"),
         ):
-
             info = get_device_info()
 
             assert isinstance(info, dict)
@@ -93,7 +90,7 @@ class TestDeviceUtils:
             assert "mps" in info
 
             assert info["optimal_device"] == "cpu"
-            assert info["cuda"]["available"] == False
+            assert info["cuda"]["available"] is False
 
     def test_setup_device_for_model_cpu(self):
         """Test setting up model on CPU device"""
@@ -120,7 +117,6 @@ class TestDeviceUtils:
             patch("utils.device_utils.get_optimal_device", return_value="cpu"),
             patch("torch.device") as mock_torch_device,
         ):
-
             mock_device = MagicMock()
             mock_torch_device.return_value = mock_device
 
@@ -156,7 +152,6 @@ class TestDeviceUtils:
             patch("torch.__version__", "2.1.0"),
             patch("torch.compile") as mock_compile,
         ):
-
             mock_compile.return_value = mock_model
 
             optimized_model = optimize_for_inference(mock_model)
@@ -185,7 +180,6 @@ class TestDeviceUtils:
             patch("torch.__version__", "2.1.0"),
             patch("torch.compile", side_effect=RuntimeError("Compile failed")),
         ):
-
             optimized_model = optimize_for_inference(mock_model)
 
             mock_model.eval.assert_called_once()
@@ -197,7 +191,6 @@ class TestDeviceUtils:
             patch("torch.cuda.is_available", return_value=True),
             patch("torch.cuda.empty_cache") as mock_empty_cache,
         ):
-
             clear_gpu_memory()
 
             mock_empty_cache.assert_called_once()
@@ -212,7 +205,6 @@ class TestDeviceUtils:
             patch("torch.backends", mock_backends),
             patch("torch.mps.empty_cache") as mock_mps_empty_cache,
         ):
-
             clear_gpu_memory()
 
             mock_mps_empty_cache.assert_called_once()
@@ -232,7 +224,6 @@ class TestDeviceUtils:
             patch("torch.cuda.memory_reserved", return_value=2000),
             patch("torch.cuda.get_device_properties") as mock_props,
         ):
-
             mock_props.return_value.total_memory = 8000
 
             usage = get_memory_usage()
@@ -255,12 +246,11 @@ class TestDeviceUtils:
             patch("torch.cuda.is_available", return_value=False),
             patch("torch.backends", mock_backends),
         ):
-
             usage = get_memory_usage()
 
             assert isinstance(usage, dict)
             assert "mps" in usage
-            assert usage["mps"]["available"] == True
+            assert usage["mps"]["available"] is True
             assert usage["mps"]["monitoring"] == "not_supported"
 
     def test_check_device_compatibility_basic(self):
@@ -269,7 +259,6 @@ class TestDeviceUtils:
             patch("utils.device_utils.get_optimal_device", return_value="cpu"),
             patch("utils.device_utils.get_device_info") as mock_device_info,
         ):
-
             mock_device_info.return_value = {
                 "platform": "Darwin",
                 "architecture": "arm64",
@@ -284,7 +273,7 @@ class TestDeviceUtils:
             assert "warnings" in result
             assert "recommendations" in result
 
-            assert result["compatible"] == True
+            assert result["compatible"] is True
             assert result["device"] == "cpu"
             assert isinstance(result["warnings"], list)
             assert isinstance(result["recommendations"], list)
@@ -308,7 +297,6 @@ class TestDeviceUtils:
             patch("utils.device_utils.get_device_info", return_value=mock_device_info),
             patch("torch.cuda.is_available", return_value=True),
         ):
-
             result = check_device_compatibility(required_memory_mb=500)
 
             # Should have warning about low GPU memory

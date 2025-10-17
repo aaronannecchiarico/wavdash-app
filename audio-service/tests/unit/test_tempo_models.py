@@ -69,9 +69,9 @@ class TestTempoModels:
         assert request.preset == TempoPresetEnum.CUSTOM
         assert request.tempo_factor == 1.0
         assert request.pitch_shift_semitones == 0.0
-        assert request.preserve_pitch == False
-        assert request.add_reverb == False
-        assert request.use_stems == False
+        assert request.preserve_pitch is False
+        assert request.add_reverb is False
+        assert request.use_stems is False
         assert request.callback_url is None
         assert request.metadata == {}
 
@@ -126,7 +126,7 @@ class TestTempoModels:
         assert config.name == "Test Preset"
         assert config.tempo_factor == 1.2
         assert config.pitch_shift_semitones == 2.0
-        assert config.preserve_pitch == False
+        assert config.preserve_pitch is False
         assert config.effects == ["pitch_shift", "reverb"]
         assert config.reverb_settings == {"wet_level": 0.3}
 

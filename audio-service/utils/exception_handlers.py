@@ -3,7 +3,6 @@ Exception Handlers
 Custom exception handlers for FastAPI to provide consistent error responses
 """
 
-from datetime import datetime, timezone
 import logging
 
 from fastapi import Request, status

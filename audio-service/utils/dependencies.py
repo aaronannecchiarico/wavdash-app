@@ -6,12 +6,9 @@ Reusable dependencies for route handlers
 import logging
 from typing import Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 
-from services.storage_service import (
-    StorageService,
-    StorageType,
-)
+from services.storage_service import StorageService, StorageType
 from services.storage_service import get_storage_service as _get_storage_service
 from services.storage_service import get_storage_type as _get_storage_type
 from services.storage_service import is_storage_enabled as _is_storage_enabled

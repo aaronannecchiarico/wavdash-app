@@ -495,9 +495,9 @@ class TempoLoadTester:
             max_response_time = max(response_times)
             min_response_time = min(response_times)
         else:
-            avg_response_time = median_response_time = p95_response_time = (
-                p99_response_time
-            ) = 0
+            avg_response_time = (
+                median_response_time
+            ) = p95_response_time = p99_response_time = 0
             max_response_time = min_response_time = 0
 
         requests_per_second = total_requests / test_duration if test_duration > 0 else 0

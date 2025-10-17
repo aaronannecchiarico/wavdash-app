@@ -16,7 +16,7 @@ def run_pip_install(packages, description):
     print(f"Command: {' '.join(cmd)}")
 
     try:
-        result = subprocess.run(cmd, check=True, text=True, capture_output=True)
+        subprocess.run(cmd, check=True, text=True, capture_output=True)
         print(f"✓ {description} - SUCCESS")
         return True
     except subprocess.CalledProcessError as e:
@@ -96,7 +96,7 @@ def main():
         print(f"✗ Failed ({len(failed)}): {', '.join(failed)}")
 
     # Test all critical imports
-    print(f"\nTesting imports...")
+    print("\nTesting imports...")
 
     test_packages = [
         ("fastapi", "FastAPI web framework"),
@@ -124,7 +124,7 @@ def main():
     try:
         import torch
 
-        print(f"\nPyTorch Device Support:")
+        print("\nPyTorch Device Support:")
         print(f"  Version: {torch.__version__}")
         print(f"  CUDA available: {torch.cuda.is_available()}")
         if hasattr(torch.backends, "mps"):
@@ -136,12 +136,12 @@ def main():
     critical_working = [pkg for pkg in critical_packages if pkg in working_imports]
 
     if len(critical_working) == len(critical_packages):
-        print(f"\n🎉 Complete installation successful!")
+        print("\n🎉 Complete installation successful!")
         print(f"✓ All {len(critical_packages)} critical packages working")
         print(f"✓ {len(working_imports)}/{len(test_packages)} total packages working")
 
         # Create/update .env file
-        env_content = f"""# Audio Processing Microservice Configuration
+        env_content = """# Audio Processing Microservice Configuration
 HOST=0.0.0.0
 PORT=8000
 DEBUG=True
@@ -193,7 +193,7 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
         return True
     else:
         missing = [pkg for pkg in critical_packages if pkg not in working_imports]
-        print(f"\n❌ Installation incomplete!")
+        print("\n❌ Installation incomplete!")
         print(f"Critical packages missing: {', '.join(missing)}")
         print(
             f"Working: {len(critical_working)}/{len(critical_packages)} critical packages"

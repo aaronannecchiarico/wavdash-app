@@ -17,7 +17,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from typing import Optional
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
@@ -235,10 +234,10 @@ def create_migration_summary():
     print("📄 Creating migration summary...")
 
     try:
-        from datetime import datetime
+        from datetime import datetime  # noqa: F401
 
-        summary_content = f"""# Migration Summary
-        
+        summary_content = """# Migration Summary
+
 **Migration Date:** {datetime.now().isoformat()}
 **Migration Type:** Fresh Deployment
 

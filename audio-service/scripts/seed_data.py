@@ -15,7 +15,6 @@ import json
 import logging
 from pathlib import Path
 import sys
-from typing import Any, Dict
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent

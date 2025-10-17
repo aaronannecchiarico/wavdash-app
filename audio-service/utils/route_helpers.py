@@ -10,7 +10,6 @@ import uuid
 from fastapi import HTTPException
 
 from services.storage_service import (
-    StorageType,
     get_storage_service,
     get_storage_type,
     is_storage_enabled,

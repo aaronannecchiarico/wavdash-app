@@ -289,9 +289,9 @@ def main():
                 f"{description}_{bpm}bpm_complex.wav,{bpm},Complex rhythmic pattern\n"
             )
 
-        f.write(f"short_120bpm.wav,120,Short duration (2 seconds)\n")
-        f.write(f"tempo_doubling_120bpm.wav,120,Potential tempo doubling confusion\n")
-        f.write(f"triplet_feel_90bpm.wav,90,Compound time feel\n")
+        f.write("short_120bpm.wav,120,Short duration (2 seconds)\n")
+        f.write("tempo_doubling_120bpm.wav,120,Potential tempo doubling confusion\n")
+        f.write("triplet_feel_90bpm.wav,90,Compound time feel\n")
 
     print(f"  - {reference_file.name} (ground truth reference)")
 

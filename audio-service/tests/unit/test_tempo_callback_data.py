@@ -206,7 +206,6 @@ class TestCallbackDataIntegration:
             patch("tasks.tempo_processing.os.unlink"),
             patch("tasks.tempo_processing.current_task"),
         ):
-
             # Setup mocks
             mock_storage = Mock()
             mock_storage.file_exists.return_value = True

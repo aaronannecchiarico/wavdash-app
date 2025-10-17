@@ -57,7 +57,7 @@ def test_celery_task():
                     progress = info.get("progress", 0)
                     status = info.get("status", "Processing...")
                     print(f"⏳ Progress: {progress}% - {status}")
-                except:
+                except Exception:
                     print(f"⏳ State: {state}")
 
             time.sleep(2)
@@ -69,7 +69,7 @@ def test_celery_task():
 
             # Display result summary
             if isinstance(result, dict):
-                print(f"\n📊 Results Summary:")
+                print("\n📊 Results Summary:")
 
                 # Metadata
                 if "metadata" in result:
@@ -83,7 +83,7 @@ def test_celery_task():
                 # Musical analysis
                 if "features" in result:
                     features = result["features"]
-                    print(f"\n🎯 Musical Analysis:")
+                    print("\n🎯 Musical Analysis:")
 
                     if "key" in features:
                         key_info = features["key"]
@@ -108,14 +108,14 @@ def test_celery_task():
 
                     print(f"\n🔍 Feature Categories Available: {list(features.keys())}")
 
-                print(f"\n✅ New feature extraction service working in Celery! 🎵")
+                print("\n✅ New feature extraction service working in Celery! 🎵")
                 assert True  # Test passed
             else:
                 print(f"❌ Unexpected result format: {type(result)}")
                 assert False, "Test failed"
 
         else:
-            print(f"❌ Task failed!")
+            print("❌ Task failed!")
             if task.failed():
                 print(f"Error: {task.traceback}")
             assert False, "Test failed"
@@ -137,7 +137,7 @@ def main():
     success = test_celery_task()
 
     if success:
-        print(f"\n🎉 Celery integration test passed!")
+        print("\n🎉 Celery integration test passed!")
         print("\n📋 Ready for production:")
         print("✅ New feature extraction service working")
         print("✅ Celery task processing working")
@@ -147,7 +147,7 @@ def main():
         print("• GET /task-summary/{task_id} - Lightweight results")
         print("• POST /extract-features-sync - Immediate results")
     else:
-        print(f"\n❌ Celery integration test failed!")
+        print("\n❌ Celery integration test failed!")
         print("Make sure:")
         print("• Celery worker is running")
         print("• Redis is available")

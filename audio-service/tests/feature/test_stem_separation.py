@@ -60,7 +60,7 @@ def test_stem_separation():
                     progress = info.get("progress", 0)
                     status = info.get("status", "Processing...")
                     print(f"⏳ Progress: {progress}% - {status}")
-                except:
+                except Exception:
                     print(f"⏳ State: {state}")
 
             time.sleep(5)  # Check every 5 seconds for stem separation
@@ -72,7 +72,7 @@ def test_stem_separation():
 
             # Display result summary
             if isinstance(result, dict):
-                print(f"\\n📊 Stem Separation Results:")
+                print("\\n📊 Stem Separation Results:")
                 print(f"   File: {result.get('filename', 'unknown')}")
                 print(f"   Model: {result.get('model_used', 'unknown')}")
                 print(f"   Sample Rate: {result.get('sample_rate', 0)} Hz")
@@ -80,7 +80,7 @@ def test_stem_separation():
 
                 if "stems" in result:
                     stems = result["stems"]
-                    print(f"\\n🎯 Available Stems:")
+                    print("\\n🎯 Available Stems:")
                     for stem_name, file_path in stems.items():
                         print(f"   • {stem_name}: {file_path}")
 
@@ -89,9 +89,9 @@ def test_stem_separation():
                             file_size = Path(file_path).stat().st_size
                             print(f"     Size: {file_size / 1024:.1f} KB")
                         else:
-                            print(f"     ⚠️ File not found!")
+                            print("     ⚠️ File not found!")
 
-                print(f"\\n✅ Stem separation service working! 🎵")
+                print("\\n✅ Stem separation service working! 🎵")
                 print("\\n💡 Tips:")
                 print("• Stem files are saved as temporary files")
                 print("• Copy them to permanent location if needed")
@@ -102,7 +102,7 @@ def test_stem_separation():
                 assert False, "Test failed"
 
         else:
-            print(f"❌ Task failed!")
+            print("❌ Task failed!")
             if task.failed():
                 print(f"Error: {task.traceback}")
             assert False, "Test failed"
@@ -129,7 +129,7 @@ def main():
     success = test_stem_separation()
 
     if success:
-        print(f"\\n🎉 Stem separation test passed!")
+        print("\\n🎉 Stem separation test passed!")
         print("\\n📋 Ready for production:")
         print("✅ Demucs model loading working")
         print("✅ CPU processing for Celery workers")
@@ -137,7 +137,7 @@ def main():
         print("\\n🔗 Use this endpoint in your Laravel app:")
         print("• POST /separate-stems - Async stem separation")
     else:
-        print(f"\\n❌ Stem separation test failed!")
+        print("\\n❌ Stem separation test failed!")
         print("Troubleshooting:")
         print("• Make sure Redis is running")
         print("• Start Celery worker: python start_worker.py")

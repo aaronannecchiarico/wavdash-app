@@ -30,7 +30,7 @@ class TestTempoPresetsService:
         assert preset.name == "Sped Up"
         assert preset.tempo_factor == 1.25
         assert preset.pitch_shift_semitones == 3.0
-        assert preset.preserve_pitch == False
+        assert preset.preserve_pitch is False
         assert "pitch_shift" in preset.effects
         assert "brightness_boost" in preset.effects
 
@@ -42,7 +42,7 @@ class TestTempoPresetsService:
         assert preset.name == "Slowed + Reverb"
         assert preset.tempo_factor == 0.75
         assert preset.pitch_shift_semitones == -2.0
-        assert preset.preserve_pitch == False
+        assert preset.preserve_pitch is False
         assert "reverb" in preset.effects
         assert preset.reverb_settings is not None
         assert preset.reverb_settings["wet_level"] == 0.3
@@ -66,7 +66,7 @@ class TestTempoPresetsService:
         assert preset.name == "Time Stretched"
         assert preset.tempo_factor == 0.8
         assert preset.pitch_shift_semitones == 0.0
-        assert preset.preserve_pitch == True
+        assert preset.preserve_pitch is True
         assert "time_stretch" in preset.effects
 
     def test_get_preset_chopped_screwed(self):
@@ -113,7 +113,7 @@ class TestTempoPresetsService:
         assert info["name"] == "Slowed + Reverb"
         assert info["tempo_factor"] == 0.75
         assert info["pitch_shift_semitones"] == -2.0
-        assert info["preserve_pitch"] == False
+        assert info["preserve_pitch"] is False
         assert "reverb" in info["effects"]
         assert "reverb_settings" in info
         assert info["reverb_settings"]["wet_level"] == 0.3
@@ -149,8 +149,8 @@ class TestTempoPresetsService:
 
         assert result["tempo_factor"] == 1.25  # From preset
         assert result["pitch_shift_semitones"] == 3.0  # From preset
-        assert result["preserve_pitch"] == False  # From preset
-        assert result["add_reverb"] == False  # Preset doesn't have reverb
+        assert result["preserve_pitch"] is False  # From preset
+        assert result["add_reverb"] is False  # Preset doesn't have reverb
         assert result["effects"] == ["pitch_shift", "brightness_boost"]
 
     def test_apply_preset_to_params_with_custom_values(self):
@@ -165,8 +165,8 @@ class TestTempoPresetsService:
 
         assert result["tempo_factor"] == 2.0  # Keep custom value
         assert result["pitch_shift_semitones"] == 5.0  # Keep custom value
-        assert result["preserve_pitch"] == True  # Keep custom value
-        assert result["add_reverb"] == True  # Keep custom value
+        assert result["preserve_pitch"] is True  # Keep custom value
+        assert result["add_reverb"] is True  # Keep custom value
 
     def test_apply_preset_to_params_reverb_preset(self):
         """Test applying reverb preset values"""
@@ -174,7 +174,7 @@ class TestTempoPresetsService:
             TempoPresetEnum.SLOWED_REVERB, add_reverb=False  # Default value
         )
 
-        assert result["add_reverb"] == True  # Should be True because preset has reverb
+        assert result["add_reverb"] is True  # Should be True because preset has reverb
         assert result["reverb_settings"] is not None
         assert result["reverb_settings"]["wet_level"] == 0.3
 

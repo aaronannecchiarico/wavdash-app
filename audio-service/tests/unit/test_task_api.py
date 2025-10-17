@@ -40,7 +40,7 @@ def mock_redis():
 def mock_celery_task():
     """Mock Celery task result"""
     mock_task = MagicMock()
-    with patch("main.celery_app.AsyncResult") as mock_async_result:
+    with patch("celery_app.celery_app.AsyncResult") as mock_async_result:
         mock_async_result.return_value = mock_task
         yield mock_task
 
@@ -267,10 +267,9 @@ def test_integration_delete_then_get_status():
     task_id = "integration-test-123"
 
     with (
-        patch("main.celery_app.AsyncResult") as mock_async_result,
+        patch("celery_app.celery_app.AsyncResult") as mock_async_result,
         patch("routes.tasks.redis_client") as mock_redis,
     ):
-
         mock_task = MagicMock()
         mock_async_result.return_value = mock_task
         mock_task.forget = MagicMock()

@@ -180,7 +180,7 @@ class TestTempoProcessingFunctions:
         create_args = mock_create_pedalboard.call_args[0]
         assert create_args[1] == 1.3  # tempo_factor
         assert create_args[2] == 2.0  # pitch_shift_semitones
-        assert create_args[3] == True  # add_reverb
+        assert create_args[3] is True  # add_reverb
 
         # Should apply pedalboard effects
         mock_pedalboard.assert_called_once()
@@ -261,7 +261,7 @@ class TestTempoProcessingFunctions:
 
         assert config["tempo_factor"] == 1.25
         assert config["pitch_shift_semitones"] == 3.0
-        assert config["preserve_pitch"] == False
+        assert config["preserve_pitch"] is False
         assert "pitch_shift" in config["effects"]
         assert "brightness_boost" in config["effects"]
 
@@ -271,7 +271,7 @@ class TestTempoProcessingFunctions:
 
         assert config["tempo_factor"] == 0.75
         assert config["pitch_shift_semitones"] == -2.0
-        assert config["preserve_pitch"] == False
+        assert config["preserve_pitch"] is False
         assert "pitch_shift" in config["effects"]
         assert "reverb" in config["effects"]
         assert "reverb_settings" in config
@@ -284,7 +284,7 @@ class TestTempoProcessingFunctions:
 
         assert config["tempo_factor"] == 1.4
         assert config["pitch_shift_semitones"] == 4.0
-        assert config["preserve_pitch"] == False
+        assert config["preserve_pitch"] is False
         assert "pitch_shift" in config["effects"]
         assert "brightness_boost" in config["effects"]
         assert "compression" in config["effects"]
@@ -295,7 +295,7 @@ class TestTempoProcessingFunctions:
 
         assert config["tempo_factor"] == 0.6
         assert config["pitch_shift_semitones"] == -3.0
-        assert config["preserve_pitch"] == False
+        assert config["preserve_pitch"] is False
         assert "pitch_shift" in config["effects"]
         assert "low_pass_filter" in config["effects"]
 
@@ -305,7 +305,7 @@ class TestTempoProcessingFunctions:
 
         assert config["tempo_factor"] == 0.8
         assert config["pitch_shift_semitones"] == 0.0
-        assert config["preserve_pitch"] == True
+        assert config["preserve_pitch"] is True
         assert "time_stretch" in config["effects"]
 
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import librosa
 import numpy as np
@@ -32,7 +32,7 @@ def extract_spectral_centroid(y: np.ndarray, sr: int) -> List[float]:
 
 
 def extract_spectral_rolloff(y: np.ndarray, sr: int) -> List[float]:
-    """Extract spectral rolloff"""
+    """Extract spectral rollof"""
     spectral_rolloff = librosa.feature.spectral_rolloff(
         y=y, sr=sr, hop_length=settings.HOP_LENGTH
     )[0]

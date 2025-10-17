@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import os
 from pathlib import Path
 import subprocess
 import sys
@@ -36,7 +35,7 @@ def main():
         logger.info("Starting Celery worker with command: %s", " ".join(cmd))
 
         # Start worker
-        process = subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)
 
     except subprocess.CalledProcessError as e:
         logger.error("Failed to start Celery worker: %s", e)

@@ -17,29 +17,20 @@ from models.storage_models import (
 )
 from services.storage_service import (
     StorageService,
-)
-from services.storage_service import (
     get_storage_type,
     is_storage_enabled,
 )
-from services.storage_service import get_storage_service as _get_storage_service
 from tasks.storage_processing import (
     batch_process_from_storage,
     process_audio_features_from_storage,
     separate_audio_stems_from_storage,
 )
-from utils.dependencies import (
-    StorageValidator,
-    get_storage_service,
-    get_storage_type_dependency,
-)
+from utils.dependencies import StorageValidator, get_storage_service
 from utils.route_helpers import (
     generate_task_id,
     get_storage_type_value,
     handle_route_error,
     validate_required_field,
-    validate_storage_and_file,
-    validate_storage_enabled,
 )
 
 router = APIRouter(prefix="/storage", tags=["Storage Processing"])
@@ -53,7 +44,8 @@ def storage_status():
             return {"enabled": False, "message": "Storage is not properly configured"}
 
         storage_type = get_storage_type()
-        storage = get_storage_service()
+        # Verify storage is accessible
+        get_storage_service()
 
         return {
             "enabled": True,
@@ -89,7 +81,7 @@ def extract_features_from_storage(
         )
 
         # Queue async processing
-        celery_task = process_audio_features_from_storage.delay(
+        process_audio_features_from_storage.delay(
             task_id=task_id,
             storage_path=request.storage_path,
             extract_detailed=request.extract_detailed,
@@ -135,7 +127,7 @@ def separate_stems_from_storage(
         task_id = generate_task_id()
 
         # Queue async processing
-        celery_task = separate_audio_stems_from_storage.delay(
+        separate_audio_stems_from_storage.delay(
             task_id=task_id,
             storage_path=request.storage_path,
             model_name=request.model_name,
@@ -313,7 +305,10 @@ def batch_process_storage(
             "batch_id": batch_id,
             "task_id": celery_task.id,
             "status": "processing",
-            "message": f"Batch processing started for {len(request.storage_paths)} files from {storage_type_value} storage",
+            "message": (
+                f"Batch processing started for {len(request.storage_paths)} files "
+                f"from {storage_type_value} storage"
+            ),
             "processing_type": request.processing_type,
             "file_count": len(request.storage_paths),
             "storage_type": storage_type_value,

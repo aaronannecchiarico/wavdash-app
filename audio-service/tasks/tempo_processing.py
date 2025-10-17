@@ -17,16 +17,17 @@ import requests
 import soundfile as sf
 
 from celery_app import celery_app
-from config import settings
+from config import settings  # noqa: F401 - Used in tests
 from models.tempo_models import TempoCallbackData, TempoPresetEnum
-from services.audio_feature_extraction import create_feature_extractor
-from services.storage_service import (
-    StorageError,
-    StorageType,
-    get_storage_service,
-    get_storage_type,
+from services.audio_feature_extraction import (  # noqa: F401 - Used in tests
+    create_feature_extractor,
 )
-from utils.audio_utils import load_audio_from_bytes, save_audio_file
+from services.storage_service import StorageError, get_storage_service, get_storage_type
+from services.storage_service import StorageType  # noqa: F401 - Used in type hints
+from utils.audio_utils import (  # noqa: F401 - Used in tests
+    load_audio_from_bytes,
+    save_audio_file,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -460,19 +461,19 @@ def validate_tempo_processing_params(
 
     # Duration-based recommendations
     if audio_duration > 600:  # 10 minutes
-        warnings["long_duration"] = (
-            "Long audio files may take significant processing time"
-        )
+        warnings[
+            "long_duration"
+        ] = "Long audio files may take significant processing time"
     elif audio_duration < 10:  # Very short
-        warnings["short_duration"] = (
-            "Very short audio may not benefit from tempo processing"
-        )
+        warnings[
+            "short_duration"
+        ] = "Very short audio may not benefit from tempo processing"
 
     # Combined effects warnings
     if tempo_factor > 1.5 and abs(pitch_shift_semitones) > 4:
-        warnings["aggressive_processing"] = (
-            "Combining high tempo and pitch changes may degrade quality"
-        )
+        warnings[
+            "aggressive_processing"
+        ] = "Combining high tempo and pitch changes may degrade quality"
 
     return warnings
 
@@ -1039,7 +1040,7 @@ def process_tempo_from_storage(
                 "analysis_timestamp": time.time(),
             }
             cache.cache_bpm_analysis(audio_file_hash, bpm_analysis_data)
-            logger.debug(f"Cached BPM analysis for future use")
+            logger.debug("Cached BPM analysis for future use")
 
         # Generate smart preset suggestions and warnings based on audio characteristics
         duration = len(audio_data) / sample_rate
@@ -1070,7 +1071,7 @@ def process_tempo_from_storage(
             processed_audio = cached_audio_data["audio_data"]
             sample_rate = cached_audio_data["sample_rate"]
             cache_hit = True
-            logger.info(f"Using cached processed audio")
+            logger.info("Using cached processed audio")
         else:
             # Apply tempo processing with preset configuration
             current_task.update_state(
@@ -1095,7 +1096,7 @@ def process_tempo_from_storage(
             cache.cache_processed_audio(
                 audio_cache_key, processed_audio, sample_rate, processing_params
             )
-            logger.debug(f"Cached processed audio for future use")
+            logger.debug("Cached processed audio for future use")
 
         # Calculate final BPM
         if tempo_factor != 1.0 and not preserve_pitch:

@@ -8,9 +8,7 @@ from enum import Enum
 import logging
 import os
 from pathlib import Path
-from typing import BinaryIO, Dict, List, Optional, Union
-
-import numpy as np
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -595,7 +593,7 @@ class CloudStorageService(StorageService):
                     )
                     return analysis_path
                 else:
-                    logger.error(f"Failed to upload analysis result to cloud storage")
+                    logger.error("Failed to upload analysis result to cloud storage")
                     return None
             finally:
                 # Cleanup temporary file

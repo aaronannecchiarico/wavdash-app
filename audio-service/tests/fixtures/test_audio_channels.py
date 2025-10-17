@@ -24,7 +24,7 @@ def test_channel_conversion():
 
     print(f"   Converted shape: {y_stereo.shape}")
     print(
-        f"   Expected: (1, 2, 44100) ✅"
+        "   Expected: (1, 2, 44100) ✅"
         if y_stereo.shape == (1, 2, 44100)
         else "   ❌ Wrong shape"
     )
@@ -50,7 +50,7 @@ def test_channel_conversion():
 
     print(f"   Converted shape: {y_stereo.shape}")
     print(
-        f"   Expected: (1, 2, 44100) ✅"
+        "   Expected: (1, 2, 44100) ✅"
         if y_stereo.shape == (1, 2, 44100)
         else "   ❌ Wrong shape"
     )
@@ -68,7 +68,7 @@ def test_channel_conversion():
 
     print(f"   After transpose and batch: {y_stereo.shape}")
     print(
-        f"   Expected: (1, 2, 44100) ✅"
+        "   Expected: (1, 2, 44100) ✅"
         if y_stereo.shape == (1, 2, 44100)
         else "   ❌ Wrong shape"
     )
@@ -93,7 +93,7 @@ def test_channel_conversion():
 
     print(f"   Converted shape: {y_stereo.shape}")
     print(
-        f"   Expected: (1, 2, 44100) ✅"
+        "   Expected: (1, 2, 44100) ✅"
         if y_stereo.shape == (1, 2, 44100)
         else "   ❌ Wrong shape"
     )

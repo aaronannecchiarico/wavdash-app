@@ -62,7 +62,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y ffmpeg libsndfile1
+        sudo apt-get install -y ffmpeg libsndfile1 redis-tools
 
     - name: Install Python dependencies
       run: |
@@ -72,10 +72,11 @@ jobs:
 
     - name: Wait for Redis
       run: |
-        until redis-cli -h localhost -p 6379 ping; do
+        timeout 30 bash -c 'until redis-cli -h localhost -p 6379 ping; do
           echo "Waiting for Redis..."
           sleep 2
-        done
+        done'
+        echo "Redis is ready!"
 
     - name: Create test audio file
       run: |
@@ -114,5 +115,7 @@ jobs:
 
     - name: Lint with flake8
       run: |
+        # Check for critical errors only (syntax errors, undefined names)
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        # Run full lint check with config (will use .flake8 file)
+        flake8 . --count --statistics

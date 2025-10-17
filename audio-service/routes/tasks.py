@@ -5,7 +5,7 @@ Handles task status, results, and task lifecycle management
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 import redis
 
 from celery_app import celery_app
@@ -139,9 +139,9 @@ def get_task_status(task_id: str, include_result: bool = False):
                         if "stem_count" in result:
                             result_summary["stem_count"] = result["stem_count"]
 
-                    result_summary["message"] = (
-                        "Task completed successfully. Use include_result=true to get full data."
-                    )
+                    result_summary[
+                        "message"
+                    ] = "Task completed successfully. Use include_result=true to get full data."
                     return result_summary
             except Exception as e:
                 logging.error(f"Error accessing task result for {task_id}: {e}")
@@ -254,9 +254,9 @@ def get_task_summary(task_id: str):
                         summary["musical_analysis"]["loudness_db"] = energy_info.get(
                             "overall_loudness_db", 0.0
                         )
-                        summary["musical_analysis"]["dynamic_range_db"] = (
-                            energy_info.get("dynamic_range_db", 0.0)
-                        )
+                        summary["musical_analysis"][
+                            "dynamic_range_db"
+                        ] = energy_info.get("dynamic_range_db", 0.0)
 
                     # Spectral characteristics
                     if "spectral" in features:
@@ -269,9 +269,9 @@ def get_task_summary(task_id: str):
                     # MFCC summary (just overall stats)
                     if "mfcc" in features:
                         mfcc_info = features["mfcc"]
-                        summary["musical_analysis"]["timbral_complexity"] = (
-                            mfcc_info.get("overall_std", 0.0)
-                        )
+                        summary["musical_analysis"][
+                            "timbral_complexity"
+                        ] = mfcc_info.get("overall_std", 0.0)
 
                 # Handle chunked results
                 elif "aggregated_features" in result:

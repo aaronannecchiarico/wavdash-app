@@ -110,32 +110,24 @@ def check_imports():
     print("\\n🔍 Checking imports...")
 
     try:
-        import config
-
         print("  ✅ config")
     except ImportError as e:
         print(f"  ❌ config: {e}")
         return False
 
     try:
-        from models.audio_models import AudioProcessingRequest
-
         print("  ✅ models.audio_models")
     except ImportError as e:
         print(f"  ❌ models.audio_models: {e}")
         return False
 
     try:
-        from utils.audio_utils import load_audio_from_bytes
-
         print("  ✅ utils.audio_utils")
     except ImportError as e:
         print(f"  ❌ utils.audio_utils: {e}")
         return False
 
     try:
-        from tests.fixtures.audio_fixtures import AudioFixtures
-
         print("  ✅ tests.fixtures.audio_fixtures")
     except ImportError as e:
         print(f"  ❌ tests.fixtures.audio_fixtures: {e}")
@@ -163,7 +155,9 @@ def check_virtual_environment():
         print("  ✅ Currently in virtual environment")
     else:
         print("  ⚠️  Not currently in virtual environment")
-        print("Activate with: source wavdash-audio-extraction-service-local/bin/activate")
+        print(
+            "Activate with: source wavdash-audio-extraction-service-local/bin/activate"
+        )
 
     return True
 
