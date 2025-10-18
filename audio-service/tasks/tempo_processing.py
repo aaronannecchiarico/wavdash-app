@@ -36,7 +36,6 @@ from utils.audio_utils import (  # noqa: F401 - Used in tests
 
 logger = logging.getLogger(__name__)
 
-# Phase 2: Enhanced audio processing imports
 try:
     from pedalboard import (
         Chorus,
@@ -116,7 +115,7 @@ def create_pedalboard_for_preset(
 ) -> Optional[Pedalboard]:
     """
     Create a pedalboard with effects based on preset configuration
-    Phase 2: Enhanced audio effects using pedalboard with stem-aware processing
+    Enhanced audio effects using pedalboard with stem-aware processing
     """
     if not PEDALBOARD_AVAILABLE:
         return None
@@ -276,7 +275,7 @@ def create_pedalboard_for_preset(
 def calculate_optimal_tempo_factor(current_bpm: float, target_style: str) -> float:
     """
     Use detected BPM to suggest optimal tempo factors for different styles
-    Phase 2: BPM-aware processing suggestions
+    BPM-aware processing suggestions
     """
     BPM_TARGETS = {
         "chill": (70, 90),
@@ -309,7 +308,7 @@ def get_smart_preset_suggestions(
 ) -> Dict[str, Dict]:
     """
     Suggest optimal presets based on audio characteristics
-    Phase 2: Intelligent preset recommendations
+    Intelligent preset recommendations
     """
     suggestions = {}
 
@@ -356,7 +355,7 @@ def process_stems_individually(
 ) -> Dict[str, np.ndarray]:
     """
     Process each stem with optimized settings for stem type
-    Phase 2: Stem-aware processing for higher quality results
+    Stem-aware processing for higher quality results
     """
     processed_stems = {}
 
@@ -393,7 +392,7 @@ def mix_processed_stems(
 ) -> np.ndarray:
     """
     Mix processed stems back together with optional level adjustments
-    Phase 2: Intelligent stem mixing
+    Intelligent stem mixing
     """
     if not processed_stems:
         raise ValueError("No processed stems to mix")
@@ -437,7 +436,7 @@ def validate_tempo_processing_params(
 ) -> Dict[str, str]:
     """
     Enhanced validation for tempo processing parameters
-    Phase 2: Comprehensive parameter validation with warnings
+    Comprehensive parameter validation with warnings
     """
     warnings = {}
 
@@ -481,7 +480,7 @@ def handle_processing_error(
 ) -> Dict[str, Any]:
     """
     Enhanced error handling with detailed context and recovery suggestions
-    Phase 2: Comprehensive error handling
+    Comprehensive error handling
     """
     error_info = {
         "error_type": type(error).__name__,
@@ -550,7 +549,7 @@ def handle_processing_error(
 def check_system_compatibility() -> Dict[str, Any]:
     """
     Check system compatibility and capabilities for tempo processing
-    Phase 2: System compatibility checking
+    System compatibility checking
     """
     compatibility = {
         "pedalboard_available": PEDALBOARD_AVAILABLE,
