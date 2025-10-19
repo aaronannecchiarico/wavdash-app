@@ -52,13 +52,34 @@ For other packages, install using npm rather than editing package.json directly.
 
 ### Component Structure
 - **Astro Pages**: Located in `src/pages/` for routing
-- **React Components**: Can be placed in `src/components/` (not created yet but standard convention)
+- **Astro Components**: Located in `src/components/` for static, non-interactive components
+- **React Components**: Located in `src/components/react/` for interactive components requiring client-side JavaScript
 - **Hybrid Approach**: Astro components can import and use React components via the `@astrojs/react` integration
+
+#### Component Inventory
+
+**Astro Components** (Static, Zero JavaScript):
+- `FeatureCard.astro` - Feature display cards with icon, title, description, and features list
+- `ProcessStep.astro` - Process step cards with step number and optional arrow indicator
+- `StatsDisplay.astro` - Statistics display with large numbers and labels
+- `TechBadge.astro` - Technology badge components for technical features section
+
+**React Components** (Interactive, Client-Side Hydration):
+- `Header.tsx` - Navigation header with auth state (uses `client:load`)
+- `AnimatedWaveform.tsx` - Interactive audio player visualization with play/pause controls (uses `client:visible`)
+- `Icon.tsx` - Wrapper component for Lucide React icons (allows use in Astro components)
 
 ### Styling System
 - **Tailwind CSS v4** is configured as a Vite plugin (not PostCSS)
 - Global styles imported via `src/styles/global.css`
 - Must import `@import "tailwindcss";` in CSS files to enable Tailwind
+- **Neobrutalist Design System** implemented with:
+  - CSS custom properties for brand colors (`--neo-green`, `--neo-pink`, `--neo-yellow`, `--neo-blue`)
+  - Hard shadows (no blur): `--neo-shadow`, `--neo-shadow-sm`, `--neo-shadow-lg`
+  - Utility classes: `.neo-border`, `.neo-shadow`, `.neo-transition`, `.neo-hover-lift`
+  - Zero border radius (sharp rectangles on all components)
+  - 3px solid black borders
+  - High contrast color palette
 
 ### Static Assets
 - Place static files (images, fonts, etc.) in `public/` directory
@@ -92,7 +113,21 @@ For other packages, install using npm rather than editing package.json directly.
 - No shared layout component exists yet (pages define full HTML structure)
 
 ### Current State
-- Project is in early stages with minimal boilerplate
-- Only index page exists (`src/pages/index.astro`)
-- No components directory created yet
-- Single global CSS file for Tailwind imports
+- **Complete marketing landing page** for WavDash (AI-powered audio processing platform)
+- Full neobrutalist design implementation migrated from Figma design
+- Main page (`src/pages/index.astro`) includes all sections:
+  - Hero section with grid pattern background
+  - Features section (3 feature cards)
+  - How It Works section (3-step process)
+  - Technical Features section (6 tech badges)
+  - Demo section with animated waveform player
+  - Social Proof section with statistics
+  - Pricing section (free tier)
+  - Community/Contest section
+  - Footer CTA and footer navigation
+- Component library complete with 7 reusable components
+- Inter font loaded from Google Fonts (can be upgraded to Cabinet Grotesk)
+- SEO meta tags and Open Graph tags implemented
+
+### Known Issues
+- AnimatedWaveform component shows React hydration warning due to `Math.random()` usage for bar heights (cosmetic, non-breaking)
