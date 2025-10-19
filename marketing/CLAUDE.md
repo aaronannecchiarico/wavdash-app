@@ -34,8 +34,14 @@ npm run astro -- <command>
 
 ## Installing Packages
 
-Use `astro add` for integrations: Use astro add for official integrations (e.g. astro add tailwind, astro add react). 
+Use `astro add` for integrations: Use astro add for official integrations (e.g. astro add tailwind, astro add react).
 For other packages, install using npm rather than editing package.json directly.
+
+## Git Commit Guidelines
+
+- Do NOT include "Co-Authored-By: Claude" in commit messages
+- Do NOT include promotional links like "Generated with Claude Code" in commit messages
+- Keep commit messages clear, concise, and professional
 
 ## Architecture
 
