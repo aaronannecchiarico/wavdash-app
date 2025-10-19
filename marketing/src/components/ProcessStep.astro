@@ -1,0 +1,42 @@
+---
+import { Icon } from './react/Icon';
+
+interface Props {
+  stepNumber: number;
+  title: string;
+  description: string;
+  iconName: string;
+  showArrow?: boolean;
+}
+
+const { stepNumber, title, description, iconName, showArrow = false } = Astro.props;
+---
+
+<div class="relative">
+  <div class="border-3 border-black bg-white neo-shadow p-8 md:p-10 h-full flex flex-col">
+    <div class="flex items-center gap-4 mb-6">
+      <div class="border-3 border-black bg-[#00eb90] w-12 h-12 flex items-center justify-center text-2xl font-black">
+        {stepNumber}
+      </div>
+      <div class="border-3 border-black w-16 h-16 flex items-center justify-center bg-black">
+        <Icon name={iconName} size={32} className="text-white" client:load />
+      </div>
+    </div>
+
+    <h3 class="uppercase mb-4 tracking-widest">
+      {title}
+    </h3>
+
+    <p class="leading-relaxed">
+      {description}
+    </p>
+  </div>
+
+  {showArrow && (
+    <div class="hidden lg:block absolute top-1/2 -right-8 -translate-y-1/2 z-10">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 16H28M28 16L20 8M28 16L20 24" stroke="black" stroke-width="3"/>
+      </svg>
+    </div>
+  )}
+</div>
