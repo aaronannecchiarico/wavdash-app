@@ -65,9 +65,16 @@ For other packages, install using npm rather than editing package.json directly.
 - `TechBadge.astro` - Technology badge components for technical features section
 
 **React Components** (Interactive, Client-Side Hydration):
-- `Header.tsx` - Navigation header with auth state (uses `client:load`)
-- `AnimatedWaveform.tsx` - Interactive audio player visualization with play/pause controls (uses `client:visible`)
+- `Header.tsx` - Responsive navigation header with auth state (uses `client:load`)
+  - Desktop: 3-column grid layout with centered nav links and right-aligned auth buttons
+  - Mobile: Hamburger menu with shadcn/ui Sheet component for slide-out navigation
+  - Includes all nav links (Features, How It Works, Pricing) and auth buttons in mobile menu
 - `Icon.tsx` - Wrapper component for Lucide React icons (allows use in Astro components)
+- `BarVisualizer.tsx` - Frequency band audio visualizer with agent states (connecting, listening, speaking, thinking) and demo mode
+- `StaticWaveform.tsx` - Lightweight static waveform visualization using canvas with seeded pseudo-random heights
+- `Orb.tsx` - 3D animated orb using Three.js/React Three Fiber with shader-based visuals (requires WebGL)
+- `OrbWithFallback.tsx` - Orb wrapper with mobile fallback (shows static gradient on mobile devices)
+- `AudioAnalysisDemo.tsx` - Complete audio analysis demo showcasing BPM, key detection, loudness, and stem separation (uses `client:visible`)
 
 ### Styling System
 - **Tailwind CSS v4** is configured as a Vite plugin (not PostCSS)
@@ -115,19 +122,31 @@ For other packages, install using npm rather than editing package.json directly.
 ### Current State
 - **Complete marketing landing page** for WavDash (AI-powered audio processing platform)
 - Full neobrutalist design implementation migrated from Figma design
+- **ElevenLabs UI Integration**: Professional audio visualization components adapted from ElevenLabs UI library
 - Main page (`src/pages/index.astro`) includes all sections:
   - Hero section with grid pattern background
   - Features section (3 feature cards)
   - How It Works section (3-step process)
   - Technical Features section (6 tech badges)
-  - Demo section with animated waveform player
+  - **Demo section with Audio Analysis showcase** featuring:
+    - 3D Orb background animation (Three.js/React Three Fiber) with mobile fallback
+    - Interactive audio waveform visualization
+    - Real-time analysis results display (BPM, Key, Time Signature, Loudness)
+    - Stem separation preview with BarVisualizer
+    - Static demo data (no file upload yet)
   - Social Proof section with statistics
   - Pricing section (free tier)
   - Community/Contest section
   - Footer CTA and footer navigation
-- Component library complete with 7 reusable components
+- Component library complete with 11 reusable components
 - Inter font loaded from Google Fonts (can be upgraded to Cabinet Grotesk)
 - SEO meta tags and Open Graph tags implemented
 
+### Dependencies
+- **Three.js Stack**: `three`, `@react-three/fiber`, `@react-three/drei` for 3D Orb visualization
+- **Utilities**: `clsx`, `tailwind-merge` for className utilities (via `cn()` helper in `src/lib/utils.ts`)
+- **UI Components**: shadcn/ui components installed in `src/components/ui/`
+  - `Sheet` component for mobile navigation menu (slide-out drawer)
+
 ### Known Issues
-- AnimatedWaveform component shows React hydration warning due to `Math.random()` usage for bar heights (cosmetic, non-breaking)
+- None currently (previous AnimatedWaveform hydration warning resolved)

@@ -6,7 +6,8 @@ import FeatureCard from '../components/FeatureCard.astro';
 import ProcessStep from '../components/ProcessStep.astro';
 import StatsDisplay from '../components/StatsDisplay.astro';
 import TechBadge from '../components/TechBadge.astro';
-import { AnimatedWaveform } from '../components/react/AnimatedWaveform';
+import { AudioAnalysisDemo } from '../components/react/AudioAnalysisDemo';
+import { OrbWithFallback } from '../components/react/OrbWithFallback';
 
 const isLoggedIn = false;
 ---
@@ -38,10 +39,10 @@ const isLoggedIn = false;
   <Header isLoggedIn={isLoggedIn} client:load />
 
   <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center px-6 py-32 overflow-hidden">
+  <section class="relative min-h-screen flex items-center justify-center px-8 md:px-12 py-32 overflow-hidden">
     <div class="absolute inset-0 grid-pattern pointer-events-none"></div>
 
-    <div class="relative z-10 max-w-5xl mx-auto text-center">
+    <div class="relative z-10 text-center">
       <!-- Logo/Brand Mark -->
       <div class="inline-flex border-3 border-black w-20 h-20 items-center justify-center bg-[#00eb90] neo-shadow mb-8">
         <Icon name="Music" size={40} client:load />
@@ -54,7 +55,7 @@ const isLoggedIn = false;
       </h1>
 
       <!-- Subheadline -->
-      <p class="mb-4 text-2xl md:text-3xl max-w-3xl mx-auto">
+      <p class="mb-4 text-2xl md:text-3xl">
         Transform Your Music with AI-Powered Audio Processing
       </p>
 
@@ -84,13 +85,13 @@ const isLoggedIn = false;
   </section>
 
   <!-- Value Propositions Section -->
-  <section id="features" class="py-24 px-6 bg-white">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-20">
+  <section id="features" class="flex items-center justify-center px-8 md:px-6 py-32 overflow-hidden">
+    <div class="flex flex-col items-center gap-6">
+      <div class="text-center">
         <h2 class="uppercase tracking-wider mb-6">
           TOOLS OF DESTRUCTION
         </h2>
-        <p class="text-xl max-w-2xl mx-auto">
+        <p class="text-xl mb-4">
           Unleash the full potential of your audio with cutting-edge AI technology
         </p>
       </div>
@@ -142,8 +143,8 @@ const isLoggedIn = false;
   </section>
 
   <!-- How It Works Section -->
-  <section id="how-it-works" class="py-24 px-6 bg-[#ffdc00]">
-    <div class="max-w-7xl mx-auto">
+  <section id="how-it-works" class="flex items-center justify-center px-8 md:px-6 py-32 overflow-hidden bg-[#ffdc00]">
+    <div class="flex flex-col items-center gap-6">
       <div class="text-center mb-20">
         <h2 class="uppercase tracking-wider mb-6">
           THREE STEPS TO AUDIO DOMINATION
@@ -178,13 +179,13 @@ const isLoggedIn = false;
   </section>
 
   <!-- Technical Features Section -->
-  <section class="py-24 px-6 bg-white">
-    <div class="max-w-7xl mx-auto">
+  <section class="py-32 px-8 md:px-12 bg-white">
+    <div class="w-full max-w-7xl mx-auto">
       <div class="text-center mb-20">
         <h2 class="uppercase tracking-wider mb-6">
           BUILT WITH CUTTING-EDGE TECHNOLOGY
         </h2>
-        <p class="text-xl max-w-2xl mx-auto">
+        <p class="text-xl">
           Enterprise-grade infrastructure meets creative innovation
         </p>
       </div>
@@ -230,24 +231,34 @@ const isLoggedIn = false;
   </section>
 
   <!-- Demo/Visualization Section -->
-  <section class="py-24 px-6 bg-[#ff73a9]">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-20">
+  <section class="relative py-32 px-8 md:px-12 bg-[#ff73a9] overflow-hidden">
+    <!-- Orb Background -->
+    <div class="absolute inset-0 pointer-events-none opacity-20">
+      <OrbWithFallback
+        colors={["#00eb90", "#ffdc00"]}
+        agentState="thinking"
+        volumeMode="auto"
+        client:idle
+      />
+    </div>
+
+    <div class="relative z-10 w-full max-w-7xl mx-auto">
+      <div class="text-center mb-12">
         <h2 class="uppercase tracking-wider mb-6">
-          SEE THE POWER
+          SEE THE ANALYSIS IN ACTION
         </h2>
         <p class="text-xl">
-          Experience the forge in action
+          Experience real-time audio analysis with our powerful AI-driven tools
         </p>
       </div>
 
-      <AnimatedWaveform client:visible />
+      <AudioAnalysisDemo client:visible />
     </div>
   </section>
 
   <!-- Social Proof Section -->
-  <section class="py-24 px-6 bg-white">
-    <div class="max-w-7xl mx-auto">
+  <section class="py-32 px-8 md:px-12 bg-white">
+    <div class="w-full max-w-7xl mx-auto">
       <div class="text-center mb-20">
         <h2 class="uppercase tracking-wider mb-6">
           TRUSTED BY CREATORS WORLDWIDE
@@ -280,8 +291,8 @@ const isLoggedIn = false;
   </section>
 
   <!-- Pricing Section -->
-  <section id="pricing" class="py-24 px-6 bg-[#3f5ef4] text-white">
-    <div class="max-w-4xl mx-auto">
+  <section id="pricing" class="py-32 px-8 md:px-12 bg-[#3f5ef4] text-white">
+    <div class="w-full max-w-5xl mx-auto">
       <div class="text-center mb-20">
         <h2 class="uppercase tracking-wider mb-6 text-white">
           START FOR FREE
@@ -302,7 +313,7 @@ const isLoggedIn = false;
           </p>
         </div>
 
-        <ul class="space-y-6 mb-12 max-w-2xl mx-auto">
+        <ul class="space-y-6 mb-12">
           <li class="flex items-start">
             <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
             <span>No credit card required</span>
@@ -343,8 +354,8 @@ const isLoggedIn = false;
   </section>
 
   <!-- Contest/Community Section -->
-  <section class="py-24 px-6 bg-white">
-    <div class="max-w-4xl mx-auto text-center">
+  <section class="py-32 px-8 md:px-12 bg-white">
+    <div class="w-full max-w-5xl mx-auto text-center">
       <div class="inline-flex border-3 border-black w-20 h-20 items-center justify-center bg-[#ffdc00] neo-shadow mb-8">
         <Icon name="Trophy" size={40} client:load />
       </div>
@@ -353,7 +364,7 @@ const isLoggedIn = false;
         JOIN THE COMMUNITY
       </h2>
 
-      <p class="text-xl mb-12 max-w-2xl mx-auto">
+      <p class="text-xl mb-12">
         Participate in music creation challenges • Community-driven competitions • Showcase your processed tracks and compete for glory
       </p>
 
@@ -364,13 +375,13 @@ const isLoggedIn = false;
   </section>
 
   <!-- Footer CTA Section -->
-  <section class="py-24 px-6 bg-black text-white">
-    <div class="max-w-4xl mx-auto text-center">
+  <section class="py-32 px-8 md:px-12 bg-black text-white">
+    <div class="w-full max-w-5xl mx-auto text-center">
       <h2 class="uppercase tracking-wider mb-8">
         READY TO TRANSFORM YOUR MUSIC?
       </h2>
 
-      <p class="text-xl mb-12 max-w-2xl mx-auto">
+      <p class="text-xl mb-12">
         Join thousands of producers, musicians, and creators using WavDash to unlock their audio's full potential
       </p>
 
@@ -385,8 +396,8 @@ const isLoggedIn = false;
   </section>
 
   <!-- Footer -->
-  <footer class="py-16 px-6 bg-black text-white border-t-3 border-white">
-    <div class="max-w-7xl mx-auto">
+  <footer class="py-20 px-8 md:px-12 bg-black text-white border-t-3 border-white">
+    <div class="w-full max-w-7xl mx-auto">
       <div class="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
         <div class="text-center md:text-left">
           <div class="flex items-center gap-4 justify-center md:justify-start mb-4">
