@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AudioAnalysisCallbackController;
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Authentication check endpoint (uses 'web' middleware for session support)
+Route::middleware('web')->group(function () {
+    Route::get('/auth/check', [AuthController::class, 'check']);
+});
 
 // Audio Analysis Callbacks (no auth required for microservice callbacks)
 Route::prefix('audio/analysis')->name('api.audio.analysis.')->group(function () {
