@@ -41,6 +41,14 @@ This is your primary reference for common tasks. Commands are organized by workf
 * **List Cloudflare R2 Buckets:** `npx wrangler r2 bucket list`
 * **List Objects in R2 Bucket:** `npx wrangler r2 object list <bucket-name>`
 
+### **Marketing Site Integration**
+
+* **Local Development:** The Astro marketing site runs on `http://localhost:4321` by default
+* **Production:** Marketing site is at `https://wavdash.com`, app is at `https://app.wavdash.com`
+* **Home Route Behavior:** Visiting `/` redirects to marketing site if logged out, or dashboard if logged in
+* **Configuration:** Set `MARKETING_URL` in `.env` to configure the marketing site URL
+* **Related Docs:** See `/docs/MARKETING_AUTH_SHARING.md` for complete implementation guide
+
 ---
 
 ## 🏛️ Architecture & Core Concepts
@@ -51,6 +59,7 @@ This is your primary reference for common tasks. Commands are organized by workf
 * **Frontend:** React, Inertia.js v2, TypeScript, Tailwind CSS, Shadcn/ui
 * **Admin Panel:** Filament v4
 * **Database:** MySQL
+* **Marketing Site:** Astro (separate repository, handles public-facing pages)
 * **Integrations:** Optional FastAPI audio analysis microservice, Cloudflare R2 for storage.
 
 ### **Key Data Flows**
@@ -58,6 +67,7 @@ This is your primary reference for common tasks. Commands are organized by workf
 1.  **Audio Processing (Client-Side):** User Upload → MediaBunny processes to OGG on client → Direct upload to storage → Immediate `UploadProcessed` event → UI updates instantly.
 2.  **Data Rendering:** Laravel Controller (`Inertia::render()`) → Inertia.js Middleware → React Page Component (`/resources/js/Pages`).
 3.  **Stems Processing:** Uses server-side `AudioConversionService` and `ConvertAndPublishAudio` job for advanced audio analysis features.
+4.  **Cross-Domain Authentication:** Marketing site (Astro) → `/api/auth/check` endpoint → Laravel session cookies → Display login state → Route to appropriate page.
 
 ### **Important Directory Structures**
 

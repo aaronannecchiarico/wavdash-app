@@ -135,4 +135,18 @@ return [
     */
 
     'client_side_audio_processing' => env('CLIENT_SIDE_PROCESSING', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Marketing Site URL
+    |--------------------------------------------------------------------------
+    |
+    | This value is the URL of the Astro marketing site. When users visit
+    | the root URL of the Laravel application without authentication, they
+    | will be redirected to this URL. This separates marketing content from
+    | the application, reducing server load.
+    |
+    */
+
+    'marketing_url' => env('MARKETING_URL', 'https://wavdash.com'),
 ];

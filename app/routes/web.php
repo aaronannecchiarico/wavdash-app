@@ -4,7 +4,17 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    // If user is authenticated, redirect to dashboard
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    // If not authenticated, redirect to marketing site
+    // In production, this will be https://wavdash.com
+    // In development, this can be configured via MARKETING_URL environment variable
+    $marketingUrl = config('app.marketing_url', 'http://localhost:4321');
+
+    return redirect()->away($marketingUrl);
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
