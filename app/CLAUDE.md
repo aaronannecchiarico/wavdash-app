@@ -23,8 +23,7 @@ This is your primary reference for common tasks. Commands are organized by workf
 
 * **Run All Tests:** `composer run test`
 * **Run a Specific Test:** `php artisan test tests/Feature/SpecificTest.php`
-* **Code Formatting (Fix):** `vendor/bin/pint --dirty`
-    * **Run this before finalizing changes.** It automatically formats modified PHP files.
+* **Code Formatting:** `vendor/bin/pint --dirty` (formats modified PHP files)
 * **Frontend Linting:** `npm run lint`
 * **Frontend Type Checking:** `npm run types`
 
@@ -43,11 +42,10 @@ This is your primary reference for common tasks. Commands are organized by workf
 
 ### **Marketing Site Integration**
 
-* **Local Development:** The Astro marketing site runs on `http://localhost:4321` by default
-* **Production:** Marketing site is at `https://wavdash.com`, app is at `https://app.wavdash.com`
-* **Home Route Behavior:** Visiting `/` redirects to marketing site if logged out, or dashboard if logged in
-* **Configuration:** Set `MARKETING_URL` in `.env` to configure the marketing site URL
-* **Related Docs:** See `/docs/MARKETING_AUTH_SHARING.md` for complete implementation guide
+* **Astro marketing site** handles public pages (separate repository)
+* **Home route (`/`)** redirects: logged out → marketing site, logged in → dashboard
+* **Configuration:** Set `MARKETING_URL` in `.env` (`http://localhost:4321` local, `https://wavdash.com` production)
+* **Full docs:** `/docs/MARKETING_AUTH_SHARING.md`
 
 ---
 
@@ -93,7 +91,6 @@ Follow these patterns to maintain code consistency and quality.
     * Prefer `Model::query()` over the `DB::` facade.
 * **File Creation:** Use `php artisan make:` commands to generate boilerplate for models, controllers, etc.
 * **Background Jobs:** Use the `ShouldQueue` interface for time-consuming tasks like stems processing. **Note:** `ProcessAudioUpload` job is deprecated in Phase 4 - main upload processing now happens client-side.
-* **Code Style:** Run `vendor/bin/pint --dirty` to format your code before committing.
 
 ### **Frontend (Inertia.js & React)**
 
@@ -187,11 +184,67 @@ This project is integrated with Laravel Boost. **Always prioritize Boost tools.*
 | Search Docs                | Query the Laravel hosted documentation API service to retrieve documentation based on installed packages       |
 | Tinker                     | Execute arbitrary code within the context of the application                                                   |
 
-## Tooling for shell interactions 
+## Tooling for shell interactions
 
-- Is it about finding FILES? use `fd` 
-- Is it about finding TEXT/strings? use `rg` 
-- Is it about finding CODE STRUCTURE? use `ast-grep` https://ast-grep.github.io/llms.txt 
-- Is it about SELECTING from multiple results? pipe to `zf` 
-- Is it about interacting with JSON? use `jq` 
+- Is it about finding FILES? use `fd`
+- Is it about finding TEXT/strings? use `rg`
+- Is it about finding CODE STRUCTURE? use `ast-grep` https://ast-grep.github.io/llms.txt
+- Is it about SELECTING from multiple results? pipe to `zf`
+- Is it about interacting with JSON? use `jq`
 - Is it about interacting with YAML or XML? use `yq`
+
+---
+
+## 🔀 Git Usage & Commit Guidelines
+
+### **Conventional Commit Format**
+
+```
+<type>(<scope>): <subject>
+```
+
+**Types:** `feat`, `fix`, `refactor`, `perf`, `style`, `test`, `docs`, `chore`, `ci`
+**Scope:** Component affected (e.g., `auth`, `upload`, `analysis`, `admin`, `ui`)
+
+**Examples:**
+```bash
+feat(auth): add marketing site redirect logic
+fix(upload): resolve client-side processing validation error
+test(upload): add comprehensive scope tests
+```
+
+### **Required Workflow**
+
+**ALWAYS verify before committing or pushing:**
+
+```bash
+# 1. Review changes
+git status && git diff
+
+# 2. Stage and review again
+git add . && git diff --staged
+
+# 3. Format and test
+vendor/bin/pint --dirty && composer run test
+
+# 4. Commit with conventional message
+git commit -m "type(scope): description"
+
+# 5. Verify before push
+git log --oneline -3 && git push origin main
+```
+
+### **Rules**
+
+**DO:**
+- ✅ Use conventional commit format with clear scope
+- ✅ Run `vendor/bin/pint --dirty` and tests before committing
+- ✅ Verify with `git diff` before every commit/push
+- ✅ Keep commits focused on single logical changes
+
+**DO NOT:**
+- ❌ Add co-author tags or "Generated with Claude Code" footers
+- ❌ Commit without reviewing changes (`git diff --staged`)
+- ❌ Push without verifying commits (`git log`)
+- ❌ Commit failing tests or unformatted code
+- ❌ Use vague messages like "update files" or "fix stuff"
