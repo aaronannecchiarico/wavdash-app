@@ -49,6 +49,7 @@ class AuthenticationTest extends TestCase
         $response = $this->actingAs($user)->post('/logout');
 
         $this->assertGuest();
-        $response->assertRedirect('/');
+        // After logout, users are redirected to the marketing site
+        $response->assertRedirect(config('app.marketing_url', 'http://localhost:4321'));
     }
 }

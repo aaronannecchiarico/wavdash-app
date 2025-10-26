@@ -39,13 +39,15 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        // Use Inertia::location() to force a full page redirect to the marketing site
+        // This prevents CORS errors that would occur with XHR redirects
+        return Inertia::location(config('app.marketing_url', 'http://localhost:4321'));
     }
 }
