@@ -224,8 +224,8 @@ git status && git diff
 # 2. Stage and review again
 git add . && git diff --staged
 
-# 3. Format and test
-vendor/bin/pint --dirty && composer run test
+# 3. Format, analyze, and test
+vendor/bin/pint --dirty && composer run analyse && composer run test
 
 # 4. Commit with conventional message
 git commit -m "type(scope): description"
@@ -238,7 +238,7 @@ git log --oneline -3 && git push origin main
 
 **DO:**
 - ✅ Use conventional commit format with clear scope
-- ✅ Run `vendor/bin/pint --dirty` and tests before committing
+- ✅ Run `vendor/bin/pint --dirty`, `composer run analyse`, and `composer run test` before committing
 - ✅ Verify with `git diff` before every commit/push
 - ✅ Keep commits focused on single logical changes
 
