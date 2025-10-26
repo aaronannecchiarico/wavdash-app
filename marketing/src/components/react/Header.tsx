@@ -15,6 +15,9 @@ interface HeaderProps {
 export function Header({ isLoggedIn = false }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Get app URL from environment
+  const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
+
   const navLinks = [
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
@@ -51,17 +54,26 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
           {/* Desktop Auth Buttons - Right */}
           <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
-              <button className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift">
+              <a
+                href={`${appUrl}/dashboard`}
+                className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+              >
                 Dashboard
-              </button>
+              </a>
             ) : (
               <>
-                <button className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift">
+                <a
+                  href={`${appUrl}/login`}
+                  className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+                >
                   Login
-                </button>
-                <button className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift">
+                </a>
+                <a
+                  href={`${appUrl}/register`}
+                  className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+                >
                   Register
-                </button>
+                </a>
               </>
             )}
           </div>
@@ -103,17 +115,26 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
                   {/* Mobile Auth Buttons */}
                   <div className="flex flex-col gap-4 pt-4">
                     {isLoggedIn ? (
-                      <button className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full">
+                      <a
+                        href={`${appUrl}/dashboard`}
+                        className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
+                      >
                         Dashboard
-                      </button>
+                      </a>
                     ) : (
                       <>
-                        <button className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full">
+                        <a
+                          href={`${appUrl}/login`}
+                          className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
+                        >
                           Login
-                        </button>
-                        <button className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full">
+                        </a>
+                        <a
+                          href={`${appUrl}/register`}
+                          className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
+                        >
                           Register
-                        </button>
+                        </a>
                       </>
                     )}
                   </div>
