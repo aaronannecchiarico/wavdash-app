@@ -45,18 +45,67 @@ For other packages, install using npm rather than editing package.json directly.
 
 ## Architecture
 
+### Domain Structure
+- **Marketing Site**: `wavdash.com` (this Astro application)
+- **Application**: `app.wavdash.com` (Laravel application)
+- **Development**: `localhost:4321` (Astro) and `localhost:8000` (Laravel)
+
+### Authentication Architecture
+- Cross-domain authentication between marketing site and Laravel app
+- Session-based authentication using shared cookies (domain: `.wavdash.com` in production)
+- Environment-specific configuration via `PUBLIC_APP_URL` environment variable
+- See `docs/authentication-integration.md` for complete implementation details
+
+**Authentication Flow:**
+1. Astro pages check auth status via Laravel API (`/api/auth/check`) during SSR
+2. Laravel returns authentication state and user data
+3. Header component receives `isLoggedIn` prop and renders appropriate buttons
+4. Login/Register/Dashboard buttons link to Laravel app URLs
+
+**Environment Variables:**
+- `PUBLIC_APP_URL`: Laravel application URL (e.g., `https://app.wavdash.com` or `http://localhost:8000`)
+
+### File Upload Architecture
+- Drag-and-drop file upload from marketing site to Laravel application
+- Files uploaded directly to Laravel API endpoint (`/api/upload-temp`)
+- Temporary storage with UUID-based filenames for security
+- Seamless redirect to Laravel onboarding flow after upload
+- See `docs/file-upload-integration.md` for complete implementation details
+
+**Upload Flow:**
+1. User drags audio file onto marketing site upload zone (React component)
+2. File uploads to Laravel with progress tracking (XMLHttpRequest)
+3. Laravel validates, stores temporarily, and returns upload ID
+4. Marketing site redirects to Laravel onboarding: `app.wavdash.com/onboard?upload={uuid}`
+5. Laravel retrieves file metadata and prompts login if needed
+6. After auth, file moves to permanent storage and processing begins
+
+**Components:**
+- `FileUploadZone.tsx`: React component for drag-and-drop with progress tracking
+- Supports: MP3, WAV, FLAC, AAC, OGG, M4A (max 100MB)
+- Includes client-side and server-side validation
+
 ### Routing
 - File-based routing via `src/pages/` directory
 - Each `.astro` or `.md` file in `src/pages/` becomes a route based on filename
 - Example: `src/pages/index.astro` → `/`
+- API endpoints in `src/pages/api/` for server-side logic
 
 ### Component Structure
 - **Astro Pages**: Located in `src/pages/` for routing
+- **Astro Layouts**: Located in `src/layouts/` for shared page structure
 - **Astro Components**: Located in `src/components/` for static, non-interactive components
 - **React Components**: Located in `src/components/react/` for interactive components requiring client-side JavaScript
+- **Utilities**: Located in `src/lib/` for helper functions and shared logic
 - **Hybrid Approach**: Astro components can import and use React components via the `@astrojs/react` integration
 
 #### Component Inventory
+
+**Layouts**:
+- `MainLayout.astro` - Shared page layout with authentication checking, meta tags, and Header component
+
+**Utilities**:
+- `auth.ts` - Authentication helper for checking user auth status with Laravel backend
 
 **Astro Components** (Static, Zero JavaScript):
 - `FeatureCard.astro` - Feature display cards with icon, title, description, and features list
@@ -66,9 +115,11 @@ For other packages, install using npm rather than editing package.json directly.
 
 **React Components** (Interactive, Client-Side Hydration):
 - `Header.tsx` - Responsive navigation header with auth state (uses `client:load`)
-  - Desktop: 3-column grid layout with centered nav links and right-aligned auth buttons
+  - Desktop: 3-column grid layout with centered nav links and right-aligned auth links
   - Mobile: Hamburger menu with shadcn/ui Sheet component for slide-out navigation
-  - Includes all nav links (Features, How It Works, Pricing) and auth buttons in mobile menu
+  - Includes all nav links (Features, How It Works, Pricing) and auth links in mobile menu
+  - Auth links use `PUBLIC_APP_URL` to link to Laravel app (login, register, dashboard)
+  - Displays Login/Register when logged out, Dashboard when logged in
 - `Icon.tsx` - Wrapper component for Lucide React icons (allows use in Astro components)
 - `BarVisualizer.tsx` - Frequency band audio visualizer with agent states (connecting, listening, speaking, thinking) and demo mode
 - `StaticWaveform.tsx` - Lightweight static waveform visualization using canvas with seeded pseudo-random heights
@@ -115,9 +166,12 @@ For other packages, install using npm rather than editing package.json directly.
 ## Project-Specific Patterns
 
 ### Page Layout
-- Astro pages currently handle their own `<html>`, `<head>`, and `<body>` tags
-- Global CSS is imported in the frontmatter of `.astro` files
-- No shared layout component exists yet (pages define full HTML structure)
+- **Layout Component**: `src/layouts/MainLayout.astro` provides shared structure for all pages
+- The layout handles authentication checking via `checkAuthStatus()` helper
+- Pages use the layout by importing and wrapping content with `<MainLayout>` component
+- Layout accepts props: `title`, `description`, `ogTitle`, `ogDescription`
+- Global CSS, fonts, and meta tags are managed by the layout
+- Header component receives authentication state from layout automatically
 
 ### Current State
 - **Complete marketing landing page** for WavDash (AI-powered audio processing platform)
