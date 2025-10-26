@@ -1,6 +1,5 @@
 ---
-import "../styles/global.css";
-import { Header } from '../components/react/Header';
+import MainLayout from '../layouts/MainLayout.astro';
 import { Icon } from '../components/react/Icon';
 import FeatureCard from '../components/FeatureCard.astro';
 import ProcessStep from '../components/ProcessStep.astro';
@@ -8,36 +7,21 @@ import StatsDisplay from '../components/StatsDisplay.astro';
 import TechBadge from '../components/TechBadge.astro';
 import { AudioAnalysisDemo } from '../components/react/AudioAnalysisDemo';
 import { OrbWithFallback } from '../components/react/OrbWithFallback';
+import { checkAuthStatus } from '../lib/auth';
 
-const isLoggedIn = false;
+// Disable prerendering to enable server-side rendering with access to request headers
+export const prerender = false;
+
+// Check authentication status for conditional rendering
+const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
 ---
 
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width" />
-
-  <!-- SEO Meta Tags -->
-  <title>WavDash - AI-Powered Audio Processing | Stem Separation & Analysis</title>
-  <meta name="description" content="Transform your music with WavDash. Professional audio analysis, AI stem separation, and tempo processing. Free to use. No credit card required." />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="WavDash - AI-Powered Audio Processing" />
-  <meta property="og:description" content="Transform your music with AI-powered audio processing." />
-  <meta property="og:type" content="website" />
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-
-  <meta name="generator" content={Astro.generator} />
-</head>
-<body class="min-h-screen bg-white">
-  <!-- Header -->
-  <Header isLoggedIn={isLoggedIn} client:load />
-
+<MainLayout
+  title="WavDash - AI-Powered Audio Processing | Stem Separation & Analysis"
+  description="Transform your music with WavDash. Professional audio analysis, AI stem separation, and tempo processing. Free to use. No credit card required."
+  ogTitle="WavDash - AI-Powered Audio Processing"
+  ogDescription="Transform your music with AI-powered audio processing."
+>
   <!-- Hero Section -->
   <section class="relative min-h-screen flex items-center justify-center px-8 md:px-12 py-32 overflow-hidden">
     <div class="absolute inset-0 grid-pattern pointer-events-none"></div>
@@ -442,5 +426,4 @@ const isLoggedIn = false;
       </div>
     </div>
   </footer>
-</body>
-</html>
+</MainLayout>
