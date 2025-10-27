@@ -1,6 +1,33 @@
-# Claude Code Directives for WavDash
+# Claude Code Directives for WavDash Laravel App
 
-This document provides essential context for working on the **WavDash** repository, a Laravel 12, React, and Inertia.js application with a Filament v4 admin panel.
+> **📦 MONOREPO CONTEXT**: This application is part of the WavDash monorepo.
+> For monorepo-wide guidance, commands, and architecture, see **[../CLAUDE.md](../CLAUDE.md)**.
+> This file contains Laravel app-specific details only.
+
+This document provides essential context for working on the **WavDash Laravel App** (`/app` directory), a Laravel 12, React, and Inertia.js application with a Filament v4 admin panel.
+
+## 🔗 Related Services
+
+- **Audio Service**: `../audio-service/` - FastAPI microservice for audio processing
+- **Marketing Site**: `../marketing/` - Astro-based public website
+
+## 🛠️ Working in this Directory
+
+**From monorepo root:**
+```bash
+cd app && composer run dev  # Start Laravel dev server
+```
+
+**From this directory:**
+```bash
+composer run dev  # Start Laravel dev server
+```
+
+**Using Docker:**
+```bash
+# From monorepo root
+make dev  # Starts all services including this app
+```
 
 ---
 
@@ -42,9 +69,12 @@ This is your primary reference for common tasks. Commands are organized by workf
 
 ### **Marketing Site Integration**
 
-* **Astro marketing site** handles public pages (separate repository)
+* **Astro marketing site** handles public pages (`../marketing/` in monorepo)
 * **Home route (`/`)** redirects: logged out → marketing site, logged in → dashboard
-* **Configuration:** Set `MARKETING_URL` in `.env` (`http://localhost:4321` local, `https://wavdash.com` production)
+* **Configuration:** Set `MARKETING_URL` in `.env`
+  - Docker: `http://marketing:4321`
+  - Local: `http://localhost:4321`
+  - Production: `https://wavdash.com`
 * **Full docs:** `/docs/MARKETING_AUTH_SHARING.md`
 
 ---

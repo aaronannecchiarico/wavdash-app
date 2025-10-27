@@ -1,6 +1,32 @@
-# CLAUDE.md
+# Claude Code Directives for WavDash Audio Service
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> **📦 MONOREPO CONTEXT**: This service is part of the WavDash monorepo.
+> For monorepo-wide guidance, commands, and architecture, see **[../CLAUDE.md](../CLAUDE.md)**.
+> This file contains Audio Service-specific details only.
+
+This file provides guidance for working with the **WavDash Audio Processing Service** (`/audio-service` directory), a FastAPI-based microservice for audio feature extraction and stem separation using Celery for distributed task processing.
+
+## 🔗 Related Services
+
+- **Laravel App**: `../app/` - Main web application that calls this service
+- **Marketing Site**: `../marketing/` - Public website
+
+## 🛠️ Working in this Directory
+
+**From monorepo root:**
+```bash
+cd audio-service
+source wavdash-audio-extraction-service-local/bin/activate
+uvicorn main:app --reload --port 8001
+```
+
+**Using Docker:**
+```bash
+# From monorepo root
+make dev  # Starts all services including audio service
+```
+
+---
 
 ## Git Commit Preferences
 

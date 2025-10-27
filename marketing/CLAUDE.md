@@ -1,6 +1,35 @@
-# CLAUDE.md
+# Claude Code Directives for WavDash Marketing Site
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+> **📦 MONOREPO CONTEXT**: This site is part of the WavDash monorepo.
+> For monorepo-wide guidance, commands, and architecture, see **[../CLAUDE.md](../CLAUDE.md)**.
+> This file contains Marketing Site-specific details only.
+
+This file provides guidance for working with the **WavDash Marketing Site** (`/marketing` directory), an Astro 5-based marketing website with React integration and Tailwind CSS v4.
+
+## 🔗 Related Services
+
+- **Laravel App**: `../app/` - Main web application for authentication and user features
+- **Audio Service**: `../audio-service/` - Audio processing microservice
+
+## 🛠️ Working in this Directory
+
+**From monorepo root:**
+```bash
+cd marketing && npm run dev
+```
+
+**From this directory:**
+```bash
+npm run dev  # Runs on http://localhost:4321
+```
+
+**Using Docker:**
+```bash
+# From monorepo root
+make dev  # Starts all services including marketing site
+```
+
+---
 
 ## Project Overview
 

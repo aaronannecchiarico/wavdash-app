@@ -1,0 +1,143 @@
+version: '3.8'
+
+# Development overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # ============================================================================
+  # Laravel Application - Development Mode
+  # ============================================================================
+
+  app:
+    build:
+      target: development
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - LOG_LEVEL=debug
+    volumes:
+      - ./app:/app
+      - /app/vendor
+      - /app/node_modules
+    ports:
+      - "8000:8000"
+      - "5173:5173"  # Vite HMR
+    command: >
+      sh -c "
+        php artisan config:clear &&
+        php artisan route:clear &&
+        php artisan view:clear &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  app-queue:
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - LOG_LEVEL=debug
+    volumes:
+      - ./app:/app
+      - /app/vendor
+
+  # ============================================================================
+  # Audio Processing Service - Development Mode
+  # ============================================================================
+
+  audio-api:
+    environment:
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./audio-service:/app
+      - /app/wavdash-audio-extraction-service-local
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+
+  audio-worker:
+    environment:
+      - DEBUG=True
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./audio-service:/app
+      - /app/wavdash-audio-extraction-service-local
+
+  # Add Flower for Celery monitoring in development
+  audio-flower:
+    build:
+      context: ./audio-service
+      dockerfile: Dockerfile
+    container_name: wavdash_audio_flower
+    command: celery -A celery_app flower --port=5555 --broker=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - audio-worker
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - wavdash
+    restart: unless-stopped
+
+  # ============================================================================
+  # Marketing Site - Development Mode
+  # ============================================================================
+
+  marketing:
+    build:
+      target: development
+    environment:
+      - PUBLIC_APP_URL=http://localhost:8000
+      - NODE_ENV=development
+    volumes:
+      - ./marketing:/app
+      - /app/node_modules
+    ports:
+      - "4321:4321"
+    command: npm run dev -- --host 0.0.0.0
+
+  # ============================================================================
+  # Development Tools
+  # ============================================================================
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: wavdash_mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - wavdash
+    restart: unless-stopped
+
+  # phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wavdash_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=${DB_PASSWORD:-secret}
+    depends_on:
+      - mysql
+    networks:
+      - wavdash
+    restart: unless-stopped
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: wavdash_redis_commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - wavdash
+    restart: unless-stopped

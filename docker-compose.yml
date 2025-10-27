@@ -1,0 +1,218 @@
+version: '3.8'
+
+# WavDash Monorepo - Production Docker Compose Configuration
+# Orchestrates Laravel app, Audio Service, Marketing site, and shared infrastructure
+
+networks:
+  wavdash:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  shared_storage:
+
+services:
+  # ============================================================================
+  # Shared Infrastructure
+  # ============================================================================
+
+  mysql:
+    image: mysql:8.0
+    container_name: wavdash_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: ${DB_DATABASE:-wavdash}
+      MYSQL_USER: ${DB_USERNAME:-wavdash}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - wavdash
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: wavdash_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wavdash
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================================
+  # Laravel Application
+  # ============================================================================
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      target: production
+    container_name: wavdash_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - BROADCAST_DRIVER=reverb
+      - AUDIO_SERVICE_URL=http://audio-api:8000
+      - MARKETING_URL=${MARKETING_URL:-http://marketing:4321}
+    volumes:
+      - shared_storage:/app/storage/app
+      - ./app/storage/logs:/app/storage/logs
+    networks:
+      - wavdash
+    healthcheck:
+      test: ["CMD", "php", "artisan", "health:check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  app-queue:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      target: production
+    container_name: wavdash_queue
+    command: php artisan queue:work --tries=3 --timeout=300
+    depends_on:
+      - app
+      - redis
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - AUDIO_SERVICE_URL=http://audio-api:8000
+    volumes:
+      - shared_storage:/app/storage/app
+      - ./app/storage/logs:/app/storage/logs
+    networks:
+      - wavdash
+    restart: unless-stopped
+
+  # ============================================================================
+  # Audio Processing Service (FastAPI)
+  # ============================================================================
+
+  audio-api:
+    build:
+      context: ./audio-service
+      dockerfile: Dockerfile
+    container_name: wavdash_audio_api
+    ports:
+      - "8001:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - STORAGE_TYPE=local
+      - LOCAL_STORAGE_PATH=/app/storage
+    volumes:
+      - shared_storage:/app/storage
+      - ./audio-service/logs:/app/logs
+    networks:
+      - wavdash
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  audio-worker:
+    build:
+      context: ./audio-service
+      dockerfile: Dockerfile
+    container_name: wavdash_audio_worker
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 --queues=audio_features,stem_separation
+    depends_on:
+      redis:
+        condition: service_healthy
+      audio-api:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - STORAGE_TYPE=local
+      - LOCAL_STORAGE_PATH=/app/storage
+    volumes:
+      - shared_storage:/app/storage
+      - ./audio-service/logs:/app/logs
+    networks:
+      - wavdash
+    healthcheck:
+      test: ["CMD", "celery", "-A", "celery_app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # Marketing Site (Astro)
+  # ============================================================================
+
+  marketing:
+    build:
+      context: ./marketing
+      dockerfile: Dockerfile
+      target: production
+    container_name: wavdash_marketing
+    ports:
+      - "4321:4321"
+    environment:
+      - PUBLIC_APP_URL=http://app:8000
+      - NODE_ENV=production
+    networks:
+      - wavdash
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
