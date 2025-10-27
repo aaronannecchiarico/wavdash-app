@@ -1,0 +1,71 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # Start at level 5, progressively increase to 8
+    level: 6
+
+    # Trust PHPDoc types from casts (needed for Laravel's automatic type casting)
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # Laravel/Eloquent false positives
+        - '#Access to an undefined property (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)::\$#'
+        - '#Call to an undefined method (Illuminate\\Database\\Eloquent\\Model|App\\Models\\.+)#'
+        - '#Relation .+ is not found in App\\Models\\.+ model#'
+
+        # Laravel Console Command false positives
+        - '#Call to an undefined method App\\Console\\Commands\\.+::(warning|line)\(\)#'
+
+        # Laravel Resource/Collection map() unresolvable type (Larastan limitation)
+        - '#Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection<.+>::map\(\) contains unresolvable type#'
+        - '#Return type of call to method Illuminate\\Database\\Eloquent\\Collection<.+>::map\(\) contains unresolvable type#'
+        - '#Parameter \#1 \$condition of method Illuminate\\Http\\Resources\\Json\\JsonResource::when\(\) expects bool, .+ given#'
+
+        # Filament false positives
+        - '#Call to static method make\(\) on an unknown class Filament\\Schemas\\Components#'
+        - '#Anonymous function never returns string so it can be removed from the return type#'
+
+        # Model $fillable property type variance (Laravel 11+ uses list<string>, older uses array)
+        - '#PHPDoc type .+ of property .+::\$fillable is not covariant with PHPDoc type .+ of overridden property#'
+        - '#Property .+::\$fillable .+ does not accept default value of type .+#'
+        - '#Property App\\Models\\.+::\$fillable type has no value type specified in iterable type array#'
+
+        # Encrypted and JSON cast arrays (Laravel handles these correctly at runtime)
+        - '#Argument of an invalid type string supplied for foreach, only iterables are supported#'
+        - '#Method .+::getAppAuthenticationRecoveryCodes\(\) should return .+ but returns .+#'
+        - '#Property .+::\$app_authentication_recovery_codes .+ does not accept .+#'
+
+        # Laravel relationship and factory generics (standard Laravel patterns)
+        - '#.+ (uses|extends) generic (class|trait) Illuminate\\Database\\Eloquent\\(Factories\\HasFactory|Relations\\(HasMany|BelongsTo|HasOne|BelongsToMany|MorphMany|MorphOne)) but does not specify its types#'
+
+        # Laravel Form Request rules() method (standard return type)
+        - '#Method App\\Http\\Requests\\.+::rules\(\) return type has no value type specified in iterable type array#'
+
+        # Service methods returning complex API responses from microservice
+        - '#Method App\\Services\\Audio(Analysis|Microservice|Conversion)Service::.+ return type has no value type specified in iterable type array#'
+        - '#Method App\\Services\\AudioMicroserviceClient::.+ return type has no value type specified in iterable type array#'
+
+        # Middleware methods handling request data
+        - '#Method App\\Http\\Middleware\\.+::.+ return type has no value type specified in iterable type array#'
+
+        # Filament widget methods (standard Filament patterns)
+        - '#Method App\\Filament\\(Widgets|Pages|Resources)\\.+::(getStats|getHeaderWidgets|getFooterWidgets|getHeaderActions|canEdit)\(\) (should return|return type with)#'
+
+        # Model relationship return types with generics (standard Eloquent pattern)
+        - '#Method App\\Models\\.+::(user|uploads|upload|contest|votes|stems|tempos|analysis|tempoTask|stemTask|analysisTask|contestEntries|contestUsers|winner|contestUser|participant)\(\) (return type with generic class|has no return type specified)#'
+
+        # Model query scope methods (standard Eloquent pattern)
+        - '#Method App\\Models\\.+::scope.+\(\) (has parameter \$query with|return type with) generic#'
+
+        # Filament resource methods (standard Filament patterns)
+        - '#Method App\\Filament\\Resources\\.+::can(Edit|Delete|View)\(\) has parameter \$record with no type specified#'
+
+        # Service helper methods returning complex types
+        - '#Method App\\Services\\.+::(findSimilarUploads|createTempDiskFFMpeg)\(\) (return type (has no value type|with generic class)|has no return type)#'
+
+        # Controller callback methods with mixed parameter types
+        - '#Method App\\Http\\Controllers\\.+::(handleFailedTask|verifyTaskStatusWithMicroservice)\(\) has parameter \$task with no type specified#'

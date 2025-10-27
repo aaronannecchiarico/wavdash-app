@@ -1,0 +1,523 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Cabinet Grotesk Font Family */
+@font-face {
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Regular.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Regular.woff') format('woff');
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Medium.woff') format('woff');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Bold.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Bold.woff') format('woff');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Cabinet Grotesk';
+    src:
+        url('./fonts/fonts/CabinetGrotesk-Black.woff2') format('woff2'),
+        url('./fonts/fonts/CabinetGrotesk-Black.woff') format('woff');
+    font-weight: 900;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans:
+        'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-heading: 'Cabinet Grotesk', ui-sans-serif, system-ui, sans-serif;
+
+    --radius-lg: 0px;
+    --radius-md: 0px;
+    --radius-sm: 0px;
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@theme inline {
+    --color-main: var(--main);
+    --color-background: var(--background);
+    --color-secondary-background: var(--secondary-background);
+    --color-foreground: var(--foreground);
+    --color-main-foreground: var(--main-foreground);
+    --color-border: var(--border);
+    --color-overlay: var(--overlay);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --spacing-boxShadowX: 4px;
+    --spacing-boxShadowY: 4px;
+    --spacing-reverseBoxShadowX: -4px;
+    --spacing-reverseBoxShadowY: -4px;
+    --radius-base: 0px;
+    --shadow-shadow: var(--shadow);
+    --font-weight-base: 500;
+    --font-weight-heading: 900;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+:root {
+    /* Beat Forge Brand Colors - Neobrutalist Palette */
+    --neo-white: #ffffff;
+    --neo-green: #00eb90;
+    --neo-pink: #ff73a9;
+    --neo-yellow: #ffdc00;
+    --neo-blue: #3f5ef4;
+    --neo-black: #000000;
+
+    /* Neobrutalism.dev CSS Variables - Adapted to Beat Forge Colors */
+    --background: var(--neo-white);
+    --secondary-background: var(--neo-yellow);
+    --foreground: var(--neo-black);
+    --main-foreground: var(--neo-black);
+    --main: var(--neo-green);
+    --border: var(--neo-black);
+    --ring: var(--neo-black);
+    --overlay: oklch(0% 0 0 / 0.8);
+    --shadow: 4px 4px 0px 0px var(--border);
+    --chart-1: var(--neo-green);
+    --chart-2: var(--neo-pink);
+    --chart-3: var(--neo-yellow);
+    --chart-4: var(--neo-blue);
+    --chart-5: var(--neo-black);
+    --chart-active-dot: var(--neo-black);
+
+    /* Legacy neo variables for backward compatibility */
+    --neo-bg-primary: var(--background);
+    --neo-bg-secondary: var(--secondary-background);
+    --neo-accent-1: var(--neo-green);
+    --neo-accent-2: var(--neo-pink);
+    --neo-accent-3: var(--neo-blue);
+    --neo-text-primary: var(--foreground);
+    --neo-border-width: 3px;
+    --neo-shadow-offset: 4px;
+    --neo-border-radius: 0px;
+    --neo-shadow: var(--shadow);
+    --neo-shadow-hover: 2px 2px 0px var(--border);
+
+    /* shadcn/ui compatibility */
+    --card: var(--background);
+    --card-foreground: var(--foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: var(--neo-pink);
+    --secondary-foreground: var(--neo-white);
+    --muted: var(--secondary-background);
+    --muted-foreground: var(--foreground);
+    --accent: var(--neo-blue);
+    --accent-foreground: var(--neo-white);
+    --destructive: #ef4444;
+    --destructive-foreground: var(--neo-white);
+    --input: var(--border);
+    --radius: 0px;
+    --sidebar: var(--neo-black);
+    --sidebar-foreground: var(--neo-white);
+    --sidebar-primary: var(--neo-white);
+    --sidebar-primary-foreground: var(--neo-black);
+    --sidebar-accent: var(--neo-green);
+    --sidebar-accent-foreground: var(--neo-black);
+    --sidebar-border: var(--neo-white);
+    --sidebar-ring: var(--neo-green);
+}
+
+.dark {
+    /* Enhanced Dark Mode Variables for Better Contrast - Phase 7 Implementation */
+    --background: var(--neo-black);
+    --secondary-background: var(--neo-blue);
+    --foreground: var(--neo-white);
+    --main-foreground: var(--neo-black);
+    --main: var(--neo-green);
+    --border: var(--neo-white);
+    --ring: var(--neo-white);
+    --overlay: oklch(0% 0 0 / 0.9);
+    --shadow: 4px 4px 0px 0px var(--border);
+    --chart-1: var(--neo-green);
+    --chart-2: var(--neo-pink);
+    --chart-3: var(--neo-yellow);
+    --chart-4: var(--neo-blue);
+    --chart-5: var(--neo-white);
+    --chart-active-dot: var(--neo-white);
+
+    /* Enhanced neo variables for better dark mode readability */
+    --neo-bg-primary: var(--background);
+    --neo-bg-secondary: var(--secondary-background);
+    --neo-accent-1: var(--neo-green);
+    --neo-accent-2: var(--neo-pink);
+    --neo-accent-3: var(--neo-yellow);
+    --neo-text-primary: var(--foreground);
+    --neo-shadow: var(--shadow);
+    --neo-shadow-hover: 2px 2px 0px var(--border);
+
+    /* Enhanced shadcn/ui compatibility for dark mode */
+    --card: var(--background);
+    --card-foreground: var(--foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--foreground);
+    --primary: var(--main);
+    --primary-foreground: var(--main-foreground);
+    --secondary: var(--neo-pink);
+    --secondary-foreground: var(--neo-black);
+    --muted: var(--secondary-background);
+    --muted-foreground: var(--foreground);
+    --accent: var(--neo-yellow);
+    --accent-foreground: var(--neo-black);
+    --destructive: #ef4444;
+    --destructive-foreground: var(--neo-white);
+    --input: var(--border);
+    --sidebar: var(--neo-black);
+    --sidebar-foreground: var(--neo-white);
+    --sidebar-primary: var(--neo-white);
+    --sidebar-primary-foreground: var(--neo-black);
+    --sidebar-accent: var(--neo-green);
+    --sidebar-accent-foreground: var(--neo-black);
+    --sidebar-border: var(--neo-white);
+    --sidebar-ring: var(--neo-green);
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background font-base text-foreground;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading;
+    }
+}
+
+/* Neobrutalist utility classes */
+@layer utilities {
+    .neo-border {
+        border: 3px solid currentColor;
+    }
+
+    .neo-border-t {
+        border-top: 3px solid currentColor;
+    }
+
+    .neo-border-b {
+        border-bottom: 3px solid currentColor;
+    }
+
+    .neo-border-l {
+        border-left: 3px solid currentColor;
+    }
+
+    .neo-border-r {
+        border-right: 3px solid currentColor;
+    }
+
+    .neo-shadow {
+        box-shadow: 4px 4px 0px #000000;
+    }
+
+    .dark .neo-shadow {
+        box-shadow: 4px 4px 0px #ffffff;
+    }
+
+    .neo-shadow-hover {
+        box-shadow: 2px 2px 0px #000000;
+    }
+
+    .dark .neo-shadow-hover {
+        box-shadow: 2px 2px 0px #ffffff;
+    }
+
+    .neo-transition {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Component-specific overrides */
+    .neo-button {
+        @apply font-bold tracking-wider uppercase;
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0;
+    }
+
+    .dark .neo-button {
+        box-shadow: 4px 4px 0px #ffffff;
+    }
+
+    .neo-button:hover {
+        box-shadow: 2px 2px 0px #000000;
+        transform: translate(2px, 2px);
+    }
+
+    .dark .neo-button:hover {
+        box-shadow: 2px 2px 0px #ffffff;
+    }
+
+    .neo-card {
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
+        border-radius: 0;
+    }
+
+    .dark .neo-card {
+        box-shadow: 4px 4px 0px #ffffff;
+    }
+
+    .neo-input {
+        @apply font-mono;
+        border: 3px solid currentColor;
+        box-shadow: 2px 2px 0px #000000;
+        border-radius: 0;
+    }
+
+    .dark .neo-input {
+        box-shadow: 2px 2px 0px #ffffff;
+    }
+
+    .neo-input:focus {
+        box-shadow: none;
+        transform: translate(1px, 1px);
+    }
+
+    .neo-slider {
+        border: 3px solid currentColor;
+    }
+
+    .neo-slider [data-orientation='horizontal'] {
+        height: 8px;
+    }
+
+    .neo-slider [role='slider'] {
+        border: 3px solid currentColor;
+        box-shadow: 4px 4px 0px #000000;
+        background-color: #00eb90;
+        width: 16px;
+        height: 16px;
+        border-radius: 0;
+    }
+
+    .dark .neo-slider [role='slider'] {
+        box-shadow: 4px 4px 0px #ffffff;
+    }
+
+    .neo-slider [role='slider']:hover {
+        box-shadow: 2px 2px 0px #000000;
+        transform: translate(-1px, -1px);
+    }
+
+    .dark .neo-slider [role='slider']:hover {
+        box-shadow: 2px 2px 0px #ffffff;
+    }
+}
+
+/* Enhanced Dark Mode Component Adjustments - Phase 7 Implementation */
+@layer utilities {
+    /* Dark mode specific component adjustments for better readability */
+    .dark .neo-border {
+        border-color: var(--neo-white);
+    }
+
+    .dark .neo-button {
+        color: var(--neo-white);
+    }
+
+    .dark .neo-card {
+        background: var(--neo-black);
+        color: var(--neo-white);
+    }
+
+    /* Enhanced text contrast in dark mode */
+    .dark .text-muted-foreground {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Dark mode form elements */
+    .dark .neo-input {
+        background-color: var(--neo-black);
+        color: var(--neo-white);
+        border-color: var(--neo-white);
+    }
+
+    .dark .neo-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Enhanced button variants for dark mode */
+    .dark .neo-button[data-variant='outline'] {
+        background-color: transparent;
+        border-color: var(--neo-white);
+        color: var(--neo-white);
+    }
+
+    .dark .neo-button[data-variant='outline']:hover {
+        background-color: var(--neo-white);
+        color: var(--neo-black);
+    }
+
+    /* Dark mode specific shadow adjustments */
+    .dark .neo-shadow,
+    .dark .neo-card,
+    .dark .neo-button {
+        box-shadow: 4px 4px 0px var(--neo-white);
+    }
+
+    .dark .neo-shadow-hover:hover,
+    .dark .neo-button:hover {
+        box-shadow: 2px 2px 0px var(--neo-white);
+    }
+}
+
+/* Neobrutalist animations */
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0.3) rotate(-5deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05) rotate(1deg);
+    }
+    70% {
+        transform: scale(0.9) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-2px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(2px);
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+}
+.animate-bounce-in {
+    animation: bounce-in 0.5s ease-out;
+}
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Hover transforms for brutalist effect */
+.neo-hover-transform:hover {
+    transform: translate(-2px, -2px);
+    transition: transform 0.1s ease-out;
+}

@@ -1,0 +1,74 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Upload;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class DashboardTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Fake HTTP calls to prevent real network requests
+        Http::fake([
+            '*' => Http::response(['status' => 'healthy'], 200),
+        ]);
+
+        // Fake queues to prevent job execution
+        Queue::fake();
+
+        // Fake storage to prevent file system operations
+        Storage::fake('r2');
+        Storage::fake('r2_private');
+        Storage::fake('r2_public');
+        Storage::fake('private');
+        Storage::fake('public');
+    }
+
+    public function test_guests_are_redirected_to_the_login_page()
+    {
+        $this->get('/dashboard')->assertRedirect('/login');
+    }
+
+    public function test_authenticated_users_can_visit_the_dashboard()
+    {
+        $this->actingAs($user = User::factory()->create());
+
+        $this->get('/dashboard')->assertOk();
+    }
+
+    public function test_dashboard_returns_proper_inertia_response_with_recent_uploads()
+    {
+        $user = User::factory()->create();
+
+        // Create uploads with processing data
+        Upload::factory()->count(3)->for($user)->state(['status' => 'ready'])->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->has('recentUploads.data', 3)
+                ->has('recentUploads.data.0', fn (Assert $upload) => $upload
+                    ->has('id')
+                    ->has('title')
+                    ->has('status')
+                    ->has('has_analysis')
+                    ->has('has_stems')
+                    ->has('has_tempos')
+                    ->etc()
+                )
+            );
+    }
+}
