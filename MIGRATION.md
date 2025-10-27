@@ -259,12 +259,18 @@ cd marketing && npm run dev                   # Terminal 4
 
 ### Configuration Changes
 
-| File | Before | After |
-|------|--------|-------|
-| `app/.env` | `AUDIO_SERVICE_URL=http://localhost:8001` | `AUDIO_SERVICE_URL=http://audio-api:8000` (Docker) |
-| `app/.env` | `MARKETING_URL=http://localhost:4321` | `MARKETING_URL=http://marketing:4321` (Docker) |
-| `audio-service/.env` | `REDIS_HOST=localhost` | `REDIS_HOST=redis` (Docker) |
-| `marketing/.env` | `PUBLIC_APP_URL=http://localhost:8000` | `PUBLIC_APP_URL=http://app:8000` (Docker) |
+| File | Before | After (Local) | After (Docker) |
+|------|--------|---------------|----------------|
+| `app/.env` | `DB_CONNECTION=sqlite` | `DB_CONNECTION=sqlite` | `DB_CONNECTION=mysql` |
+| `app/.env` | `AUDIO_SERVICE_URL=http://localhost:8001` | `AUDIO_SERVICE_URL=http://localhost:8001` | `AUDIO_SERVICE_URL=http://audio-api:8000` |
+| `app/.env` | `MARKETING_URL=http://localhost:4321` | `MARKETING_URL=http://localhost:4321` | `MARKETING_URL=http://marketing:4321` |
+| `app/.env` | `QUEUE_CONNECTION=sync` | `QUEUE_CONNECTION=sync` | `QUEUE_CONNECTION=redis` |
+| `audio-service/.env` | `REDIS_HOST=localhost` | `REDIS_HOST=localhost` | `REDIS_HOST=redis` |
+| `marketing/.env` | `PUBLIC_APP_URL=http://localhost:8000` | `PUBLIC_APP_URL=http://localhost:8000` | `PUBLIC_APP_URL=http://app:8000` |
+
+**Key Differences:**
+- **Local Development**: Uses SQLite (no MySQL), sync queue (no Redis required)
+- **Docker Development**: Uses MySQL and Redis (production-like environment)
 
 ### Directory Structure
 
@@ -418,6 +424,8 @@ git checkout pre-monorepo-migration
 5. **Merge sequentially** - One repo at a time, test between merges
 6. **Update docs immediately** - Don't let documentation get stale
 7. **Plan for config changes** - Service URLs, paths, etc. will change
+8. **Document your container runtime** - Colima, Docker Desktop, Podman, etc.
+9. **Handle database differences** - SQLite for local, MySQL/Postgres for Docker
 
 ### Time Investment
 

@@ -15,17 +15,36 @@ RESET := \033[0m
 
 help: ## Display this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\n$(CYAN)Usage:$(RESET)\n  make $(GREEN)<target>$(RESET)\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2 } /^##@/ { printf "\n$(YELLOW)%s$(RESET)\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)Container Runtime:$(RESET) Colima (brew install colima docker docker-compose)"
+	@echo "$(YELLOW)Local Database:$(RESET) SQLite (no setup needed)"
+	@echo "$(YELLOW)Docker Database:$(RESET) MySQL 8.0 (managed by docker-compose)"
 
-##@ Development (Docker)
+colima-start: ## Start Colima container runtime
+	@echo "$(GREEN)Starting Colima...$(RESET)"
+	@colima start --cpu 4 --memory 8
+
+colima-stop: ## Stop Colima container runtime
+	@echo "$(YELLOW)Stopping Colima...$(RESET)"
+	@colima stop
+
+colima-status: ## Check Colima status
+	@colima status
+
+##@ Development (Docker via Colima)
 
 dev: ## Start all services in development mode with Docker
+	@echo "$(CYAN)Checking Colima status...$(RESET)"
+	@colima status > /dev/null 2>&1 || (echo "$(RED)Colima is not running. Start it with: colima start$(RESET)" && exit 1)
 	@echo "$(GREEN)Starting WavDash monorepo in development mode...$(RESET)"
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 dev-detached: ## Start all services in development mode (detached)
+	@echo "$(CYAN)Checking Colima status...$(RESET)"
+	@colima status > /dev/null 2>&1 || (echo "$(RED)Colima is not running. Start it with: colima start$(RESET)" && exit 1)
 	@echo "$(GREEN)Starting WavDash monorepo in development mode (detached)...$(RESET)"
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-	@echo "$(GREEN)Services started!$(RESET)"
+	@echo "$(GREEN)Services started! (Using MySQL in Docker)$(RESET)"
 	@echo "App: http://localhost:8000"
 	@echo "Audio Service: http://localhost:8001"
 	@echo "Marketing: http://localhost:4321"
@@ -50,9 +69,10 @@ clean: ## Remove all Docker containers, volumes, and images
 
 dev-local: ## Start all services locally (no Docker)
 	@echo "$(GREEN)Starting local development...$(RESET)"
+	@echo "$(YELLOW)Uses SQLite for Laravel database (no MySQL needed)$(RESET)"
 	@echo "$(YELLOW)You need to run these in separate terminals:$(RESET)"
 	@echo ""
-	@echo "Terminal 1 - Laravel App:"
+	@echo "Terminal 1 - Laravel App (SQLite):"
 	@echo "  cd app && composer run dev"
 	@echo ""
 	@echo "Terminal 2 - Audio Service Worker:"
@@ -63,6 +83,8 @@ dev-local: ## Start all services locally (no Docker)
 	@echo ""
 	@echo "Terminal 4 - Marketing Site:"
 	@echo "  cd marketing && npm run dev"
+	@echo ""
+	@echo "$(CYAN)Note: Redis is optional for local dev (use QUEUE_CONNECTION=sync)$(RESET)"
 
 install: ## Install dependencies for all services
 	@echo "$(GREEN)Installing dependencies for all services...$(RESET)"

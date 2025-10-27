@@ -111,23 +111,6 @@ services:
       - wavdash
     restart: unless-stopped
 
-  # phpMyAdmin for database management
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: wavdash_phpmyadmin
-    ports:
-      - "8080:80"
-    environment:
-      - PMA_HOST=mysql
-      - PMA_PORT=3306
-      - PMA_USER=root
-      - PMA_PASSWORD=${DB_PASSWORD:-secret}
-    depends_on:
-      - mysql
-    networks:
-      - wavdash
-    restart: unless-stopped
-
   # Redis Commander for Redis management
   redis-commander:
     image: rediscommander/redis-commander:latest

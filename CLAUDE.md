@@ -42,9 +42,16 @@ wavdash/
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended for Full Stack)
+### Option 1: Docker via Colima (Recommended for Full Stack)
 
+**Prerequisites**: Colima must be installed and running
 ```bash
+# Install Colima (if not already installed)
+brew install colima docker docker-compose
+
+# Start Colima
+colima start
+
 # Start all services in development mode
 make dev
 
@@ -54,6 +61,8 @@ make dev-detached
 # Stop services
 make stop
 ```
+
+**Note**: Uses MySQL in Docker containers for production-like environment
 
 **Services available after `make dev-detached`:**
 - Laravel App: http://localhost:8000
@@ -66,10 +75,10 @@ make stop
 
 ### Option 2: Local Development (No Docker)
 
-For faster iteration, you can run services locally:
+For faster iteration, you can run services locally. **Uses SQLite** for the Laravel database.
 
 ```bash
-# Terminal 1: Laravel App
+# Terminal 1: Laravel App (uses SQLite)
 cd app && composer run dev
 
 # Terminal 2: Audio Service Worker
@@ -85,6 +94,8 @@ uvicorn main:app --reload --port 8001
 # Terminal 4: Marketing Site
 cd marketing && npm run dev
 ```
+
+**Note**: Local development uses SQLite (no MySQL required), Redis is optional for queue testing
 
 ---
 
@@ -137,8 +148,8 @@ When running locally:
 
 - **Laravel → Audio Service**: `http://localhost:8001`
 - **Marketing → Laravel**: `http://localhost:8000`
-- **All → Redis**: `redis://localhost:6379`
-- **Laravel → MySQL**: `mysql://localhost:3306`
+- **All → Redis**: `redis://localhost:6379` (optional)
+- **Laravel Database**: SQLite file at `app/database/database.sqlite`
 
 ### Configuration
 
@@ -146,9 +157,18 @@ Each service has environment variables that need to be configured:
 
 **app/.env:**
 ```bash
+# Database - SQLite for local, MySQL for Docker
+DB_CONNECTION=sqlite  # Local development
+# DB_CONNECTION=mysql  # Docker/production
+
+# Service URLs
 AUDIO_SERVICE_URL=http://audio-api:8000  # Docker
 # AUDIO_SERVICE_URL=http://localhost:8001  # Local
 MARKETING_URL=http://marketing:4321
+
+# Queue - optional for local dev
+QUEUE_CONNECTION=sync  # Local (no Redis needed)
+# QUEUE_CONNECTION=redis  # Docker/production
 ```
 
 **audio-service/.env:**
@@ -275,7 +295,14 @@ chore(docker): optimize build caching
 
 ## 🛠️ Troubleshooting
 
-### Docker Issues
+### Docker/Colima Issues
+
+**Colima not running:**
+```bash
+colima status
+colima start
+# If issues: colima delete && colima start
+```
 
 **Services won't start:**
 ```bash
@@ -292,6 +319,16 @@ lsof -i :8001
 lsof -i :4321
 
 # Kill processes or change ports in docker-compose files
+```
+
+**Colima resource limits:**
+```bash
+# Check resources
+colima status
+
+# Adjust CPU/Memory if needed
+colima stop
+colima start --cpu 4 --memory 8
 ```
 
 ### Local Development Issues

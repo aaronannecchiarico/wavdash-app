@@ -16,20 +16,25 @@ WavDash is a comprehensive audio processing platform built as a monorepo contain
 
 ### Prerequisites
 
-- **Docker & Docker Compose** (recommended)
+- **Colima & Docker Compose** (recommended for containerized development)
+  - Install: `brew install colima docker docker-compose`
+  - Start: `colima start`
 - **OR** for local development:
   - PHP 8.3+, Composer
   - Node.js 20+
   - Python 3.11+
-  - MySQL 8.0+
-  - Redis 7+
+  - SQLite 3 (included with macOS/PHP)
+  - Redis 7+ (optional - for queue testing)
 
-### Start All Services (Docker)
+### Start All Services (Docker via Colima)
 
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/wavdash.git
 cd wavdash
+
+# Ensure Colima is running
+colima status || colima start
 
 # Start all services in development mode
 make dev-detached
@@ -165,10 +170,10 @@ make test-marketing    # Marketing build test
 - TypeScript
 
 ### Infrastructure
-- MySQL 8.0
-- Redis 7
-- Docker & Docker Compose
-- GitHub Actions (CI/CD)
+- **Database**: SQLite (local dev), MySQL 8.0 (Docker/production)
+- **Cache/Queue**: Redis 7
+- **Containers**: Colima + Docker Compose
+- **CI/CD**: GitHub Actions
 
 ## 📂 Project Structure
 
