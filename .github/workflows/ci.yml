@@ -1,0 +1,173 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  # Laravel App Tests
+  laravel-tests:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'app/') ||
+      contains(github.event.head_commit.added, 'app/') ||
+      github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install PHP Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Build SSR
+        run: npm run build:ssr
+
+      - name: Copy Environment File
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Run Tests
+        run: composer run test
+
+  # Laravel Linting
+  laravel-lint:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'app/') ||
+      contains(github.event.head_commit.added, 'app/') ||
+      github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install PHP Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Install Node Dependencies
+        run: npm install
+
+      - name: Run Pint
+        run: vendor/bin/pint
+
+      - name: Run PHPStan
+        run: composer run analyse
+
+      - name: Format Frontend
+        run: npm run format
+
+      - name: Lint Frontend
+        run: npm run lint
+
+  # Audio Service Tests
+  audio-service-tests:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'audio-service/') ||
+      contains(github.event.head_commit.added, 'audio-service/') ||
+      github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: audio-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: audio-service/requirements.txt
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run Tests
+        run: pytest tests/ --cov=. --cov-report=xml
+
+  # Marketing Site Build
+  marketing-build:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'marketing/') ||
+      contains(github.event.head_commit.added, 'marketing/') ||
+      github.event_name == 'pull_request'
+
+    defaults:
+      run:
+        working-directory: marketing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: marketing/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Site
+        run: npm run build
+
+      - name: Check TypeScript
+        run: npm run check
