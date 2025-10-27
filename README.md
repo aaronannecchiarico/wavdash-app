@@ -45,7 +45,6 @@ make dev-detached
 - Audio Service: http://localhost:8001
 - Marketing Site: http://localhost:4321
 - Celery Monitor (Flower): http://localhost:5555
-- phpMyAdmin: http://localhost:8080
 - Redis Commander: http://localhost:8081
 - MailHog: http://localhost:8025
 

@@ -74,6 +74,7 @@ dev-local: ## Start all services locally (no Docker)
 	@echo ""
 	@echo "Terminal 1 - Laravel App (SQLite):"
 	@echo "  cd app && composer run dev"
+	cd app && composer run dev
 	@echo ""
 	@echo "Terminal 2 - Audio Service Worker:"
 	@echo "  cd audio-service && source wavdash-audio-extraction-service-local/bin/activate && python scripts/start_worker.py"
@@ -91,7 +92,7 @@ install: ## Install dependencies for all services
 	@echo "$(CYAN)Installing Laravel dependencies...$(RESET)"
 	cd app && composer install && npm install
 	@echo "$(CYAN)Installing Audio Service dependencies...$(RESET)"
-	cd audio-service && python scripts/install.py
+	cd audio-service && python3 -m venv venv && source venv/bin/activate && python3 scripts/install.py
 	@echo "$(CYAN)Installing Marketing dependencies...$(RESET)"
 	cd marketing && npm install
 	@echo "$(GREEN)All dependencies installed!$(RESET)"

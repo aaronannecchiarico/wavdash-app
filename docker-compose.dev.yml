@@ -15,10 +15,22 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
+      # Storage Configuration
+      - FILESYSTEM_DISK=${STORAGE_MODE:-r2}
+      # R2 Credentials (from root .env)
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_PRIVATE_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_PRIVATE_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
     volumes:
       - ./app:/app
       - /app/vendor
       - /app/node_modules
+      # Shared storage (for local mode)
+      - shared-storage:${SHARED_STORAGE_PATH:-/app/shared-storage}
     ports:
       - "8000:8000"
       - "5173:5173"  # Vite HMR
@@ -35,9 +47,21 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
+      # Storage Configuration
+      - FILESYSTEM_DISK=${STORAGE_MODE:-r2}
+      # R2 Credentials (from root .env)
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_PRIVATE_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_PRIVATE_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
     volumes:
       - ./app:/app
       - /app/vendor
+      # Shared storage (for local mode)
+      - shared-storage:${SHARED_STORAGE_PATH:-/app/shared-storage}
 
   # ============================================================================
   # Audio Processing Service - Development Mode
@@ -47,18 +71,42 @@ services:
     environment:
       - DEBUG=True
       - LOG_LEVEL=DEBUG
+      # Storage Configuration
+      - STORAGE_TYPE=${STORAGE_MODE:-r2}
+      # R2 Credentials (from root .env)
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      # Local storage (for local mode)
+      - LOCAL_STORAGE_PATH=${SHARED_STORAGE_PATH}
     volumes:
       - ./audio-service:/app
       - /app/wavdash-audio-extraction-service-local
+      # Shared storage (for local mode)
+      - shared-storage:${SHARED_STORAGE_PATH:-/app/shared-storage}
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
 
   audio-worker:
     environment:
       - DEBUG=True
       - LOG_LEVEL=DEBUG
+      # Storage Configuration
+      - STORAGE_TYPE=${STORAGE_MODE:-r2}
+      # R2 Credentials (from root .env)
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      # Local storage (for local mode)
+      - LOCAL_STORAGE_PATH=${SHARED_STORAGE_PATH}
     volumes:
       - ./audio-service:/app
       - /app/wavdash-audio-extraction-service-local
+      # Shared storage (for local mode)
+      - shared-storage:${SHARED_STORAGE_PATH:-/app/shared-storage}
 
   # Add Flower for Celery monitoring in development
   audio-flower:
@@ -124,3 +172,14 @@ services:
     networks:
       - wavdash
     restart: unless-stopped
+
+# ============================================================================
+# Volumes
+# ============================================================================
+
+volumes:
+  # Shared storage volume for local storage mode
+  # Used when STORAGE_MODE=local
+  # All services mount this volume to share audio files
+  shared-storage:
+    driver: local
