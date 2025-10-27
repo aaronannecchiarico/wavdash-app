@@ -1,0 +1,54 @@
+[flake8]
+# Flake8 Configuration for Audio Processing Microservice
+
+# Maximum line length
+max-line-length = 127
+
+# Maximum complexity for functions (relaxed for complex processing tasks)
+max-complexity = 35
+
+# Files and directories to exclude
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    wavdash-audio-extraction-service-local,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .pytest_cache,
+    .mypy_cache
+
+# Error codes to ignore globally
+ignore =
+    # W503: Line break before binary operator (conflicts with Black)
+    W503,
+    # E203: Whitespace before ':' (conflicts with Black)
+    E203
+
+# Patterns to exclude per file
+per-file-ignores =
+    # Test files can have imports after path manipulation and unused mocks
+    tests/*:E402,F841,F401,E501
+    # Scripts can have imports after path manipulation and longer lines
+    scripts/*:E402,E501,F401
+    # Init files often have unused imports for re-exporting
+    __init__.py:F401
+    # Celery app needs os import in function scope for MPS compatibility
+    celery_app.py:F811
+    # Storage service and tasks have conditional/type hint imports
+    services/storage_service.py:F401,F841
+    tasks/storage_processing.py:F401
+    tasks/tempo_processing.py:F401
+    routes/tempo_processing.py:E501
+
+# Show source code for each error
+show-source = True
+
+# Show statistics at the end
+statistics = True
+
+# Count errors
+count = True

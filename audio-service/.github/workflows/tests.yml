@@ -1,0 +1,121 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12, 3.13]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg libsndfile1
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio pytest-mock
+        pip install -r requirements.txt
+
+    - name: Run unit tests
+      run: |
+        pytest tests/unit/ -v --tb=short
+
+  feature-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.13
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg libsndfile1 redis-tools
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio pytest-mock
+        pip install -r requirements.txt
+
+    - name: Wait for Redis
+      run: |
+        timeout 30 bash -c 'until redis-cli -h localhost -p 6379 ping; do
+          echo "Waiting for Redis..."
+          sleep 2
+        done'
+        echo "Redis is ready!"
+
+    - name: Create test audio file
+      run: |
+        python tests/feature/test_setup.py
+
+    - name: Run feature tests (without Celery worker)
+      run: |
+        # Run tests that don't require Celery worker
+        pytest tests/feature/test_setup.py -v --tb=short
+        pytest tests/feature/test_feature_service.py -v --tb=short
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.13
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black isort flake8
+        pip install -r requirements.txt
+
+    - name: Check code formatting with Black
+      run: |
+        black --check --diff .
+
+    - name: Check import sorting with isort  
+      run: |
+        isort --check-only --diff .
+
+    - name: Lint with flake8
+      run: |
+        # Check for critical errors only (syntax errors, undefined names)
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Run full lint check with config (will use .flake8 file)
+        flake8 . --count --statistics
