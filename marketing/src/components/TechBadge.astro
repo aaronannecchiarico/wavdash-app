@@ -1,0 +1,25 @@
+---
+import { Icon } from './react/Icon';
+
+interface Props {
+  iconName: string;
+  title: string;
+  description: string;
+}
+
+const { iconName, title, description } = Astro.props;
+---
+
+<div class="border-3 border-black bg-white neo-shadow neo-transition neo-hover-lift p-8">
+  <div class="border-3 border-black w-14 h-14 flex items-center justify-center bg-[#00eb90] mb-6">
+    <Icon name={iconName} size={28} client:load />
+  </div>
+
+  <h3 class="uppercase tracking-wider mb-3 font-bold">
+    {title}
+  </h3>
+
+  <p class="leading-relaxed">
+    {description}
+  </p>
+</div>

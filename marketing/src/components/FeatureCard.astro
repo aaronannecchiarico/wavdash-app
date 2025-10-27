@@ -1,0 +1,43 @@
+---
+import { Icon } from './react/Icon';
+
+interface Props {
+  title: string;
+  description: string;
+  features: string[];
+  iconName: string;
+  color: 'green' | 'pink' | 'blue' | 'yellow';
+}
+
+const { title, description, features, iconName, color } = Astro.props;
+
+const colorClasses = {
+  green: 'bg-[#00eb90]',
+  pink: 'bg-[#ff73a9]',
+  blue: 'bg-[#3f5ef4]',
+  yellow: 'bg-[#ffdc00]',
+};
+---
+
+<div class={`${colorClasses[color]} border-3 border-black neo-shadow neo-transition neo-hover-lift p-10 h-full flex flex-col`}>
+  <div class="border-3 border-black w-16 h-16 flex items-center justify-center mb-8 bg-white">
+    <Icon name={iconName} size={32} client:load />
+  </div>
+
+  <h3 class="uppercase mb-6 tracking-widest">
+    {title}
+  </h3>
+
+  <p class="mb-8 tracking-wider leading-relaxed">
+    {description}
+  </p>
+
+  <ul class="space-y-4 flex-grow">
+    {features.map((feature) => (
+      <li class="flex items-start">
+        <span class="mr-4 mt-1">•</span>
+        <span>{feature}</span>
+      </li>
+    ))}
+  </ul>
+</div>
