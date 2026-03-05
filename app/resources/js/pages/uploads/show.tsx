@@ -1,6 +1,6 @@
 import { AudioPlayer } from '@/components/audio-player';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
-import { Badge } from '@/components/ui/neo/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadProcessingPanel } from '@/components/upload-processing-panel';

@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/neo/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDuration, formatFileSize } from '@/lib/formatters';
 import { getAudioFormat } from '@/lib/upload-helpers';

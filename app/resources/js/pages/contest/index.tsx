@@ -1,4 +1,4 @@
-import { BrutalistStatusBadge } from '@/components/brutalist-status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -40,19 +40,25 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const statusVariantMap = {
+    Active:   'success',
+    Upcoming: 'warning',
+    Finished: 'secondary',
+} as const;
+
 const Pagination: React.FC<{ links: PaginationLink[] }> = ({ links }) => (
-    <nav className="mt-6 flex justify-center gap-2">
+    <nav className="mt-6 flex justify-center gap-2 flex-wrap">
         {links.map((link) => (
             <Link
                 key={link.label}
                 href={link.url ?? ''}
                 preserveScroll
                 className={cn(
-                    'neo-border neo-transition px-3 py-2 text-xs font-black tracking-wide uppercase',
+                    'inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-[--radius-md] transition-all duration-150 border',
                     link.active
-                        ? 'bg-neo-black text-neo-white'
-                        : 'bg-neo-white text-neo-black hover:bg-neo-green hover:translate-x-1 hover:translate-y-1',
-                    !link.url && 'cursor-not-allowed opacity-50',
+                        ? 'bg-primary text-primary-foreground border-primary/20'
+                        : 'bg-card text-foreground border-[--border-strong] hover:bg-muted',
+                    !link.url && 'cursor-not-allowed opacity-50 pointer-events-none',
                 )}
                 dangerouslySetInnerHTML={{ __html: link.label }}
             />
@@ -68,39 +74,40 @@ const ContestIndex: React.FC<Props> = ({ contests }) => {
             <Head title="Contests" />
 
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-                {/* Neobrutalist Contest Table */}
-                <div className="neo-border neo-shadow bg-neo-white dark:bg-neo-black">
-                    <div className="bg-neo-black neo-border-b p-4">
-                        <h2 className="text-neo-white text-xl font-black tracking-wider uppercase">BEAT BATTLES</h2>
+                <div className="studio-card overflow-hidden p-0">
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b border-[--border]">
+                        <h2 className="font-sans text-lg font-semibold text-foreground">Beat Battles</h2>
+                        <p className="text-sm text-muted-foreground">Join a contest and compete with other producers</p>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-neo-yellow neo-border-b">
+                            <thead className="bg-[--surface-2]">
                                 <tr>
-                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">CONTEST</th>
-                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">STATUS</th>
-                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">FIGHTERS</th>
-                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">DEADLINE</th>
-                                    <th className="text-neo-black p-4 text-left font-black tracking-wide uppercase">ACTION</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contest</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fighters</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Deadline</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-[--border]">
                                 {data.map((contest) => (
-                                    <tr key={contest.id} className="neo-border-b hover:bg-neo-green/10">
-                                        <td className="text-neo-black dark:text-neo-white p-4 font-bold">{contest.name.toUpperCase()}</td>
-                                        <td className="p-4">
-                                            <BrutalistStatusBadge status={contest.status} />
+                                    <tr key={contest.id} className="hover:bg-[--surface-2] transition-colors">
+                                        <td className="px-6 py-4 font-medium text-sm text-foreground">{contest.name}</td>
+                                        <td className="px-6 py-4">
+                                            <Badge variant={statusVariantMap[contest.status]}>{contest.status}</Badge>
                                         </td>
-                                        <td className="text-neo-black dark:text-neo-white p-4 font-mono font-bold">
-                                            {contest.contest_users_count} PLAYERS
+                                        <td className="px-6 py-4 font-mono text-sm text-muted-foreground">
+                                            {contest.contest_users_count} players
                                         </td>
-                                        <td className="text-neo-black dark:text-neo-white p-4 font-mono font-bold">
-                                            {new Date(contest.end_date).toLocaleDateString().toUpperCase()}
+                                        <td className="px-6 py-4 font-mono text-sm text-muted-foreground">
+                                            {new Date(contest.end_date).toLocaleDateString()}
                                         </td>
-                                        <td className="p-4">
-                                            <Button variant="default" size="sm" className="neo-shadow font-black uppercase" asChild>
-                                                <Link href={`/contests/${contest.id}`}>ENTER</Link>
+                                        <td className="px-6 py-4">
+                                            <Button variant="secondary" size="sm" asChild>
+                                                <Link href={`/contests/${contest.id}`}>Enter</Link>
                                             </Button>
                                         </td>
                                     </tr>
@@ -109,11 +116,11 @@ const ContestIndex: React.FC<Props> = ({ contests }) => {
                         </table>
                     </div>
 
-                    {/* Brutalist Pagination Footer */}
-                    <div className="neo-border-t bg-neo-pink p-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-neo-white text-sm font-bold">
-                                SHOWING {meta.from} TO {meta.to} OF {meta.total} RESULTS
+                    {/* Pagination footer */}
+                    <div className="px-6 py-4 border-t border-[--border] bg-[--surface-2]">
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                            <p className="text-sm text-muted-foreground">
+                                Showing {meta.from}–{meta.to} of {meta.total} results
                             </p>
                             <Pagination links={meta.links} />
                         </div>
