@@ -1,4 +1,4 @@
-import { BrutalistMusicCard } from '@/components/brutalist-music-card';
+import { MusicCard } from '@/components/music-library-card';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -137,7 +137,7 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                     ) : (
                         <div className="space-y-4">
                             {recentUploads.data.map((upload) => (
-                                <BrutalistMusicCard key={upload.id} upload={upload} />
+                                <MusicCard key={upload.id} upload={upload} isLast={false} />
                             ))}
                         </div>
                     )}

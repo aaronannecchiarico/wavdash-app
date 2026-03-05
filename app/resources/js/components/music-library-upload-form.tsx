@@ -2,8 +2,8 @@ import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/neo/input';
-import { NeoProgressBar } from '@/components/ui/neo/progress-bar';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useAudioFileHandler } from '@/hooks/useAudioFileHandler';
 import { useClientAudioProcessing } from '@/hooks/useClientAudioProcessing';
@@ -279,7 +279,7 @@ export function MusicLibraryUploadForm({
                                     </span>
                                     <span className="font-mono text-chart-1">{processingProgress}%</span>
                                 </div>
-                                <NeoProgressBar value={processingProgress} color="bg-chart-1" />
+                                <Progress value={processingProgress} />
                             </div>
                         </div>
                     )}
@@ -387,7 +387,7 @@ export function MusicLibraryUploadForm({
                                 </span>
                                 <span className="font-mono text-chart-1">{uploadProgress}%</span>
                             </div>
-                            <NeoProgressBar value={uploadProgress} color="bg-chart-1" />
+                            <Progress value={uploadProgress} />
                         </div>
                     </div>
                 )}
