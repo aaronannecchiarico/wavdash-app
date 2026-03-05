@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import { Upload } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BarChart3, Gauge, Scissors } from 'lucide-react';
@@ -156,7 +156,7 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
                         )}
 
                         <Button
-                            variant="neutral"
+                            variant="secondary"
                             className="w-full border-main-foreground font-heading font-black text-main-foreground uppercase hover:bg-main-foreground hover:text-secondary-background"
                             asChild
                         >

@@ -103,7 +103,7 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                     <Button variant="default" size="sm" className="font-mono text-[var(--neo-black)]">
                         {formatTime(currentTime)}
                     </Button>
-                    <Button variant="neutral" size="sm" className="font-mono text-[var(--neo-white)]">
+                    <Button variant="secondary" size="sm" className="font-mono text-[var(--neo-white)]">
                         {formatTime(duration)}
                     </Button>
                 </div>

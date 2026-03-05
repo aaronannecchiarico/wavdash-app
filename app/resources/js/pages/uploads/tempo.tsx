@@ -333,7 +333,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                         <Zap className="mr-2 h-4 w-4" />
                         {processing ? 'Processing...' : 'Start Processing'}
                     </Button>
-                    <Button variant="neutral" onClick={() => setShowCreateForm(false)} disabled={processing}>
+                    <Button variant="secondary" onClick={() => setShowCreateForm(false)} disabled={processing}>
                         Cancel
                     </Button>
                 </div>
@@ -372,7 +372,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <Button variant="neutral" onClick={handleDeleteTask} disabled={processing}>
+                            <Button variant="secondary" onClick={handleDeleteTask} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Cancel Processing
                             </Button>
@@ -441,7 +441,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                                 <div className="min-w-0 flex-1">
                                                     <div className="mb-2 flex items-center gap-2">
                                                         <h4 className="text-lg font-semibold text-foreground">{tempo.preset_name || tempo.preset}</h4>
-                                                        <Badge variant="neutral" className="text-xs">
+                                                        <Badge variant="secondary" className="text-xs">
                                                             x{tempo.tempo_factor}
                                                         </Badge>
                                                     </div>
@@ -497,7 +497,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                                             </div>
                                                         )}
                                                 </div>
-                                                <Button variant="neutral" size="sm" onClick={() => handleDownload(tempo)} className="ml-4 shrink-0">
+                                                <Button variant="secondary" size="sm" onClick={() => handleDownload(tempo)} className="ml-4 shrink-0">
                                                     <Download className="mr-2 h-4 w-4" />
                                                     Download
                                                 </Button>
@@ -518,7 +518,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                         </div>
                     </div>
                     <div className="flex gap-2 border-t border-border/50 pt-4">
-                        <Button onClick={handleDeleteTempo} variant="neutral" disabled={processing}>
+                        <Button onClick={handleDeleteTempo} variant="secondary" disabled={processing}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete All Tempos
                         </Button>
@@ -549,7 +549,7 @@ export default function Tempo({ upload, analysis_service, tempo_presets, tempo_s
                                 {uploadData.title}
                             </CardTitle>
                             <CardDescription className="flex items-center gap-4">
-                                <Badge variant="neutral">{uploadData.status}</Badge>
+                                <Badge variant="secondary">{uploadData.status}</Badge>
                                 {uploadData.analysis && (
                                     <>
                                         <span>Key: {uploadData.analysis.musical_key || 'Unknown'}</span>

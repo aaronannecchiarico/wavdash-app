@@ -43,7 +43,7 @@ export function NeoThemeToggle() {
 
     return (
         <Button
-            variant="neutral"
+            variant="secondary"
             size="icon"
             className={`neo-shadow hover:neo-shadow-hover ${getButtonColor()}`}
             onClick={handleThemeToggle}

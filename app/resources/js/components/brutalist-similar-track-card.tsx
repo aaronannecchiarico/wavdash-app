@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/neo/badge';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import { formatDuration, formatFileSize } from '@/lib/formatters';
 import { getAudioFormat } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
@@ -80,11 +80,11 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
                     </div>
                 </div>
                 <div className="flex items-center justify-between text-xs font-bold">
-                    <Badge variant="neutral" className="text-xs font-bold">
+                    <Badge variant="secondary" className="text-xs font-bold">
                         {getAudioFormat(upload.mime_type)}
                     </Badge>
                     {upload.has_analysis && (
-                        <Badge variant="neutral" className="text-xs font-bold">
+                        <Badge variant="secondary" className="text-xs font-bold">
                             <BarChart3 className="mr-1 h-3 w-3" />
                             ANALYZED
                         </Badge>
@@ -97,7 +97,7 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
                 {upload.id && (
                     <Link href={route('uploads.show', { upload: upload.id })} className="flex-1">
                         <Button
-                            variant="neutral"
+                            variant="secondary"
                             size="sm"
                             className="neo-transition w-full text-xs font-black uppercase group-hover:translate-x-1 group-hover:translate-y-1"
                             onClick={(e) => e.stopPropagation()}
@@ -110,7 +110,7 @@ export const BrutalistSimilarTrackCard = ({ upload, index }: BrutalistSimilarTra
                 {upload.has_analysis && upload.id && (
                     <Link href={route('uploads.analysis.show', { upload: upload.id })}>
                         <Button
-                            variant="neutral"
+                            variant="secondary"
                             size="sm"
                             className="neo-transition text-xs font-black uppercase group-hover:translate-x-1 group-hover:translate-y-1"
                             onClick={(e) => e.stopPropagation()}

@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { BarChart3, Gauge, Music, Play, Scissors, Volume2 } from 'lucide-react';
@@ -61,7 +61,7 @@ export default function BrutalistWelcome() {
                     <nav className="absolute top-6 right-6 z-20 flex items-center gap-4">
                         {auth.user ? (
                             <Button
-                                variant="neutral"
+                                variant="secondary"
                                 className="border-background font-heading font-black tracking-wider text-background uppercase hover:bg-background hover:text-main-foreground"
                                 asChild
                             >
@@ -70,7 +70,7 @@ export default function BrutalistWelcome() {
                         ) : (
                             <div className="flex gap-4">
                                 <Button
-                                    variant="neutral"
+                                    variant="secondary"
                                     className="border-background font-heading font-black tracking-wider text-background uppercase hover:bg-background hover:text-main-foreground"
                                     asChild
                                 >
@@ -115,7 +115,7 @@ export default function BrutalistWelcome() {
                             </Button>
 
                             <Button
-                                variant="neutral"
+                                variant="secondary"
                                 size="lg"
                                 className="border-background px-8 py-4 font-heading text-lg font-black tracking-widest text-background uppercase hover:bg-background hover:text-main-foreground"
                                 asChild

@@ -73,7 +73,7 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
             <div className="flex items-center gap-2">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="neutral" className="flex items-center gap-2">
+                        <Button variant="secondary" className="flex items-center gap-2">
                             <Filter className="h-4 w-4" />
                             <span>Filter</span>
                             {activeFilterCount > 0 && (
@@ -173,7 +173,7 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
             </div>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="neutral" className="flex items-center gap-2">
+                    <Button variant="secondary" className="flex items-center gap-2">
                         <ArrowUpDown className="h-4 w-4" />
                         <span>Sort</span>
                         {filters.sort && filters.sort !== 'updated_at' && (

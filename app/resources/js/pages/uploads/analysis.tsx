@@ -132,7 +132,7 @@ export default function Analysis({ upload, analysis_service }: Props) {
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <Button variant="neutral" onClick={handleDeleteTask} disabled={processing}>
+                            <Button variant="secondary" onClick={handleDeleteTask} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Cancel Analysis
                             </Button>
@@ -163,7 +163,7 @@ export default function Analysis({ upload, analysis_service }: Props) {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete Failed Task
                             </Button>
-                            <Button variant="neutral" onClick={handleDeleteAnalysis} disabled={processing}>
+                            <Button variant="secondary" onClick={handleDeleteAnalysis} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Clear All Data
                             </Button>
@@ -197,13 +197,13 @@ export default function Analysis({ upload, analysis_service }: Props) {
                         </div>
                         <div className="flex gap-2">
                             <Link href={route('uploads.analysis.similar', { upload: uploadData.id })}>
-                                <Button variant="neutral" size="sm" className="neo-shadow font-black uppercase">
+                                <Button variant="secondary" size="sm" className="neo-shadow font-black uppercase">
                                     <Users className="mr-2 h-4 w-4" />
                                     FIND SIMILAR
                                 </Button>
                             </Link>
                             <Button
-                                variant="neutral"
+                                variant="secondary"
                                 size="sm"
                                 className="neo-shadow border-red-500 font-black text-red-500 uppercase hover:bg-red-500 hover:text-white"
                                 onClick={handleDeleteAnalysis}

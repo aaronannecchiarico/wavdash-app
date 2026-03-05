@@ -1,8 +1,8 @@
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/neo/badge';
-import { Button } from '@/components/ui/neo/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/neo/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { formatDate, formatDuration, formatFileSize } from '@/lib/formatters';
 import { getAudioFormat } from '@/lib/upload-helpers';
 import { Upload } from '@/types';
@@ -36,7 +36,7 @@ export const MusicCard = ({
                 <CardHeader className="p-4 pb-3">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-2">
-                            <Badge variant="neutral" className="text-xs font-base">
+                            <Badge variant="secondary" className="text-xs font-base">
                                 {getAudioFormat(upload.mime_type)}
                             </Badge>
                             <Badge variant="default">{upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}</Badge>
@@ -44,7 +44,7 @@ export const MusicCard = ({
                         <div className="opacity-0 transition-opacity group-hover:opacity-100">
                             <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="neutral" size="icon" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                                    <Button variant="secondary" size="icon" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                                         <MoreVertical className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -59,7 +59,7 @@ export const MusicCard = ({
                                                 </Badge>
                                             )}
                                             {upload.is_analysis_in_progress && (
-                                                <Badge variant="neutral" className="ml-auto text-xs">
+                                                <Badge variant="secondary" className="ml-auto text-xs">
                                                     Processing
                                                 </Badge>
                                             )}
@@ -75,7 +75,7 @@ export const MusicCard = ({
                                                 </Badge>
                                             )}
                                             {upload.is_stem_separation_in_progress && (
-                                                <Badge variant="neutral" className="ml-auto text-xs">
+                                                <Badge variant="secondary" className="ml-auto text-xs">
                                                     Processing
                                                 </Badge>
                                             )}
@@ -91,7 +91,7 @@ export const MusicCard = ({
                                                 </Badge>
                                             )}
                                             {upload.is_tempo_processing_in_progress && (
-                                                <Badge variant="neutral" className="ml-auto text-xs">
+                                                <Badge variant="secondary" className="ml-auto text-xs">
                                                     Processing
                                                 </Badge>
                                             )}

@@ -6,7 +6,7 @@ import { BrutalistCheckbox } from '@/components/brutalist-checkbox';
 import { BrutalistInput } from '@/components/brutalist-input';
 import { BrutalistLabel } from '@/components/brutalist-label';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import BrutalistAuthLayout from '@/layouts/brutalist-auth-layout';
 
 type LoginForm = {

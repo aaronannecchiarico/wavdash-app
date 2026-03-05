@@ -171,7 +171,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             </div>
                         </div>
                         <div className="flex justify-center">
-                            <Button variant="neutral" onClick={handleDeleteTask} disabled={processing}>
+                            <Button variant="secondary" onClick={handleDeleteTask} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Cancel Separation
                             </Button>
@@ -202,7 +202,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete Failed Task
                             </Button>
-                            <Button variant="neutral" onClick={handleDeleteStems} disabled={processing}>
+                            <Button variant="secondary" onClick={handleDeleteStems} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Clear All Data
                             </Button>
@@ -235,7 +235,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                 </CardTitle>
                                 <CardDescription>Completed {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}</CardDescription>
                             </div>
-                            <Button variant="neutral" size="sm" onClick={handleDeleteStems} disabled={processing}>
+                            <Button variant="secondary" size="sm" onClick={handleDeleteStems} disabled={processing}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                             </Button>
@@ -255,7 +255,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                     </CardTitle>
                                     <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
                                         <span>Total: {stems.length} files</span>
-                                        <Badge variant="neutral" className="border-slate-300 bg-slate-100 dark:border-gray-600 dark:bg-gray-800">
+                                        <Badge variant="secondary" className="border-slate-300 bg-slate-100 dark:border-gray-600 dark:bg-gray-800">
                                             {stems[0]?.storage_type?.toUpperCase() || 'LOCAL'}
                                         </Badge>
                                     </div>

@@ -8,7 +8,7 @@ import { BrutalistInput } from '@/components/brutalist-input';
 import { BrutalistLabel } from '@/components/brutalist-label';
 import DeleteUser from '@/components/delete-user';
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import BrutalistSettingsLayout from '@/layouts/brutalist-settings-layout';
 

@@ -88,7 +88,7 @@ export function UploadSelectionDialog({ title, description, actionLabel, actionT
                                 className="pl-10"
                             />
                         </div>
-                        <Button asChild variant="neutral">
+                        <Button asChild variant="secondary">
                             <Link href="/uploads/create">
                                 <PlusIcon />
                                 New Upload

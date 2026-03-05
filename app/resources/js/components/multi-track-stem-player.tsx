@@ -263,7 +263,7 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
                                 disabled={!allLoaded || duration === 0}
                             />
                         </div>
-                        <Button variant="neutral" size="sm" className="min-w-[50px] font-mono text-[var(--neo-white)]">
+                        <Button variant="secondary" size="sm" className="min-w-[50px] font-mono text-[var(--neo-white)]">
                             {formatTime(duration)}
                         </Button>
                     </div>
@@ -307,7 +307,7 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
                                     </h4>
                                     <div className="flex space-x-2">
                                         <Button
-                                            variant="neutral"
+                                            variant="secondary"
                                             size="sm"
                                             className="neo-border border-[var(--neo-black)] font-black text-[var(--neo-black)] uppercase hover:bg-[var(--neo-black)] hover:text-[var(--neo-white)]"
                                             disabled={player.isLoading}
@@ -316,7 +316,7 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
                                         </Button>
                                         <Button
                                             onClick={() => handleMuteToggle(stem.stem_type)}
-                                            variant="neutral"
+                                            variant="secondary"
                                             size="sm"
                                             className="neo-border border-[var(--neo-black)] font-black text-[var(--neo-black)] uppercase hover:bg-[var(--neo-black)] hover:text-[var(--neo-white)]"
                                             disabled={player.isLoading}

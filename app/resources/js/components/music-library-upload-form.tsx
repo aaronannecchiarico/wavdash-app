@@ -1,7 +1,7 @@
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/neo/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/neo/input';
 import { NeoProgressBar } from '@/components/ui/neo/progress-bar';
 import { Textarea } from '@/components/ui/textarea';
@@ -394,7 +394,7 @@ export function MusicLibraryUploadForm({
                 <CardFooter className="flex justify-end space-x-4 px-6 py-4">
                     <Button
                         type="button"
-                        variant="neutral"
+                        variant="secondary"
                         onClick={() => window.history.back()}
                         disabled={processing}
                         className="px-6 py-2 font-heading font-black tracking-wider uppercase"

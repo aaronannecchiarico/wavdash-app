@@ -1,7 +1,7 @@
 import { BrutalistMusicCard } from '@/components/brutalist-music-card';
 import { StatCard } from '@/components/stat-card';
-import { Button } from '@/components/ui/neo/button';
-import { Card, CardContent } from '@/components/ui/neo/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { UploadSelectionDialog } from '@/components/upload-selection-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
@@ -97,7 +97,7 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                         actionType="stems"
                         onUploadSelect={handleStemSelection}
                     >
-                        <Button className="h-16 flex-col gap-1.5 font-heading font-black tracking-wider uppercase" variant="neutral">
+                        <Button className="h-16 flex-col gap-1.5 font-heading font-black tracking-wider uppercase" variant="secondary">
                             <Scissors className="size-5" />
                             <span className="text-sm">CREATE STEMS</span>
                         </Button>
@@ -110,7 +110,7 @@ export default function Dashboard({ recentUploads }: DashboardProps) {
                         actionType="analysis"
                         onUploadSelect={handleAnalysisSelection}
                     >
-                        <Button className="h-16 flex-col gap-1.5 font-heading font-black tracking-wider uppercase" variant="neutral">
+                        <Button className="h-16 flex-col gap-1.5 font-heading font-black tracking-wider uppercase" variant="secondary">
                             <BarChart3 className="size-5" />
                             <span className="text-sm">SONG ANALYSIS</span>
                         </Button>

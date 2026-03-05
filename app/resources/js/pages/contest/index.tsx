@@ -1,5 +1,5 @@
 import { BrutalistStatusBadge } from '@/components/brutalist-status-badge';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { PaginatedData, User, type BreadcrumbItem } from '@/types';

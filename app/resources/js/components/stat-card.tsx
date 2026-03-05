@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/neo/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {

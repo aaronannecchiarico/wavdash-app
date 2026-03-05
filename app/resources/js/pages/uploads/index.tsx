@@ -1,6 +1,6 @@
 import { MusicCard } from '@/components/music-library-card';
 import { MusicLibraryControls } from '@/components/music-library-controls';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/formatters';
 import { type BreadcrumbItem, type Upload } from '@/types';

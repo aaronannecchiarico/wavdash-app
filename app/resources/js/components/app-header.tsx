@@ -46,7 +46,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         <div className="lg:hidden">
                             <Sheet>
                                 <SheetTrigger asChild>
-                                    <Button variant="neutral" size="icon" className="mr-2 h-[34px] w-[34px]">
+                                    <Button variant="secondary" size="icon" className="mr-2 h-[34px] w-[34px]">
                                         <Menu className="h-5 w-5" />
                                     </Button>
                                 </SheetTrigger>
@@ -96,7 +96,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             {mainNavItems.map((item, index) => (
                                 <Button
                                     key={index}
-                                    variant="neutral"
+                                    variant="secondary"
                                     className="font-black tracking-wide text-[var(--neo-black)] uppercase hover:bg-[var(--neo-black)] hover:text-[var(--neo-yellow)]"
                                     asChild
                                 >

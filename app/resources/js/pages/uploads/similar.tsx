@@ -1,5 +1,5 @@
 import { BrutalistSimilarTrackCard } from '@/components/brutalist-similar-track-card';
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -75,7 +75,7 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
                 {/* Brutalist Back Button */}
                 <div className="flex items-center gap-4">
                     <Link href={route('uploads.analysis.show', { upload: uploadData.id })}>
-                        <Button variant="neutral" size="sm" className="neo-shadow font-black uppercase">
+                        <Button variant="secondary" size="sm" className="neo-shadow font-black uppercase">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             BACK TO ANALYSIS
                         </Button>
@@ -119,7 +119,7 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
                                 {uploadData.title.toUpperCase()}". TRY UPLOADING MORE MUSIC TO BUILD A LARGER COLLECTION FOR COMPARISON.
                             </p>
                             <Link href={route('uploads.create')}>
-                                <Button variant="neutral" className="neo-shadow font-black uppercase">
+                                <Button variant="secondary" className="neo-shadow font-black uppercase">
                                     <Music className="mr-2 h-4 w-4" />
                                     UPLOAD MORE MUSIC
                                 </Button>
@@ -157,13 +157,13 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
                         </div>
                         <div className="flex gap-3">
                             <Link href={route('uploads.create')}>
-                                <Button variant="neutral" className="neo-shadow font-black uppercase">
+                                <Button variant="secondary" className="neo-shadow font-black uppercase">
                                     <Music className="mr-2 h-4 w-4" />
                                     UPLOAD MUSIC
                                 </Button>
                             </Link>
                             <Link href={route('uploads.index')}>
-                                <Button variant="neutral" className="neo-shadow font-black uppercase">
+                                <Button variant="secondary" className="neo-shadow font-black uppercase">
                                     BROWSE LIBRARY
                                 </Button>
                             </Link>

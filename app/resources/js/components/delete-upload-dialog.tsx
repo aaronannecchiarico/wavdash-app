@@ -40,12 +40,12 @@ export function DeleteUploadDialog({ upload, isOpen, onOpenChange }: DeleteUploa
                 <form onSubmit={deleteUpload} className="pt-4">
                     <DialogFooter className="gap-2">
                         <DialogClose asChild>
-                            <Button type="button" variant="neutral" onClick={closeDeleteModal}>
+                            <Button type="button" variant="secondary" onClick={closeDeleteModal}>
                                 Cancel
                             </Button>
                         </DialogClose>
 
-                        <Button variant="reverse" disabled={processing}>
+                        <Button variant="outline" disabled={processing}>
                             {processing ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

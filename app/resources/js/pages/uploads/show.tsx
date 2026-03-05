@@ -1,8 +1,8 @@
 import { AudioPlayer } from '@/components/audio-player';
 import { DeleteUploadDialog } from '@/components/delete-upload-dialog';
 import { Badge } from '@/components/ui/neo/badge';
-import { Button } from '@/components/ui/neo/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/neo/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadProcessingPanel } from '@/components/upload-processing-panel';
 import AppLayout from '@/layouts/app-layout';
 import { formatFileSize } from '@/lib/formatters';
@@ -127,7 +127,7 @@ export default function Show({ upload }: Props) {
                                     <div className="text-xs font-base text-foreground uppercase">ACTIONS</div>
                                     <div className="flex gap-2">
                                         <Link href={route('uploads.edit', uploadData.id)}>
-                                            <Button variant="neutral" className="font-heading font-black tracking-wider uppercase">
+                                            <Button variant="secondary" className="font-heading font-black tracking-wider uppercase">
                                                 <PencilIcon className="mr-2 h-4 w-4" />
                                                 EDIT TRACK
                                             </Button>

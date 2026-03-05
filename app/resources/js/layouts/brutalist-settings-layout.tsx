@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/neo/button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -60,7 +60,7 @@ export default function BrutalistSettingsLayout({ children }: PropsWithChildren)
                                 return (
                                     <Button
                                         key={`${item.href}-${index}`}
-                                        variant="neutral"
+                                        variant="secondary"
                                         asChild
                                         className={cn(
                                             'h-12 w-full justify-start border-2 transition-all',
