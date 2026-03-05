@@ -77,7 +77,7 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                             <Filter className="h-4 w-4" />
                             <span>Filter</span>
                             {activeFilterCount > 0 && (
-                                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-[--amber] text-xs text-white">
                                     {activeFilterCount}
                                 </span>
                             )}
@@ -177,7 +177,7 @@ export function MusicLibraryControls({ filters, filterOptions }: MusicLibraryCon
                         <ArrowUpDown className="h-4 w-4" />
                         <span>Sort</span>
                         {filters.sort && filters.sort !== 'updated_at' && (
-                            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs text-white">1</span>
+                            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[--amber] text-xs text-white">1</span>
                         )}
                     </Button>
                 </DropdownMenuTrigger>

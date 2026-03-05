@@ -72,31 +72,31 @@ export default function Index({ uploads, filters, filterOptions }: Props) {
                     <Link href={route('uploads.create')} className={uploads.data.length === 0 ? 'ml-auto' : ''}>
                         <Button>
                             <PlusIcon className="mr-2 h-4 w-4" />
-                            Create Upload
+                            Upload a track
                         </Button>
                     </Link>
                 </div>
                 <div className="flex h-full flex-1 flex-col gap-4 pb-8">
                     {uploads.data.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <div className="mb-4 flex h-16 w-16 items-center justify-center border-2 border-border bg-secondary-background">
-                                <Music className="h-8 w-8 text-foreground" />
+                        <div className="studio-card p-12 text-center">
+                            <div className="w-14 h-14 rounded-full bg-[--amber]/10 flex items-center justify-center mx-auto mb-4">
+                                <Music className="h-6 w-6 text-[--amber]" />
                             </div>
-                            <h3 className="mb-2 font-heading text-lg text-foreground">No music files found</h3>
-                            <p className="max-w-sm font-base text-foreground opacity-75">
+                            <h3 className="font-serif text-xl text-foreground mb-2">
+                                {hasFilters ? 'No results found' : 'Your library is empty'}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                                 {hasFilters
-                                    ? 'Your search returned no results. Try adjusting your filters.'
-                                    : "You haven't uploaded any audio files yet. Upload some tracks to get started."}
+                                    ? 'Try adjusting your filters to find what you\'re looking for.'
+                                    : 'Upload your first track to get started with stem separation, BPM analysis, and more.'}
                             </p>
                             {!hasFilters && (
-                                <div className="mt-6">
+                                <Button asChild>
                                     <Link href={route('uploads.create')}>
-                                        <Button>
-                                            <PlusIcon className="mr-2 h-5 w-5" />
-                                            Upload Your First Beat
-                                        </Button>
+                                        <PlusIcon className="mr-2 h-4 w-4" />
+                                        Upload your first track
                                     </Link>
-                                </div>
+                                </Button>
                             )}
                         </div>
                     ) : (
