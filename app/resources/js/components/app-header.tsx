@@ -1,32 +1,15 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Icon } from '@/components/icon';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { UserMenuContent } from '@/components/user-menu-content';
-import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, LayoutGrid, Menu } from 'lucide-react';
-import AppLogoIcon from './app-logo-icon';
+import { LayoutGrid, Menu, Music, PartyPopper } from 'lucide-react';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'UPLOADS',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'CONTESTS',
-        href: '/contests',
-        icon: BookOpen,
-    },
-];
-
-const rightNavItems: NavItem[] = [
-    {
-        title: 'HELP',
-        href: '#',
-        icon: BookOpen,
-    },
+const mobileNavItems = [
+    { title: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
+    { title: 'My tracks', href: '/uploads', icon: Music },
+    { title: 'Contests', href: '/contests', icon: PartyPopper },
 ];
 
 interface AppHeaderProps {
@@ -34,88 +17,57 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
-    const page = usePage<SharedData>();
-    const { auth } = page.props;
+    const { auth } = usePage<SharedData>().props;
 
     return (
         <>
-            <header className="neo-border-b sticky top-0 z-50 bg-[var(--neo-yellow)]">
-                <div className="container mx-auto px-4">
-                    <div className="flex h-16 items-center justify-between">
-                        {/* Mobile Menu */}
-                        <div className="lg:hidden">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="secondary" size="icon" className="mr-2 h-[34px] w-[34px]">
-                                        <Menu className="h-5 w-5" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar">
-                                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                                    <SheetHeader className="flex justify-start text-left">
-                                        <AppLogoIcon className="h-6 w-6 fill-current text-black dark:text-white" />
-                                    </SheetHeader>
-                                    <div className="flex h-full flex-1 flex-col space-y-4 p-4">
-                                        <div className="flex h-full flex-col justify-between text-sm">
-                                            <div className="flex flex-col space-y-4">
-                                                {mainNavItems.map((item) => (
-                                                    <Link key={item.title} href={item.href} className="flex items-center space-x-2 font-medium">
-                                                        {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
-                                                        <span>{item.title}</span>
-                                                    </Link>
-                                                ))}
-                                            </div>
-
-                                            <div className="flex flex-col space-y-4">
-                                                {rightNavItems.map((item) => (
-                                                    <a
-                                                        key={item.title}
-                                                        href={item.href}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center space-x-2 font-medium"
-                                                    >
-                                                        {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
-                                                        <span>{item.title}</span>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
-
-                        <div className="flex items-center space-x-6">
-                            <AppLogoIcon className="neo-shadow h-10 w-10" />
-                            <h1 className="text-2xl font-black tracking-widest text-[var(--neo-black)] uppercase">WavDash</h1>
-                        </div>
-
-                        {/* Brutalist navigation buttons */}
-                        <nav className="hidden space-x-2 md:flex">
-                            {mainNavItems.map((item, index) => (
-                                <Button
-                                    key={index}
-                                    variant="secondary"
-                                    className="font-black tracking-wide text-[var(--neo-black)] uppercase hover:bg-[var(--neo-black)] hover:text-[var(--neo-yellow)]"
-                                    asChild
-                                >
-                                    <Link href={item.href}>{item.title}</Link>
+            <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-[--border]">
+                <div className="flex h-14 items-center px-6 gap-4">
+                    {/* Mobile menu */}
+                    <div className="lg:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Menu className="h-4 w-4" />
                                 </Button>
-                            ))}
-                        </nav>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-64 p-0">
+                                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                                <SheetHeader className="px-5 py-5 border-b border-[--border]">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
+                                            <Music className="h-4 w-4 text-white" />
+                                        </div>
+                                        <span className="font-sans text-base font-semibold text-foreground tracking-tight">WavDash</span>
+                                    </div>
+                                </SheetHeader>
+                                <nav className="space-y-0.5 px-3 py-4">
+                                    {mobileNavItems.map((item) => (
+                                        <Link
+                                            key={item.title}
+                                            href={item.href}
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-[--radius-md] text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                        >
+                                            <item.icon className="h-4 w-4 shrink-0" />
+                                            {item.title}
+                                        </Link>
+                                    ))}
+                                </nav>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
 
+                    {/* Breadcrumbs */}
+                    <div className="flex-1">
+                        {breadcrumbs.length > 0 && <Breadcrumbs breadcrumbs={breadcrumbs} />}
+                    </div>
+
+                    {/* User menu */}
+                    <div className="flex items-center gap-2">
                         <UserMenuContent user={auth.user} />
                     </div>
                 </div>
             </header>
-            {breadcrumbs.length > 1 && (
-                <div className="flex w-full border-b border-sidebar-border/70">
-                    <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                        <Breadcrumbs breadcrumbs={breadcrumbs} />
-                    </div>
-                </div>
-            )}
         </>
     );
 }

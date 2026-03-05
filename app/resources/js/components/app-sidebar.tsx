@@ -1,38 +1,52 @@
-import { Link } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
+import { Link, usePage } from '@inertiajs/react';
 import { LayoutGrid, Music, PartyPopper } from 'lucide-react';
 import { NavUser } from './nav-user';
 
-// Brutalist sidebar items with color assignments
 const sidebarItems = [
-    { label: 'DASHBOARD', icon: LayoutGrid, href: '/dashboard', color: 'bg-[var(--neo-green)]' },
-    { label: 'MY TRACKS', icon: Music, href: '/uploads', color: 'bg-[var(--neo-pink)]' },
-    { label: 'CONTESTS', icon: PartyPopper, href: '/contests', color: 'bg-[var(--neo-blue)]' },
+    { label: 'Dashboard', icon: LayoutGrid, href: '/dashboard' },
+    { label: 'My tracks', icon: Music, href: '/uploads' },
+    { label: 'Contests', icon: PartyPopper, href: '/contests' },
 ];
 
 export function AppSidebar() {
+    const { url } = usePage();
+    const currentPath = url.split('?')[0];
+
     return (
-        <aside className="neo-border-r flex w-64 flex-col bg-[var(--neo-black)]">
-            {/* Brand Header */}
-            <div className="border-b-2 border-border p-6">
-                <h1 className="font-heading text-xl font-black tracking-widest text-[var(--neo-white)] uppercase">WavDash</h1>
+        <aside className="flex w-60 shrink-0 flex-col bg-sidebar border-r border-[--border] h-full">
+            {/* Brand header */}
+            <div className="flex items-center gap-2.5 px-5 py-5 border-b border-[--border]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
+                    <Music className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-sans text-base font-semibold text-sidebar-foreground tracking-tight">WavDash</span>
             </div>
 
-            {/* Navigation Items */}
-            <div className="flex-1 space-y-2 p-4">
-                {sidebarItems.map((item) => (
-                    <Link
-                        key={item.label}
-                        href={item.href}
-                        className={`${item.color} neo-shadow hover:neo-shadow-hover block flex items-center gap-3 p-4 font-black tracking-wide text-[var(--neo-black)] uppercase transition-all hover:translate-x-1 hover:translate-y-1`}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                    </Link>
-                ))}
-            </div>
+            {/* Navigation */}
+            <nav className="flex-1 space-y-0.5 px-3 py-4">
+                {sidebarItems.map((item) => {
+                    const isActive = currentPath === item.href || currentPath.startsWith(item.href + '/');
+                    return (
+                        <Link
+                            key={item.label}
+                            href={item.href}
+                            className={cn(
+                                'flex items-center gap-3 px-3 py-2.5 rounded-[--radius-md] text-sm font-medium transition-all duration-150',
+                                isActive
+                                    ? 'bg-[--sidebar-accent] text-[--amber] border-l-[3px] border-[--amber] pl-[calc(0.75rem-3px)]'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            )}
+                        >
+                            <item.icon className="h-4 w-4 shrink-0" />
+                            {item.label}
+                        </Link>
+                    );
+                })}
+            </nav>
 
-            {/* User Menu - Bottom of Sidebar */}
-            <div className="border-t-2 border-border p-4">
+            {/* User menu */}
+            <div className="border-t border-[--border] p-3">
                 <NavUser />
             </div>
         </aside>
