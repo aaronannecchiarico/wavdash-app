@@ -82,6 +82,7 @@ class AudioProcessingService
         return [
             'client_side_processing_enabled' => true,
             'should_use_client_processing' => true,
+            'fallback_on_error' => false, // Server-side processing deprecated in Phase 4
             'monitor_performance' => true,
         ];
     }

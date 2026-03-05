@@ -1,0 +1,16 @@
+# Exclude local dev artefacts that must not pollute the production image
+# Bootstrap cache files are generated from locally-installed dev dependencies
+# and would cause class-not-found errors when --no-dev packages are absent.
+bootstrap/cache/*.php
+
+# Node / npm build output (rebuilt inside the image)
+node_modules/
+public/build/
+
+# Local .env (injected via docker-compose environment)
+.env
+.env.*
+
+# Git metadata
+.git/
+.gitignore

@@ -8,8 +8,10 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Install system dependencies
+# curl is required by the HEALTHCHECK command
 RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
     ffmpeg \
     libsndfile1 \
     libsndfile1-dev \
@@ -24,13 +26,13 @@ WORKDIR /app
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
-COPY install.py .
+COPY scripts/install.py scripts/install.py
 
 # Install dependencies with optional GPU support
 # Use build arg to enable GPU support: --build-arg ENABLE_GPU=true
 ARG ENABLE_GPU=false
 RUN if [ "$ENABLE_GPU" = "true" ]; then \
-        python install.py --gpu; \
+        python scripts/install.py --gpu; \
     else \
         pip install --no-cache-dir -r requirements.txt; \
     fi

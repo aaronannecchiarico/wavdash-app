@@ -75,6 +75,9 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      # Explicitly set DB_CONNECTION so the host .env (sqlite for local dev)
+      # does not leak into the Docker environment via the volume mount.
+      - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_DATABASE=${DB_DATABASE:-wavdash}
@@ -83,8 +86,14 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - QUEUE_CONNECTION=redis
-      - BROADCAST_DRIVER=reverb
-      - AUDIO_SERVICE_URL=http://audio-api:8000
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
       - MARKETING_URL=${MARKETING_URL:-http://marketing:4321}
     volumes:
       - shared_storage:/app/storage/app
@@ -92,7 +101,8 @@ services:
     networks:
       - wavdash
     healthcheck:
-      test: ["CMD", "php", "artisan", "health:check"]
+      # Use Laravel's built-in /up endpoint (available in Laravel 11+)
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/up || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -112,6 +122,9 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
+      # Explicitly set DB_CONNECTION so the host .env (sqlite for local dev)
+      # does not leak into the Docker environment via the volume mount.
+      - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_DATABASE=${DB_DATABASE:-wavdash}
@@ -120,10 +133,51 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - QUEUE_CONNECTION=redis
-      - AUDIO_SERVICE_URL=http://audio-api:8000
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
     volumes:
       - shared_storage:/app/storage/app
       - ./app/storage/logs:/app/storage/logs
+    networks:
+      - wavdash
+    restart: unless-stopped
+
+  app-reverb:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      target: production
+    container_name: wavdash_reverb
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    depends_on:
+      - app
+      - redis
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+    ports:
+      - "8080:8080"
     networks:
       - wavdash
     restart: unless-stopped
@@ -210,7 +264,9 @@ services:
     networks:
       - wavdash
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4321"]
+      # Use 127.0.0.1 explicitly — alpine's wget resolves "localhost" to [::1]
+      # (IPv6) first, but the Astro dev server binds to 0.0.0.0 (IPv4 only).
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:4321"]
       interval: 30s
       timeout: 10s
       retries: 3

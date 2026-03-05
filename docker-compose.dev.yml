@@ -15,6 +15,13 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
+      # Explicitly override DB_CONNECTION so the host .env (sqlite) is ignored
+      - DB_CONNECTION=mysql
+      # Override audio service URL so the host .env (localhost:8001) is ignored
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
+      # Override domain settings so cookies work with localhost:8000 in Docker
+      - APP_URL=http://localhost:8000
+      - SESSION_DOMAIN=
       # Storage Configuration
       - FILESYSTEM_DISK=${STORAGE_MODE:-r2}
       # R2 Credentials (from root .env)
@@ -25,6 +32,20 @@ services:
       - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
       - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
       - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      # Broadcasting — override so queue worker connects to the Reverb container
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      # Vite
+      - VITE_APP_NAME="${APP_NAME}"
+      - VITE_R2_URL="${R2_PUBLIC_URL}"
+      - VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+      - VITE_REVERB_HOST="${REVERB_HOST}"
+      - VITE_REVERB_PORT="${REVERB_PORT}"
+      - VITE_REVERB_SCHEME="${REVERB_SCHEME}"
     volumes:
       - ./app:/app
       - /app/vendor
@@ -36,17 +57,36 @@ services:
       - "5173:5173"  # Vite HMR
     command: >
       sh -c "
+        composer install --no-interaction &&
         php artisan config:clear &&
         php artisan route:clear &&
         php artisan view:clear &&
-        php artisan serve --host=0.0.0.0 --port=8000
+        php artisan migrate --force &&
+        php artisan serve --host=0.0.0.0 --port=8000 --no-reload
       "
 
   app-queue:
+    build:
+      # Use development target (has composer) so the queue worker can install
+      # vendor dependencies at startup (same pattern as the app service).
+      target: development
+    command: >
+      sh -c "
+        composer install --no-interaction &&
+        php artisan package:discover --ansi &&
+        php artisan migrate --force &&
+        php artisan queue:work --tries=3 --timeout=300
+      "
+    healthcheck:
+      disable: true
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
+      # Explicitly override DB_CONNECTION so the host .env (sqlite) is ignored
+      - DB_CONNECTION=mysql
+      # Override audio service URL so the host .env (localhost:8001) is ignored
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
       # Storage Configuration
       - FILESYSTEM_DISK=${STORAGE_MODE:-r2}
       # R2 Credentials (from root .env)
@@ -57,11 +97,59 @@ services:
       - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
       - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
       - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      # Broadcasting — override so queue worker connects to the Reverb container
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      # Vite
+      - VITE_APP_NAME="${APP_NAME}"
+      - VITE_R2_URL="${R2_PUBLIC_URL}"
+      - VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+      - VITE_REVERB_HOST="${REVERB_HOST}"
+      - VITE_REVERB_PORT="${REVERB_PORT}"
+      - VITE_REVERB_SCHEME="${REVERB_SCHEME}"
     volumes:
       - ./app:/app
       - /app/vendor
       # Shared storage (for local mode)
       - shared-storage:${SHARED_STORAGE_PATH:-/app/shared-storage}
+
+  # WebSocket server for real-time broadcasting (Laravel Reverb)
+  app-reverb:
+    build:
+      target: development
+    command: >
+      sh -c "
+        composer install --no-interaction &&
+        php artisan reverb:start --host=0.0.0.0 --port=8080 --debug
+      "
+    # Reverb has no HTTP health endpoint — disable the FrankenPHP default check
+    healthcheck:
+      disable: true
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app
+      - /app/vendor
+    networks:
+      - wavdash
+    restart: unless-stopped
 
   # ============================================================================
   # Audio Processing Service - Development Mode
@@ -123,6 +211,14 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    # Override the Dockerfile HEALTHCHECK (which targets port 8000/the API) with
+    # one that targets port 5555 (flower's web UI port).
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - wavdash
     restart: unless-stopped
@@ -142,7 +238,9 @@ services:
       - /app/node_modules
     ports:
       - "4321:4321"
-    command: npm run dev -- --host 0.0.0.0
+    # Use npx astro directly so we can override --host without conflicting with
+    # the `--host local.wavdash.com` hardcoded in the package.json dev script.
+    command: npx astro dev --host 0.0.0.0 --port 4321
 
   # ============================================================================
   # Development Tools

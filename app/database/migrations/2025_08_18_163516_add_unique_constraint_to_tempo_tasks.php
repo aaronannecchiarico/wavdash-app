@@ -12,13 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Clean up any duplicate tasks before adding the constraint
-        // Use SQLite-compatible syntax
+        // Clean up any duplicate tasks before adding the constraint.
+        // MySQL does not allow referencing the target table directly in a
+        // DELETE subquery (error 1093). Wrapping the subquery in a derived
+        // table alias works on both MySQL and SQLite.
         DB::statement('
-            DELETE FROM upload_tempo_tasks 
+            DELETE FROM upload_tempo_tasks
             WHERE id IN (
-                SELECT t1.id FROM upload_tempo_tasks t1, upload_tempo_tasks t2 
-                WHERE t1.id > t2.id AND t1.upload_id = t2.upload_id
+                SELECT id FROM (
+                    SELECT t1.id
+                    FROM upload_tempo_tasks t1
+                    INNER JOIN upload_tempo_tasks t2
+                        ON t1.upload_id = t2.upload_id AND t1.id > t2.id
+                ) AS duplicates
             )
         ');
 

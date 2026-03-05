@@ -175,10 +175,9 @@ export function MusicLibraryUploadForm({
                 setFallbackReason(`Client processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 setData('audio_file', file); // Fallback to server processing
                 onProcessedFile?.(null); // Clear processed file data
-            } else {
-                // Don't fallback, show error to user
-                throw error;
             }
+            // When fallbackOnError is false: processingError state is already set by
+            // useClientAudioProcessing. The submit button stays disabled (no audio_file set).
         }
     };
 
@@ -317,7 +316,11 @@ export function MusicLibraryUploadForm({
                                 <div className="text-sm text-red-700">
                                     <div className="font-heading font-black uppercase mb-2">⚠️ Processing Failed</div>
                                     <div className="text-xs">{processingError}</div>
-                                    <div className="text-xs mt-2">Falling back to server-side processing.</div>
+                                    <div className="text-xs mt-2">
+                                        {fallbackOnError
+                                            ? 'Falling back to server-side processing.'
+                                            : 'Please use a WebCodecs-compatible browser (Chrome or Edge) and try again.'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
