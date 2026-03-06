@@ -5,7 +5,7 @@ import Echo from 'laravel-echo';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import Pusher from 'pusher-js';
 import { createRoot } from 'react-dom/client';
-import { BrutalistToaster } from './components/ui/neo/toaster';
+import { Toaster } from './components/ui/sonner';
 import { initializeTheme } from './hooks/use-appearance';
 
 declare global {
@@ -38,7 +38,7 @@ createInertiaApp({
         root.render(
             <>
                 <App {...props} />
-                <BrutalistToaster position="top-right" richColors={false} closeButton={false} />
+                <Toaster position="top-right" richColors={false} closeButton={false} />
             </>,
         );
     },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Music, Menu, X } from 'lucide-react';
+import { Music, Menu } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -15,48 +15,45 @@ interface HeaderProps {
 export function Header({ isLoggedIn = false }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Get app URL from environment
   const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
 
   const navLinks = [
     { href: '#features', label: 'Features' },
-    { href: '#how-it-works', label: 'How It Works' },
+    { href: '#how-it-works', label: 'How it works' },
     { href: '#pricing', label: 'Pricing' },
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b-3 border-black">
-      <div className="w-full px-8 md:px-12 py-5">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-[--border]">
+      <div className="w-full px-6 md:px-12 py-4">
         <div className="flex items-center justify-between relative">
-          {/* Logo - Left */}
-          <a href="/" className="flex items-center gap-3 group flex-shrink-0">
-            <div className="border-3 border-black w-12 h-12 flex items-center justify-center bg-[#00eb90] neo-shadow-sm neo-transition group-hover:bg-[#ff73a9]">
-              <Music size={24} className="text-black" />
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2.5 group flex-shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] group-hover:opacity-80 transition-opacity">
+              <Music size={14} className="text-white" />
             </div>
-            <span className="text-xl uppercase tracking-wider">
-              WavDash
-            </span>
+            <span className="font-sans text-base font-semibold text-foreground tracking-tight">WavDash</span>
           </a>
 
-          {/* Desktop Navigation - Absolutely Centered on Viewport */}
+          {/* Desktop nav — centered */}
           <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="uppercase tracking-wider hover:text-[#00eb90] transition-colors whitespace-nowrap"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
               >
                 {link.label}
               </a>
             ))}
           </nav>
 
-          {/* Desktop Auth Buttons - Right */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Desktop auth buttons */}
+          <div className="hidden md:flex items-center gap-3">
             {isLoggedIn ? (
               <a
                 href={`${appUrl}/dashboard`}
-                className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+                className="inline-flex items-center px-4 py-2 rounded-[--radius-md] bg-primary text-primary-foreground text-sm font-medium shadow-sm-studio hover:scale-[1.01] transition-all"
               >
                 Dashboard
               </a>
@@ -64,81 +61,81 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
               <>
                 <a
                   href={`${appUrl}/login`}
-                  className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+                  className="text-sm font-medium text-foreground hover:text-[--amber] transition-colors"
                 >
-                  Login
+                  Sign in
                 </a>
                 <a
                   href={`${appUrl}/register`}
-                  className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition neo-hover-lift"
+                  className="inline-flex items-center px-4 py-2 rounded-[--radius-md] bg-primary text-primary-foreground text-sm font-medium shadow-amber hover:scale-[1.01] transition-all"
                 >
-                  Register
+                  Get started
                 </a>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile menu */}
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button
-                  className="border-3 border-black bg-white p-2 neo-shadow-sm"
+                  className="flex h-8 w-8 items-center justify-center rounded-[--radius-md] hover:bg-muted transition-colors"
                   aria-label="Open menu"
                 >
-                  <Menu size={24} className="text-black" />
+                  <Menu size={18} className="text-foreground" />
                 </button>
               </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-[300px] sm:w-[400px] border-l-3 border-black bg-white p-0"
-              >
-                <SheetHeader className="border-b-3 border-black p-6">
-                  <SheetTitle className="text-left uppercase tracking-wider text-2xl">
-                    Menu
-                  </SheetTitle>
+              <SheetContent side="right" className="w-[280px] p-0">
+                <SheetHeader className="px-5 py-5 border-b border-[--border]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
+                      <Music size={14} className="text-white" />
+                    </div>
+                    <SheetTitle className="font-sans text-base font-semibold text-foreground tracking-tight">
+                      WavDash
+                    </SheetTitle>
+                  </div>
                 </SheetHeader>
 
-                {/* Mobile Navigation */}
-                <nav className="flex flex-col p-6 space-y-6">
+                <nav className="flex flex-col space-y-0.5 px-3 py-4">
                   {navLinks.map((link) => (
                     <a
                       key={link.href}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className="uppercase tracking-wider hover:text-[#00eb90] transition-colors text-lg border-b-2 border-black pb-4"
+                      className="flex items-center px-3 py-2.5 rounded-[--radius-md] text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                       {link.label}
                     </a>
                   ))}
-
-                  {/* Mobile Auth Buttons */}
-                  <div className="flex flex-col gap-4 pt-4">
-                    {isLoggedIn ? (
-                      <a
-                        href={`${appUrl}/dashboard`}
-                        className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
-                      >
-                        Dashboard
-                      </a>
-                    ) : (
-                      <>
-                        <a
-                          href={`${appUrl}/login`}
-                          className="border-3 border-black bg-white px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
-                        >
-                          Login
-                        </a>
-                        <a
-                          href={`${appUrl}/register`}
-                          className="border-3 border-black bg-[#00eb90] px-6 py-3 uppercase tracking-wider neo-shadow-sm neo-transition w-full text-center"
-                        >
-                          Register
-                        </a>
-                      </>
-                    )}
-                  </div>
                 </nav>
+
+                <div className="flex flex-col gap-3 px-4 pt-4 border-t border-[--border]">
+                  {isLoggedIn ? (
+                    <a
+                      href={`${appUrl}/dashboard`}
+                      className="inline-flex items-center justify-center px-4 py-2.5 rounded-[--radius-md] bg-primary text-primary-foreground text-sm font-medium shadow-sm-studio"
+                    >
+                      Dashboard
+                    </a>
+                  ) : (
+                    <>
+                      <a
+                        href={`${appUrl}/login`}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-[--radius-md] border border-[--border-strong] text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                      >
+                        Sign in
+                      </a>
+                      <a
+                        href={`${appUrl}/register`}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-[--radius-md] bg-primary text-primary-foreground text-sm font-medium shadow-amber"
+                      >
+                        Get started free
+                      </a>
+                    </>
+                  )}
+                </div>
               </SheetContent>
             </Sheet>
           </div>

@@ -6,36 +6,31 @@ interface Props {
   description: string;
   features: string[];
   iconName: string;
-  color: 'green' | 'pink' | 'blue' | 'yellow';
+  color?: string;
 }
 
-const { title, description, features, iconName, color } = Astro.props;
-
-const colorClasses = {
-  green: 'bg-[#00eb90]',
-  pink: 'bg-[#ff73a9]',
-  blue: 'bg-[#3f5ef4]',
-  yellow: 'bg-[#ffdc00]',
-};
+const { title, description, features, iconName } = Astro.props;
 ---
 
-<div class={`${colorClasses[color]} border-3 border-black neo-shadow neo-transition neo-hover-lift p-10 h-full flex flex-col`}>
-  <div class="border-3 border-black w-16 h-16 flex items-center justify-center mb-8 bg-white">
-    <Icon name={iconName} size={32} client:load />
+<div class="studio-card p-8 h-full flex flex-col">
+  <div class="w-10 h-10 rounded-[--radius-md] bg-[--amber]/10 flex items-center justify-center mb-6">
+    <Icon name={iconName} size={20} className="text-[--amber]" client:load />
   </div>
 
-  <h3 class="uppercase mb-6 tracking-widest">
+  <h3 class="font-sans font-semibold text-base text-foreground mb-3">
     {title}
   </h3>
 
-  <p class="mb-8 tracking-wider leading-relaxed">
+  <p class="text-sm text-muted-foreground mb-6 leading-relaxed">
     {description}
   </p>
 
-  <ul class="space-y-4 flex-grow">
+  <ul class="space-y-2 mt-auto">
     {features.map((feature) => (
-      <li class="flex items-start">
-        <span class="mr-4 mt-1">•</span>
+      <li class="flex items-start gap-2 text-sm text-muted-foreground">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" class="shrink-0 mt-0.5 text-[--jade]" stroke="currentColor" stroke-width="2">
+          <path d="M2 7l3.5 3.5L12 3.5"/>
+        </svg>
         <span>{feature}</span>
       </li>
     ))}

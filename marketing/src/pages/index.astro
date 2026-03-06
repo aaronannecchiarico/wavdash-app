@@ -14,77 +14,93 @@ export const prerender = false;
 
 // Check authentication status for conditional rendering
 const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
+
+const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
 ---
 
 <MainLayout
-  title="WavDash - AI-Powered Audio Processing | Stem Separation & Analysis"
-  description="Transform your music with WavDash. Professional audio analysis, AI stem separation, and tempo processing. Free to use. No credit card required."
-  ogTitle="WavDash - AI-Powered Audio Processing"
-  ogDescription="Transform your music with AI-powered audio processing."
+  title="WavDash — Precision Audio Intelligence for Serious Producers"
+  description="Professional stem separation, BPM analysis, and audio processing for producers who demand precision. Free to use. No credit card required."
+  ogTitle="WavDash — Precision Audio Intelligence"
+  ogDescription="Professional audio analysis and stem separation for serious producers."
 >
   <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center px-8 md:px-12 py-32 overflow-hidden">
-    <div class="absolute inset-0 grid-pattern pointer-events-none"></div>
+  <section class="relative min-h-screen flex items-center justify-center px-6 md:px-12 py-32 overflow-hidden">
+    <!-- Gradient mesh background -->
+    <div class="gradient-mesh absolute inset-0 pointer-events-none"></div>
+    <!-- Subtle grain overlay -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.025]"
+         style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22/><feColorMatrix type=%22saturate%22 values=%220%22/></filter><rect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/></svg>'); background-repeat: repeat; background-size: 128px 128px;">
+    </div>
 
-    <div class="relative z-10 text-center">
-      <!-- Logo/Brand Mark -->
-      <div class="inline-flex border-3 border-black w-20 h-20 items-center justify-center bg-[#00eb90] neo-shadow mb-8">
-        <Icon name="Music" size={40} client:load />
+    <div class="relative z-10 text-center max-w-3xl mx-auto">
+      <!-- Brand mark -->
+      <div class="inline-flex h-14 w-14 rounded-full bg-[--amber] items-center justify-center mb-10 shadow-amber mx-auto">
+        <Icon name="Music" size={24} className="text-white" client:load />
       </div>
 
-      <!-- Main Headline -->
-      <h1 class="mb-6 tracking-tighter">
-        <span class="text-[#00eb90]">WAV</span>
-        <span class="text-[#ff73a9]">DASH</span>
+      <!-- Main headline -->
+      <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl text-foreground mb-6" style="letter-spacing: -0.025em; line-height: 1.1;">
+        Precision audio<br/>intelligence.
       </h1>
 
       <!-- Subheadline -->
-      <p class="mb-4 text-2xl md:text-3xl">
-        Transform Your Music with AI-Powered Audio Processing
-      </p>
-
-      <!-- Tagline -->
-      <p class="uppercase tracking-widest mb-12 opacity-70">
-        DESTROY YOUR AUDIO • ANALYZE EVERYTHING • DOMINATE THE BEATS
+      <p class="text-lg md:text-xl text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
+        Professional stem separation, BPM analysis, and audio processing for producers who demand precision.
       </p>
 
       <!-- CTAs -->
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
         {isLoggedIn ? (
-          <button class="border-3 border-black bg-[#00eb90] px-12 py-6 uppercase tracking-widest neo-shadow neo-transition neo-hover-lift">
-            GO TO DASHBOARD
-          </button>
+          <a
+            href={`${appUrl}/dashboard`}
+            class="inline-flex items-center justify-center px-7 py-3.5 rounded-[--radius-md] bg-primary text-primary-foreground font-medium text-sm shadow-amber hover:scale-[1.01] transition-all"
+          >
+            Go to Dashboard
+          </a>
         ) : (
           <>
-            <button class="border-3 border-black bg-[#00eb90] px-12 py-6 uppercase tracking-widest neo-shadow neo-transition neo-hover-lift">
-              START DESTROYING
-            </button>
-            <button class="border-3 border-black bg-white px-12 py-6 uppercase tracking-widest neo-shadow neo-transition neo-hover-lift">
-              VIEW DEMO
-            </button>
+            <a
+              href={`${appUrl}/register`}
+              class="inline-flex items-center justify-center px-7 py-3.5 rounded-[--radius-md] bg-primary text-primary-foreground font-medium text-sm shadow-amber hover:scale-[1.01] transition-all"
+            >
+              Get started free
+            </a>
+            <a
+              href="#demo"
+              class="inline-flex items-center justify-center px-7 py-3.5 rounded-[--radius-md] border border-[--border-strong] bg-transparent text-foreground font-medium text-sm hover:bg-muted transition-all"
+            >
+              See it in action
+            </a>
           </>
         )}
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="mt-16 flex flex-col items-center gap-2 text-muted-foreground">
+        <span class="text-xs font-medium tracking-wide uppercase">Scroll to explore</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="animate-bounce">
+          <path d="M8 3v10M3 9l5 5 5-5"/>
+        </svg>
       </div>
     </div>
   </section>
 
-  <!-- Value Propositions Section -->
-  <section id="features" class="flex items-center justify-center px-8 md:px-6 py-32 overflow-hidden">
-    <div class="flex flex-col items-center gap-6">
-      <div class="text-center">
-        <h2 class="uppercase tracking-wider mb-6">
-          TOOLS OF DESTRUCTION
-        </h2>
-        <p class="text-xl mb-4">
-          Unleash the full potential of your audio with cutting-edge AI technology
+  <!-- Features Section -->
+  <section id="features" class="px-6 md:px-12 py-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">What WavDash does</h2>
+        <p class="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          Every tool a serious producer needs to understand, deconstruct, and transform audio.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <FeatureCard
           iconName="BarChart3"
-          title="INSTANT AUDIO ANALYSIS"
-          description="RIP APART YOUR TRACKS • FIND THE DNA • DISCOVER THE SECRETS • EXTRACT EVERY DETAIL"
+          title="Instant audio analysis"
+          description="Deep analysis of your track's DNA — BPM, key, loudness, dynamics, and timbral character in seconds."
           features={[
             'BPM detection and tempo analysis',
             'Musical key identification with confidence scoring',
@@ -92,13 +108,12 @@ const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
             'Timbral complexity and brightness analysis',
             'Detailed waveform visualization',
           ]}
-          color="green"
         />
 
         <FeatureCard
           iconName="Scissors"
-          title="PROFESSIONAL STEM SEPARATION"
-          description="SLICE AND DICE • ISOLATE EVERYTHING • REBUILD FROM CHAOS • TOTAL CONTROL"
+          title="Professional stem separation"
+          description="AI-powered source separation that isolates vocals, drums, bass, and more with studio-grade precision."
           features={[
             'AI-powered stem extraction (vocals, drums, bass, other)',
             'High-quality separation algorithms',
@@ -106,13 +121,12 @@ const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
             'Real-time processing with live updates via WebSockets',
             'Perfect for producers and remixers',
           ]}
-          color="pink"
         />
 
         <FeatureCard
           iconName="Gauge"
-          title="TEMPO WARFARE"
-          description="SPEED UP • SLOW DOWN • PITCH SHIFT • TIME STRETCH • COMMAND TIME ITSELF"
+          title="Tempo and pitch processing"
+          description="Stretch, shift, and transform your audio without compromising quality. Full control over time and pitch."
           features={[
             'Nightcore and sped-up variations',
             'Slowed + reverb effects',
@@ -120,119 +134,65 @@ const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
             'Multiple preset options available',
             'Preserve or modify pitch independently',
           ]}
-          color="blue"
         />
       </div>
     </div>
   </section>
 
   <!-- How It Works Section -->
-  <section id="how-it-works" class="flex items-center justify-center px-8 md:px-6 py-32 overflow-hidden bg-[#ffdc00]">
-    <div class="flex flex-col items-center gap-6">
-      <div class="text-center mb-20">
-        <h2 class="uppercase tracking-wider mb-6">
-          THREE STEPS TO AUDIO DOMINATION
-        </h2>
+  <section id="how-it-works" class="px-6 md:px-12 py-24 bg-[--surface-2]">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">How it works</h2>
+        <p class="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          From upload to insight in seconds. No configuration, no complexity.
+        </p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ProcessStep
           stepNumber={1}
-          title="UPLOAD"
-          description="Drag and drop your audio file or browse to select. We support MP3, WAV, FLAC, OGG, and more."
+          title="Upload your track"
+          description="Drag and drop or browse to select. We support MP3, WAV, FLAC, OGG, and more. Processing begins immediately."
           iconName="Upload"
           showArrow={true}
         />
 
         <ProcessStep
           stepNumber={2}
-          title="PROCESS"
-          description="Watch real-time updates as AI analyzes your track. Client-side processing with MediaBunny for instant feedback."
+          title="AI analysis runs"
+          description="Watch real-time updates as AI analyzes your track — BPM, stems, key, and more processed in parallel."
           iconName="Cpu"
           showArrow={true}
         />
 
         <ProcessStep
           stepNumber={3}
-          title="DOWNLOAD"
-          description="Get your processed audio, individual stems, or detailed analysis data. Everything is stored securely in the cloud."
+          title="Download your results"
+          description="Get processed stems, analysis data, or tempo variants. Everything stored securely and ready to download."
           iconName="Download"
         />
       </div>
     </div>
   </section>
 
-  <!-- Technical Features Section -->
-  <section class="py-32 px-8 md:px-12 bg-white">
-    <div class="w-full max-w-7xl mx-auto">
-      <div class="text-center mb-20">
-        <h2 class="uppercase tracking-wider mb-6">
-          BUILT WITH CUTTING-EDGE TECHNOLOGY
-        </h2>
-        <p class="text-xl">
-          Enterprise-grade infrastructure meets creative innovation
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <TechBadge
-          iconName="Radio"
-          title="Real-Time Updates"
-          description="WebSockets via Laravel Reverb for live processing status"
-        />
-
-        <TechBadge
-          iconName="Zap"
-          title="Client-Side Processing"
-          description="MediaBunny library for instant audio conversion"
-        />
-
-        <TechBadge
-          iconName="Cloud"
-          title="Cloud Storage"
-          description="Cloudflare R2 integration for reliable file storage"
-        />
-
-        <TechBadge
-          iconName="Music"
-          title="High-Quality Processing"
-          description="FFmpeg-powered audio analysis"
-        />
-
-        <TechBadge
-          iconName="Shield"
-          title="Secure & Private"
-          description="End-to-end encryption and user data protection"
-        />
-
-        <TechBadge
-          iconName="Server"
-          title="Modern Stack"
-          description="Laravel 12, React, Inertia.js, TypeScript"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- Demo/Visualization Section -->
-  <section class="relative py-32 px-8 md:px-12 bg-[#ff73a9] overflow-hidden">
-    <!-- Orb Background -->
-    <div class="absolute inset-0 pointer-events-none opacity-20">
+  <!-- Demo Section -->
+  <section id="demo" class="relative px-6 md:px-12 py-24 overflow-hidden">
+    <!-- Subtle orb background -->
+    <div class="absolute inset-0 pointer-events-none opacity-10">
       <OrbWithFallback
-        colors={["#00eb90", "#ffdc00"]}
+        colors={["#C8892A", "#2EA88A"]}
         agentState="thinking"
         volumeMode="auto"
         client:idle
       />
     </div>
 
-    <div class="relative z-10 w-full max-w-7xl mx-auto">
+    <div class="relative z-10 max-w-7xl mx-auto">
       <div class="text-center mb-12">
-        <h2 class="uppercase tracking-wider mb-6">
-          SEE THE ANALYSIS IN ACTION
-        </h2>
-        <p class="text-xl">
-          Experience real-time audio analysis with our powerful AI-driven tools
+        <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">See the analysis in action</h2>
+        <p class="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          Experience real-time audio analysis with our powerful AI-driven tools.
         </p>
       </div>
 
@@ -240,189 +200,211 @@ const { authenticated: isLoggedIn } = await checkAuthStatus(Astro.request);
     </div>
   </section>
 
-  <!-- Social Proof Section -->
-  <section class="py-32 px-8 md:px-12 bg-white">
-    <div class="w-full max-w-7xl mx-auto">
-      <div class="text-center mb-20">
-        <h2 class="uppercase tracking-wider mb-6">
-          TRUSTED BY CREATORS WORLDWIDE
-        </h2>
+  <!-- Stats Section -->
+  <section class="px-6 md:px-12 py-24 bg-[--surface-2]">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="font-serif text-3xl text-foreground mb-4">Trusted by creators worldwide</h2>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
         <StatsDisplay
           value="10,000+"
-          label="TRACKS PROCESSED"
-          iconName="TrendingUp"
-          color="green"
+          label="Tracks processed"
         />
-
         <StatsDisplay
           value="5,000+"
-          label="ACTIVE PRODUCERS"
-          iconName="Users"
-          color="pink"
+          label="Active producers"
         />
-
         <StatsDisplay
           value="100%"
-          label="FREE TO USE"
-          iconName="CheckCircle"
-          color="yellow"
+          label="Free to use"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack Section -->
+  <section class="px-6 md:px-12 py-24">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">Built on production-grade infrastructure</h2>
+        <p class="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          Enterprise-grade tools powering your creative workflow.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <TechBadge
+          iconName="Radio"
+          title="Real-time updates"
+          description="WebSockets via Laravel Reverb for live processing status"
+        />
+        <TechBadge
+          iconName="Zap"
+          title="Client-side processing"
+          description="MediaBunny library for instant audio conversion"
+        />
+        <TechBadge
+          iconName="Cloud"
+          title="Cloud storage"
+          description="Cloudflare R2 integration for reliable, fast file storage"
+        />
+        <TechBadge
+          iconName="Music"
+          title="High-quality processing"
+          description="FFmpeg and Demucs-powered audio analysis and separation"
+        />
+        <TechBadge
+          iconName="Shield"
+          title="Secure and private"
+          description="Your audio files are encrypted and never shared"
+        />
+        <TechBadge
+          iconName="Server"
+          title="Modern stack"
+          description="Laravel 12, React 19, Inertia.js, TypeScript, Tailwind v4"
         />
       </div>
     </div>
   </section>
 
   <!-- Pricing Section -->
-  <section id="pricing" class="py-32 px-8 md:px-12 bg-[#3f5ef4] text-white">
-    <div class="w-full max-w-5xl mx-auto">
-      <div class="text-center mb-20">
-        <h2 class="uppercase tracking-wider mb-6 text-white">
-          START FOR FREE
-        </h2>
-        <p class="text-xl">
-          No credit card required. No hidden fees. Just pure audio power.
+  <section id="pricing" class="px-6 md:px-12 py-24 bg-[--surface-2]">
+    <div class="max-w-2xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">Simple, free pricing</h2>
+        <p class="text-base text-muted-foreground leading-relaxed">
+          No credit card required. No hidden fees. Just professional audio tools.
         </p>
       </div>
 
-      <div class="border-3 border-black bg-white text-black neo-shadow-lg p-12 md:p-16">
-        <div class="text-center mb-8">
-          <h3 class="uppercase tracking-wider mb-2">
-            FREE TIER
-          </h3>
-          <p class="text-4xl mb-2">$0</p>
-          <p class="uppercase tracking-wider opacity-70">
-            FOREVER
-          </p>
+      <div class="studio-card p-10 md:p-12">
+        <div class="text-center mb-8 pb-8 border-b border-[--border]">
+          <div class="inline-flex h-10 w-10 rounded-full bg-[--amber]/10 items-center justify-center mb-4">
+            <Icon name="Music" size={18} className="text-[--amber]" client:load />
+          </div>
+          <h3 class="font-sans font-semibold text-lg text-foreground mb-1">Free tier</h3>
+          <div class="font-mono text-5xl font-medium text-foreground mt-3">$0</div>
+          <p class="text-sm text-muted-foreground mt-2">Forever free</p>
         </div>
 
-        <ul class="space-y-6 mb-12">
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>No credit card required</span>
-          </li>
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>Unlimited uploads and processing</span>
-          </li>
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>Full access to all audio analysis features</span>
-          </li>
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>Stem separation and tempo processing</span>
-          </li>
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>Participate in contests</span>
-          </li>
-          <li class="flex items-start">
-            <Icon name="CheckCircle" size={20} className="mr-4 flex-shrink-0 mt-1" client:load />
-            <span>Cloud storage for your files</span>
-          </li>
+        <ul class="space-y-4 mb-10">
+          {[
+            'No credit card required',
+            'Unlimited uploads and processing',
+            'Full access to all audio analysis features',
+            'Stem separation and tempo processing',
+            'Participate in contests',
+            'Cloud storage for your files',
+          ].map((feature) => (
+            <li class="flex items-start gap-3 text-sm text-foreground">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="shrink-0 mt-0.5 text-[--jade]" stroke="currentColor" stroke-width="2">
+                <path d="M2.5 8l3.5 3.5 7-7"/>
+              </svg>
+              <span>{feature}</span>
+            </li>
+          ))}
         </ul>
 
         <div class="text-center">
-          <button class="border-3 border-black bg-[#00eb90] px-12 py-6 uppercase tracking-widest neo-shadow neo-transition neo-hover-lift">
-            GET STARTED FREE
-          </button>
+          <a
+            href={`${appUrl}/register`}
+            class="inline-flex items-center justify-center w-full px-8 py-3.5 rounded-[--radius-md] bg-primary text-primary-foreground font-medium text-sm shadow-amber hover:scale-[1.01] transition-all"
+          >
+            Get started free
+          </a>
         </div>
 
-        <p class="text-center mt-8 uppercase tracking-wider opacity-70">
-          Premium features coming soon • Early adopters get lifetime benefits
+        <p class="text-center text-xs text-muted-foreground mt-6">
+          Premium features coming soon — early adopters get lifetime benefits
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Contest/Community Section -->
-  <section class="py-32 px-8 md:px-12 bg-white">
-    <div class="w-full max-w-5xl mx-auto text-center">
-      <div class="inline-flex border-3 border-black w-20 h-20 items-center justify-center bg-[#ffdc00] neo-shadow mb-8">
-        <Icon name="Trophy" size={40} client:load />
+  <!-- Community / Contests Section -->
+  <section class="px-6 md:px-12 py-24">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="inline-flex h-12 w-12 rounded-full bg-[--amber]/10 items-center justify-center mb-6">
+        <Icon name="Trophy" size={20} className="text-[--amber]" client:load />
       </div>
-
-      <h2 class="uppercase tracking-wider mb-8">
-        JOIN THE COMMUNITY
-      </h2>
-
-      <p class="text-xl mb-12">
-        Participate in music creation challenges • Community-driven competitions • Showcase your processed tracks and compete for glory
+      <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-5">Join the community</h2>
+      <p class="text-base text-muted-foreground mb-8 leading-relaxed max-w-xl mx-auto">
+        Participate in music creation challenges, community-driven competitions, and showcase your work to fellow producers.
       </p>
-
-      <button class="border-3 border-black bg-[#ff73a9] px-12 py-6 uppercase tracking-widest neo-shadow neo-transition neo-hover-lift">
-        EXPLORE CONTESTS
-      </button>
+      <a
+        href={`${appUrl}/contests`}
+        class="inline-flex items-center justify-center px-7 py-3.5 rounded-[--radius-md] border border-[--border-strong] bg-transparent text-foreground font-medium text-sm hover:bg-muted transition-all"
+      >
+        Explore contests
+      </a>
     </div>
   </section>
 
   <!-- Footer CTA Section -->
-  <section class="py-32 px-8 md:px-12 bg-black text-white">
-    <div class="w-full max-w-5xl mx-auto text-center">
-      <h2 class="uppercase tracking-wider mb-8">
-        READY TO TRANSFORM YOUR MUSIC?
+  <section class="relative py-28 px-6 md:px-12 overflow-hidden">
+    <div class="gradient-mesh absolute inset-0 pointer-events-none"></div>
+    <div class="relative z-10 text-center max-w-2xl mx-auto">
+      <h2 class="font-serif text-4xl md:text-5xl text-foreground mb-6" style="line-height: 1.1;">
+        Ready to hear your music differently?
       </h2>
-
-      <p class="text-xl mb-12">
-        Join thousands of producers, musicians, and creators using WavDash to unlock their audio's full potential
+      <p class="text-lg text-muted-foreground mb-10 leading-relaxed">
+        Upload your first track and get instant analysis, stems, and tempo insights.
       </p>
-
-      <button class="border-3 border-white bg-[#00eb90] text-black px-12 py-6 uppercase tracking-widest shadow-[4px_4px_0_#ffffff] hover:shadow-[2px_2px_0_#ffffff] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all">
-        GET STARTED FREE
-      </button>
-
-      <p class="mt-8 uppercase tracking-wider opacity-70">
-        No credit card required • Process your first track in minutes • Full feature access
-      </p>
+      <a
+        href={`${appUrl}/register`}
+        class="inline-flex items-center justify-center px-8 py-4 rounded-[--radius-md] bg-primary text-primary-foreground font-medium text-base shadow-amber hover:scale-[1.01] transition-all"
+      >
+        Get started free
+      </a>
+      <p class="mt-5 text-sm text-muted-foreground">No credit card required • Process your first track in minutes</p>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="py-20 px-8 md:px-12 bg-black text-white border-t-3 border-white">
-    <div class="w-full max-w-7xl mx-auto">
-      <div class="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
-        <div class="text-center md:text-left">
-          <div class="flex items-center gap-4 justify-center md:justify-start mb-4">
-            <div class="border-3 border-white w-12 h-12 flex items-center justify-center bg-[#00eb90]">
-              <Icon name="Music" size={24} className="text-black" client:load />
+  <footer class="border-t border-[--border] py-12 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between gap-10">
+        <!-- Brand -->
+        <div>
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
+              <Icon name="Music" size={14} className="text-white" client:load />
             </div>
-            <span class="text-2xl uppercase tracking-wider">
-              WavDash
-            </span>
+            <span class="font-sans font-semibold text-base text-foreground">WavDash</span>
           </div>
-          <p class="uppercase tracking-widest opacity-70">
-            FORGED WITH BRUTALITY • POWERED BY PASSION • BUILT FOR BEATS
+          <p class="text-sm text-muted-foreground max-w-xs leading-relaxed">
+            Professional audio analysis and stem separation for serious producers.
           </p>
         </div>
 
-        <div class="flex flex-wrap gap-8 justify-center">
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            About
-          </a>
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            Features
-          </a>
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            How It Works
-          </a>
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            Contact
-          </a>
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            Privacy
-          </a>
-          <a href="#" class="uppercase tracking-wider hover:text-[#00eb90] transition-colors">
-            Terms
-          </a>
+        <!-- Nav columns -->
+        <div class="flex gap-12">
+          <div>
+            <h4 class="font-sans font-semibold text-xs text-foreground uppercase tracking-wide mb-4">Product</h4>
+            <nav class="space-y-2.5">
+              <a href="#features" class="block text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+              <a href="#how-it-works" class="block text-sm text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+              <a href="#pricing" class="block text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            </nav>
+          </div>
+          <div>
+            <h4 class="font-sans font-semibold text-xs text-foreground uppercase tracking-wide mb-4">Account</h4>
+            <nav class="space-y-2.5">
+              <a href={`${appUrl}/login`} class="block text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</a>
+              <a href={`${appUrl}/register`} class="block text-sm text-muted-foreground hover:text-foreground transition-colors">Create account</a>
+              <a href={`${appUrl}/contests`} class="block text-sm text-muted-foreground hover:text-foreground transition-colors">Contests</a>
+            </nav>
+          </div>
         </div>
       </div>
 
-      <div class="text-center pt-12 border-t-3 border-white/20">
-        <p class="opacity-70">
-          © 2025 WavDash. All rights reserved.
-        </p>
+      <div class="mt-10 pt-6 border-t border-[--border] flex flex-col md:flex-row justify-between items-center gap-3">
+        <p class="text-sm text-muted-foreground">© 2025 WavDash. All rights reserved.</p>
+        <div class="flex gap-6">
+          <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
+          <a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a>
+        </div>
       </div>
     </div>
   </footer>

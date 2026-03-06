@@ -13,29 +13,29 @@ const { stepNumber, title, description, iconName, showArrow = false } = Astro.pr
 ---
 
 <div class="relative">
-  <div class="border-3 border-black bg-white neo-shadow p-8 md:p-10 h-full flex flex-col">
-    <div class="flex items-center gap-4 mb-6">
-      <div class="border-3 border-black bg-[#00eb90] w-12 h-12 flex items-center justify-center text-2xl font-black">
+  <div class="studio-card p-8 h-full">
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-8 h-8 rounded-full bg-[--amber] flex items-center justify-center text-white font-sans font-semibold text-sm shrink-0">
         {stepNumber}
       </div>
-      <div class="border-3 border-black w-16 h-16 flex items-center justify-center bg-black">
-        <Icon name={iconName} size={32} className="text-white" client:load />
+      <div class="w-10 h-10 rounded-[--radius-md] bg-muted flex items-center justify-center">
+        <Icon name={iconName} size={20} className="text-muted-foreground" client:load />
       </div>
     </div>
 
-    <h3 class="uppercase mb-4 tracking-widest">
+    <h3 class="font-sans font-semibold text-base text-foreground mb-2">
       {title}
     </h3>
 
-    <p class="leading-relaxed">
+    <p class="text-sm text-muted-foreground leading-relaxed">
       {description}
     </p>
   </div>
 
   {showArrow && (
-    <div class="hidden lg:block absolute top-1/2 -right-8 -translate-y-1/2 z-10">
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 16H28M28 16L20 8M28 16L20 24" stroke="black" stroke-width="3"/>
+    <div class="hidden lg:block absolute top-1/2 -right-6 -translate-y-1/2 z-10">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-muted-foreground">
+        <path d="M5 12h14M14 7l5 5-5 5"/>
       </svg>
     </div>
   )}

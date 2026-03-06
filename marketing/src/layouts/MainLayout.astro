@@ -32,14 +32,16 @@ const { authenticated, user } = await checkAuthStatus(Astro.request);
     {ogDescription && <meta property="og:description" content={ogDescription} />}
     <meta property="og:type" content="website" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Dark mode: apply class before paint to avoid flash -->
+    <script is:inline>
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
   </head>
-  <body class="min-h-screen bg-white">
+  <body class="min-h-screen bg-background text-foreground antialiased">
     <!-- Header with authentication state -->
     <Header isLoggedIn={authenticated} client:load />
 
