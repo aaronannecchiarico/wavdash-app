@@ -1,4 +1,4 @@
-import { BrutalistSimilarTrackCard } from '@/components/brutalist-similar-track-card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Upload } from '@/types';
@@ -31,17 +31,15 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
         }
     }, [flash]);
 
-    // Ensure we have proper upload data with safety checks
     const uploadData = upload || {};
 
-    // Early return if no upload data
     if (!upload || !upload.id) {
         return (
             <AppLayout breadcrumbs={[]}>
                 <Head title="Similar Tracks" />
                 <div className="p-4">
-                    <div className="neo-border neo-shadow bg-neo-pink p-8 text-center">
-                        <p className="text-neo-white font-black uppercase">UPLOAD DATA NOT FOUND</p>
+                    <div className="studio-card p-8 text-center">
+                        <p className="text-sm text-muted-foreground">Upload data not found.</p>
                     </div>
                 </div>
             </AppLayout>
@@ -49,20 +47,11 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
     }
 
     const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Music Library', href: route('uploads.index') },
+        { title: uploadData.title, href: route('uploads.show', { upload: uploadData.id }) },
+        { title: 'Analysis', href: route('uploads.analysis.show', { upload: uploadData.id }) },
         {
-            title: 'Music Library',
-            href: route('uploads.index'),
-        },
-        {
-            title: uploadData.title,
-            href: route('uploads.show', { upload: uploadData.id }),
-        },
-        {
-            title: 'Analysis',
-            href: route('uploads.analysis.show', { upload: uploadData.id }),
-        },
-        {
-            title: 'Similar Tracks',
+            title: 'Similar tracks',
             href: route('uploads.analysis.similar', { upload: uploadData.id }),
             description: `Found ${similar_uploads.length} similar tracks based on musical analysis`,
         },
@@ -72,102 +61,126 @@ export default function Similar({ upload, similar_uploads, analysis_criteria }: 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Similar Tracks - ${uploadData.title}`} />
             <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-                {/* Brutalist Back Button */}
-                <div className="flex items-center gap-4">
+                {/* Back button */}
+                <div>
                     <Link href={route('uploads.analysis.show', { upload: uploadData.id })}>
-                        <Button variant="secondary" size="sm" className="neo-shadow font-black uppercase">
+                        <Button variant="ghost" size="sm">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            BACK TO ANALYSIS
+                            Back to analysis
                         </Button>
                     </Link>
                 </div>
 
-                {/* Brutalist Search Criteria Display */}
-                <div className="neo-border neo-shadow bg-neo-yellow p-6">
-                    <h3 className="text-neo-black mb-4 font-black tracking-widest uppercase">SEARCH PARAMETERS</h3>
-                    <p className="text-neo-black mb-6 text-sm font-bold">
-                        TRACKS SIMILAR TO "{uploadData.title.toUpperCase()}" BASED ON MUSICAL CHARACTERISTICS
+                {/* Search criteria */}
+                <div className="studio-card p-6">
+                    <h3 className="font-sans font-semibold text-sm text-foreground mb-1">Search parameters</h3>
+                    <p className="text-xs text-muted-foreground mb-5">
+                        Tracks similar to &ldquo;{uploadData.title}&rdquo; based on musical characteristics
                     </p>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                        <div className="neo-border bg-neo-black p-3">
-                            <span className="text-neo-white block text-xs font-black uppercase">KEY</span>
-                            <span className="text-neo-green text-lg font-black">{analysis_criteria.musical_key}</span>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        <div className="rounded-[--radius-md] bg-[--surface-2] p-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Key</p>
+                            <p className="font-mono text-lg font-medium text-[--jade]">{analysis_criteria.musical_key}</p>
                         </div>
-                        <div className="neo-border bg-neo-black p-3">
-                            <span className="text-neo-white block text-xs font-black uppercase">BPM</span>
-                            <span className="text-neo-pink text-lg font-black">{analysis_criteria.bpm}±10</span>
+                        <div className="rounded-[--radius-md] bg-[--surface-2] p-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">BPM</p>
+                            <p className="font-mono text-lg font-medium text-[--amber]">{analysis_criteria.bpm}±10</p>
                         </div>
-                        <div className="neo-border bg-neo-black p-3">
-                            <span className="text-neo-white block text-xs font-black uppercase">BRIGHTNESS</span>
-                            <span className="text-neo-blue text-lg font-black">{Math.round(analysis_criteria.brightness)}Hz</span>
+                        <div className="rounded-[--radius-md] bg-[--surface-2] p-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Brightness</p>
+                            <p className="font-mono text-lg font-medium text-foreground">{Math.round(analysis_criteria.brightness)}Hz</p>
                         </div>
-                        <div className="neo-border bg-neo-black p-3">
-                            <span className="text-neo-white block text-xs font-black uppercase">CONFIDENCE</span>
-                            <span className="text-neo-white text-lg font-black">{Math.round(analysis_criteria.key_confidence * 100)}%</span>
+                        <div className="rounded-[--radius-md] bg-[--surface-2] p-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Confidence</p>
+                            <p className="font-mono text-lg font-medium text-foreground">{Math.round(analysis_criteria.key_confidence * 100)}%</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Brutalist Results */}
+                {/* Results */}
                 {similar_uploads.length === 0 ? (
-                    <div className="neo-border neo-shadow bg-neo-pink p-8">
-                        <div className="text-center">
-                            <Users className="text-neo-white mx-auto mb-6 h-16 w-16" />
-                            <h3 className="text-neo-white mb-4 text-2xl font-black tracking-wide uppercase">NO SIMILAR TRACKS FOUND</h3>
-                            <p className="text-neo-white mx-auto mb-6 max-w-md font-bold">
-                                WE COULDN'T FIND ANY TRACKS IN YOUR LIBRARY THAT MATCH THE MUSICAL CHARACTERISTICS OF "
-                                {uploadData.title.toUpperCase()}". TRY UPLOADING MORE MUSIC TO BUILD A LARGER COLLECTION FOR COMPARISON.
-                            </p>
-                            <Link href={route('uploads.create')}>
-                                <Button variant="secondary" className="neo-shadow font-black uppercase">
-                                    <Music className="mr-2 h-4 w-4" />
-                                    UPLOAD MORE MUSIC
-                                </Button>
-                            </Link>
+                    <div className="studio-card p-12 text-center">
+                        <div className="w-14 h-14 rounded-full bg-[--amber]/10 flex items-center justify-center mx-auto mb-4">
+                            <Users className="h-6 w-6 text-[--amber]" />
                         </div>
+                        <h3 className="font-serif text-xl text-foreground mb-2">No similar tracks found</h3>
+                        <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                            No tracks in your library match the musical characteristics of &ldquo;{uploadData.title}&rdquo;.
+                            Upload more music to build a larger collection.
+                        </p>
+                        <Link href={route('uploads.create')}>
+                            <Button>
+                                <Music className="mr-2 h-4 w-4" />
+                                Upload more music
+                            </Button>
+                        </Link>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        {/* Results Header */}
-                        <div className="neo-border neo-shadow bg-neo-black p-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-neo-white text-xl font-black tracking-wider uppercase">SIMILAR TRACKS</h2>
-                                    <p className="text-neo-green font-bold">{similar_uploads.length} MATCHES FOUND • SORTED BY BPM SIMILARITY</p>
-                                </div>
-                                <Users className="text-neo-white h-8 w-8" />
-                            </div>
+                    <div className="space-y-3">
+                        {/* Results header */}
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-foreground">{similar_uploads.length} matches found</p>
+                            <p className="text-xs text-muted-foreground">Sorted by BPM similarity</p>
                         </div>
 
-                        {/* Results Grid */}
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {/* Track list */}
+                        <div className="studio-card overflow-hidden divide-y divide-[--border]">
                             {similar_uploads.map((similarUpload, index) => (
-                                <BrutalistSimilarTrackCard key={similarUpload.id} upload={similarUpload} index={index} />
+                                <Link
+                                    key={similarUpload.id}
+                                    href={route('uploads.show', { upload: similarUpload.id })}
+                                    className="flex items-center gap-4 px-5 py-4 hover:bg-muted transition-colors group"
+                                >
+                                    {/* Index */}
+                                    <span className="font-mono text-xs text-muted-foreground w-5 shrink-0">{index + 1}</span>
+
+                                    {/* Icon */}
+                                    <div className="w-10 h-10 rounded-[--radius-md] bg-[--surface-2] flex items-center justify-center shrink-0">
+                                        <Music className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm text-foreground truncate group-hover:text-[--amber] transition-colors">
+                                            {similarUpload.title}
+                                        </p>
+                                        {similarUpload.artist && (
+                                            <p className="text-xs text-muted-foreground truncate">by {similarUpload.artist}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Analysis data */}
+                                    {similarUpload.analysis && (
+                                        <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
+                                            {similarUpload.analysis.musical_key && (
+                                                <span className="font-mono text-[--jade]">{similarUpload.analysis.musical_key}</span>
+                                            )}
+                                            {similarUpload.analysis.bpm && (
+                                                <span className="font-mono text-[--amber]">{similarUpload.analysis.bpm} BPM</span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <Badge variant="secondary">{similarUpload.status}</Badge>
+                                </Link>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Brutalist Actions */}
-                <div className="neo-border neo-shadow bg-neo-green p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h4 className="text-neo-black text-lg font-black tracking-wide uppercase">DISCOVER MORE</h4>
-                            <p className="text-neo-black text-sm font-bold">UPLOAD MORE TRACKS TO IMPROVE SIMILARITY MATCHING</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <Link href={route('uploads.create')}>
-                                <Button variant="secondary" className="neo-shadow font-black uppercase">
-                                    <Music className="mr-2 h-4 w-4" />
-                                    UPLOAD MUSIC
-                                </Button>
-                            </Link>
-                            <Link href={route('uploads.index')}>
-                                <Button variant="secondary" className="neo-shadow font-black uppercase">
-                                    BROWSE LIBRARY
-                                </Button>
-                            </Link>
-                        </div>
+                {/* Actions footer */}
+                <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">Upload more tracks to improve similarity matching</p>
+                    <div className="flex gap-2">
+                        <Link href={route('uploads.create')}>
+                            <Button variant="secondary" size="sm">
+                                <Music className="mr-2 h-4 w-4" />
+                                Upload music
+                            </Button>
+                        </Link>
+                        <Link href={route('uploads.index')}>
+                            <Button variant="ghost" size="sm">Browse library</Button>
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -135,7 +135,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                             </div>
                         ) : (
                             <div className="py-8 text-center">
-                                <Scissors className="mx-auto mb-4 h-12 w-12 text-blue-500" />
+                                <Scissors className="mx-auto mb-4 h-12 w-12 text-[--amber]" />
                                 <p className="mb-4 text-muted-foreground">No stem separation has been performed yet.</p>
                                 <Button onClick={handleStartSeparation} disabled={processing}>
                                     <Zap className="mr-2 h-4 w-4" />
@@ -161,7 +161,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-center py-8">
                             <div className="flex flex-col items-center space-y-4">
-                                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
+                                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[--amber]"></div>
                                 <div className="text-center">
                                     <p className="text-sm font-medium">Separating stems...</p>
                                     <p className="text-xs text-muted-foreground">
@@ -246,14 +246,14 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                         <MultiTrackStemPlayer stems={stems} uploadId={uploadData.id} analysis={uploadData.analysis || undefined} />
 
                         {/* Stem Downloads */}
-                        <Card className="border-slate-200 bg-slate-50 dark:border-gray-700 dark:bg-gray-900">
+                        <Card className="border border-[--border] bg-[--surface-2]">
                             <CardHeader className="pb-4">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                                    <CardTitle className="flex items-center gap-2 text-foreground">
                                         <Download className="h-5 w-5" />
                                         Download Stems
                                     </CardTitle>
-                                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <span>Total: {stems.length} files</span>
                                         <Badge variant="secondary" className="border-slate-300 bg-slate-100 dark:border-gray-600 dark:bg-gray-800">
                                             {stems[0]?.storage_type?.toUpperCase() || 'LOCAL'}
@@ -281,17 +281,17 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                     return (
                                         <div
                                             key={stem.id}
-                                            className={`flex items-center justify-between rounded-lg border-2 p-4 transition-all hover:shadow-sm ${getStemColor(stem.stem_type)}`}
+                                            className={`flex items-center justify-between rounded-[--radius-md] border p-4 transition-all hover:shadow-sm-studio ${getStemColor(stem.stem_type)}`}
                                         >
                                             <div className="flex items-center gap-4">
                                                 {/* Icon and Name */}
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-xl">{getStemIcon(stem.stem_type)}</span>
                                                     <div>
-                                                        <h4 className="font-semibold text-slate-900 dark:text-white">
+                                                        <h4 className="font-semibold text-foreground">
                                                             {stem.stem_type_name || stem.stem_type.charAt(0).toUpperCase() + stem.stem_type.slice(1)}
                                                         </h4>
-                                                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-400">
+                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                             {stem.formatted_file_size && <span>{stem.formatted_file_size}</span>}
                                                             {stem.formatted_file_size && stem.formatted_duration && <span>•</span>}
                                                             {stem.formatted_duration && <span>{stem.formatted_duration}</span>}
@@ -305,7 +305,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                                 size="sm"
                                                 onClick={() => handleDownloadStem(stem.stem_type)}
                                                 disabled={processing}
-                                                className="border-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-gray-800 dark:hover:bg-gray-700"
+                                                className=""
                                             >
                                                 <Download className="mr-2 h-4 w-4" />
                                                 Download
@@ -317,17 +317,17 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                         </Card>
 
                         {/* Additional Info */}
-                        <div className="mt-6 border-t border-slate-200 pt-6 dark:border-gray-700">
-                            <div className="grid grid-cols-1 gap-4 text-sm text-slate-600 md:grid-cols-2 dark:text-gray-400">
+                        <div className="mt-6 border-t border-[--border] pt-6">
+                            <div className="grid grid-cols-1 gap-4 text-sm text-muted-foreground md:grid-cols-2">
                                 <div>
-                                    <span className="font-medium text-slate-900 dark:text-white">Total Stems:</span> {stems.length}
+                                    <span className="font-medium text-foreground">Total stems:</span> {stems.length}
                                 </div>
                                 <div>
-                                    <span className="font-medium text-slate-900 dark:text-white">Storage:</span>{' '}
+                                    <span className="font-medium text-foreground">Storage:</span>{' '}
                                     {stems[0]?.storage_type?.toUpperCase() || 'Unknown'}
                                 </div>
                                 <div>
-                                    <span className="font-medium text-slate-900 dark:text-white">Completed:</span>{' '}
+                                    <span className="font-medium text-foreground">Completed:</span>{' '}
                                     {new Date(uploadData.stem_task?.completed_at || '').toLocaleString()}
                                 </div>
                             </div>
