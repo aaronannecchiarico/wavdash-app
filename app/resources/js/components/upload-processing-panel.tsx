@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Upload } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -11,7 +12,7 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
     const sections = [
         {
             id: 'analysis',
-            title: 'Audio Analysis',
+            title: 'Audio analysis',
             description: 'Analyze musical properties like key, BPM, and timbral characteristics',
             icon: BarChart3,
             route: 'uploads.analysis.show',
@@ -27,7 +28,7 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
         },
         {
             id: 'stems',
-            title: 'Stem Separation',
+            title: 'Stem separation',
             description: 'Separate audio into individual instrument tracks',
             icon: Scissors,
             route: 'uploads.stems.show',
@@ -43,7 +44,7 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
         },
         {
             id: 'tempo',
-            title: 'Tempo Effects',
+            title: 'Tempo effects',
             description: 'Generate tempo and pitch variations of your audio',
             icon: Gauge,
             route: 'uploads.tempo.show',
@@ -60,107 +61,78 @@ export function UploadProcessingPanel({ upload }: UploadProcessingPanelProps) {
     ];
 
     return (
-        <div className="space-y-4">
-            <div className="mb-6">
-                <h2 className="mb-2 font-heading text-lg font-black tracking-widest text-foreground uppercase">Processing & Analysis</h2>
-                <p className="text-sm font-bold text-foreground uppercase">Enhance your track with advanced audio processing features</p>
-            </div>
-
+        <div className="space-y-3">
             {sections.map((section) => {
                 const Icon = section.icon;
 
-                const getStatusColor = () => {
-                    if (section.hasResults) return 'bg-chart-1';
-                    if (section.isProcessing) return 'bg-chart-3';
-                    return 'bg-chart-2';
-                };
-
-                const getStatusText = () => {
-                    if (section.hasResults) return 'COMPLETE';
-                    if (section.isProcessing) return 'PROCESSING';
-                    return 'AVAILABLE';
-                };
+                const statusVariant = section.hasResults ? 'success' : section.isProcessing ? 'processing' : 'secondary';
+                const statusLabel = section.hasResults ? 'Complete' : section.isProcessing ? 'Processing' : 'Available';
 
                 return (
-                    <div key={section.id} className={`border-2 border-border p-6 ${getStatusColor()}`} style={{ boxShadow: 'var(--shadow)' }}>
-                        <div className="mb-4 flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="flex h-12 w-12 items-center justify-center border-2 border-border bg-main-foreground">
-                                    <Icon className="h-6 w-6 text-secondary-background" />
-                                </div>
-                                <div>
-                                    <h3 className="font-heading font-black tracking-wide text-main-foreground uppercase">{section.title}</h3>
-                                    <p className="text-sm font-bold text-main-foreground">{section.description.toUpperCase()}</p>
-                                </div>
+                    <div key={section.id} className="rounded-[--radius-md] border border-[--border] bg-[--surface-1] p-4">
+                        <div className="flex items-start gap-3 mb-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-[--radius-md] bg-[--amber]/10 shrink-0">
+                                <Icon className="h-4 w-4 text-[--amber]" />
                             </div>
-
-                            <div className="border-2 border-border bg-main-foreground px-3 py-1">
-                                <span className="font-heading text-xs font-black text-secondary-background">{getStatusText()}</span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-0.5">
+                                    <h3 className="font-sans font-semibold text-sm text-foreground">{section.title}</h3>
+                                    <Badge variant={statusVariant}>{statusLabel}</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{section.description}</p>
                             </div>
                         </div>
 
                         {section.isProcessing && (
-                            <div className="mb-4">
-                                <div className="flex items-center space-x-2">
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-main-foreground border-t-transparent" />
-                                    <span className="font-bold text-main-foreground">PROCESSING...</span>
-                                </div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="h-3 w-3 animate-spin rounded-full border-2 border-[--amber] border-t-transparent" />
+                                <span className="text-xs text-muted-foreground">Processing...</span>
                             </div>
                         )}
 
                         {section.hasResults && section.resultSummary && (
-                            <div className="mb-4 space-y-2">
+                            <div className="mb-3 rounded-[--radius-sm] bg-[--surface-2] px-3 py-2">
                                 {section.id === 'analysis' && (
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="flex flex-wrap gap-3 text-xs">
                                         {section.resultSummary.key && (
-                                            <div>
-                                                <span className="font-heading font-black text-main-foreground">KEY:</span>{' '}
-                                                <span className="font-mono text-main-foreground">{section.resultSummary.key}</span>
-                                            </div>
+                                            <span>
+                                                <span className="text-muted-foreground">Key </span>
+                                                <span className="font-mono font-medium text-[--jade]">{section.resultSummary.key}</span>
+                                            </span>
                                         )}
                                         {section.resultSummary.bpm && (
-                                            <div>
-                                                <span className="font-heading font-black text-main-foreground">BPM:</span>{' '}
-                                                <span className="font-mono text-main-foreground">{Math.round(section.resultSummary.bpm)}</span>
-                                            </div>
+                                            <span>
+                                                <span className="text-muted-foreground">BPM </span>
+                                                <span className="font-mono font-medium text-[--amber]">{Math.round(section.resultSummary.bpm)}</span>
+                                            </span>
                                         )}
                                         {section.resultSummary.loudness && (
-                                            <div className="col-span-2">
-                                                <span className="font-heading font-black text-main-foreground">LOUDNESS:</span>{' '}
-                                                <span className="font-mono text-main-foreground">{section.resultSummary.loudness}</span>
-                                            </div>
+                                            <span>
+                                                <span className="text-muted-foreground">Loudness </span>
+                                                <span className="font-mono font-medium text-foreground">{section.resultSummary.loudness}</span>
+                                            </span>
                                         )}
                                     </div>
                                 )}
-
                                 {section.id === 'stems' && (
-                                    <div className="space-y-1 text-xs">
-                                        <div>
-                                            <span className="font-heading font-black text-main-foreground">STEMS:</span>{' '}
-                                            <span className="font-mono text-main-foreground">{section.resultSummary.count} tracks</span>
-                                        </div>
-                                        <div className="font-mono text-xs text-main-foreground">{section.resultSummary.types}</div>
+                                    <div className="text-xs">
+                                        <span className="font-mono font-medium text-foreground">{section.resultSummary.count} tracks</span>
+                                        <span className="text-muted-foreground ml-1">— {section.resultSummary.types}</span>
                                     </div>
                                 )}
-
                                 {section.id === 'tempo' && (
-                                    <div className="space-y-1 text-xs">
-                                        <div>
-                                            <span className="font-heading font-black text-main-foreground">VARIATIONS:</span>{' '}
-                                            <span className="font-mono text-main-foreground">{section.resultSummary.count} files</span>
-                                        </div>
-                                        <div className="font-mono text-xs text-main-foreground">{section.resultSummary.variations}</div>
+                                    <div className="text-xs">
+                                        <span className="font-mono font-medium text-foreground">{section.resultSummary.count} variations</span>
+                                        <span className="text-muted-foreground ml-1">— {section.resultSummary.variations}</span>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        <Button
-                            variant="secondary"
-                            className="w-full border-main-foreground font-heading font-black text-main-foreground uppercase hover:bg-main-foreground hover:text-secondary-background"
-                            asChild
-                        >
-                            <Link href={route(section.route, upload.id)}>{section.hasResults ? 'VIEW RESULTS' : 'START PROCESS'}</Link>
+                        <Button variant={section.hasResults ? 'secondary' : 'default'} size="sm" className="w-full" asChild>
+                            <Link href={route(section.route, upload.id)}>
+                                {section.hasResults ? 'View results' : 'Start processing'}
+                            </Link>
                         </Button>
                     </div>
                 );
