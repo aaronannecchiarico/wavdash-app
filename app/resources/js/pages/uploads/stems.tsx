@@ -255,7 +255,7 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                     </CardTitle>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <span>Total: {stems.length} files</span>
-                                        <Badge variant="secondary" className="border-slate-300 bg-slate-100 dark:border-gray-600 dark:bg-gray-800">
+                                        <Badge variant="secondary">
                                             {stems[0]?.storage_type?.toUpperCase() || 'LOCAL'}
                                         </Badge>
                                     </div>

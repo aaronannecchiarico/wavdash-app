@@ -18,36 +18,23 @@ export function NeoThemeToggle() {
     const getIcon = () => {
         switch (appearance) {
             case 'light':
-                return <Sun className="h-5 w-5 text-[var(--neo-black)]" />;
+                return <Sun className="h-4 w-4" />;
             case 'dark':
-                return <Moon className="h-5 w-5 text-[var(--neo-white)]" />;
+                return <Moon className="h-4 w-4" />;
             case 'system':
-                return <Monitor className="h-5 w-5 text-[var(--neo-black)]" />;
+                return <Monitor className="h-4 w-4" />;
             default:
-                return <Sun className="h-5 w-5 text-[var(--neo-black)]" />;
-        }
-    };
-
-    const getButtonColor = () => {
-        switch (appearance) {
-            case 'light':
-                return 'bg-[var(--neo-yellow)] dark:bg-[var(--neo-yellow)] border-[var(--neo-black)] dark:border-[var(--neo-black)]';
-            case 'dark':
-                return 'bg-[var(--neo-blue)] dark:bg-[var(--neo-blue)] border-[var(--neo-white)] dark:border-[var(--neo-white)]';
-            case 'system':
-                return 'bg-[var(--neo-green)] dark:bg-[var(--neo-green)] border-[var(--neo-black)] dark:border-[var(--neo-white)]';
-            default:
-                return 'bg-[var(--neo-yellow)] border-[var(--neo-black)]';
+                return <Sun className="h-4 w-4" />;
         }
     };
 
     return (
         <Button
-            variant="secondary"
+            variant="ghost"
             size="icon"
-            className={`neo-shadow hover:neo-shadow-hover ${getButtonColor()}`}
+            className="rounded-[--radius-md] text-muted-foreground hover:text-foreground"
             onClick={handleThemeToggle}
-            style={{ borderRadius: '0px' }}
+            aria-label="Toggle theme"
         >
             {getIcon()}
         </Button>

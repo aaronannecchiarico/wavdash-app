@@ -32,13 +32,11 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
         }
     };
 
-    // Update time display
     useEffect(() => {
         if (wavesurfer) {
             const updateTime = () => {
                 setCurrentTime(wavesurfer.getCurrentTime());
             };
-
             wavesurfer.on('timeupdate', updateTime);
             return () => {
                 wavesurfer.un('timeupdate', updateTime);
@@ -46,7 +44,6 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
         }
     }, [wavesurfer]);
 
-    // Set initial volume when wavesurfer is ready
     useEffect(() => {
         if (wavesurfer) {
             wavesurfer.setVolume(volume);
@@ -60,29 +57,33 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
     };
 
     return (
-        <div className={`audio-player neo-border neo-shadow bg-[var(--neo-bg-primary)] p-6 dark:bg-[var(--neo-black)] ${className}`}>
-            {title && <h3 className="neo-border-b mb-4 pb-2 text-lg font-black tracking-widest text-[var(--neo-text-primary)] uppercase">{title}</h3>}
+        <div className={`studio-card p-5 ${className}`}>
+            {title && (
+                <h3 className="font-sans font-semibold text-sm text-foreground mb-4 pb-3 border-b border-[--border]">
+                    {title}
+                </h3>
+            )}
 
-            <div className="flex items-center space-x-6">
-                {/* Brutalist play button */}
+            <div className="flex items-center gap-4">
+                {/* Play button */}
                 <Button
                     onClick={handlePlayPause}
                     variant="default"
-                    size="lg"
-                    className="neo-shadow hover:neo-shadow-hover h-16 w-16 bg-[var(--neo-green)] hover:translate-x-1 hover:translate-y-1 hover:bg-[var(--neo-pink)]"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 rounded-full shadow-amber"
                     disabled={isLoading}
                 >
                     {isLoading ? (
-                        <Loader2 className="h-8 w-8 animate-spin text-[var(--neo-black)]" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                     ) : isPlaying ? (
-                        <PauseIcon className="h-8 w-8 text-[var(--neo-black)]" />
+                        <PauseIcon className="h-4 w-4" />
                     ) : (
-                        <PlayIcon className="h-8 w-8 text-[var(--neo-black)]" />
+                        <PlayIcon className="h-4 w-4" />
                     )}
                 </Button>
 
-                {/* Waveform with brutalist styling */}
-                <div className="neo-border neo-shadow-hover flex-1 bg-[var(--neo-yellow)]/20 p-4">
+                {/* Waveform */}
+                <div className="flex-1 rounded-[--radius-md] bg-[--surface-2] px-3 py-2">
                     <SoundcloudWaveform
                         url={url}
                         onReady={(ws) => {
@@ -97,19 +98,16 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                 </div>
             </div>
 
-            {/* Control bar with brutalist buttons */}
-            <div className="mt-4 flex items-center justify-between">
-                <div className="flex space-x-2">
-                    <Button variant="default" size="sm" className="font-mono text-[var(--neo-black)]">
-                        {formatTime(currentTime)}
-                    </Button>
-                    <Button variant="secondary" size="sm" className="font-mono text-[var(--neo-white)]">
-                        {formatTime(duration)}
-                    </Button>
+            {/* Control bar */}
+            <div className="mt-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>/</span>
+                    <span>{formatTime(duration)}</span>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                    <Volume2 className="h-4 w-4 text-[var(--neo-text-primary)]" />
+                <div className="flex items-center gap-2">
+                    <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
                     <input
                         type="range"
                         min="0"
@@ -117,9 +115,9 @@ export function AudioPlayer({ url, title, className = '' }: AudioPlayerProps) {
                         step="0.1"
                         value={volume}
                         onChange={handleVolumeChange}
-                        className="neo-border slider-thumb:w-4 slider-thumb:h-4 slider-thumb:bg-[var(--neo-green)] slider-thumb:border-2 slider-thumb:border-[var(--neo-black)] slider-thumb:cursor-pointer hover:slider-thumb:bg-[var(--neo-pink)] h-2 w-20 bg-[var(--neo-bg-secondary)]"
+                        className="h-1.5 w-20 cursor-pointer accent-[--amber]"
                         style={{
-                            background: `linear-gradient(to right, var(--neo-green) 0%, var(--neo-green) ${volume * 100}%, var(--neo-bg-secondary) ${volume * 100}%, var(--neo-bg-secondary) 100%)`,
+                            background: `linear-gradient(to right, var(--amber) 0%, var(--amber) ${volume * 100}%, var(--surface-3) ${volume * 100}%, var(--surface-3) 100%)`,
                         }}
                     />
                 </div>
