@@ -31,7 +31,7 @@ export function DeleteUploadDialog({ upload, isOpen, onOpenChange }: DeleteUploa
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent onClick={(e: MouseEvent) => e.stopPropagation()} className="dark:border-slate-700">
+            <DialogContent onClick={(e: MouseEvent) => e.stopPropagation()} className="border-[--border]">
                 <DialogTitle className="flex items-center">
                     <Trash2 className="mr-2 h-5 w-5 text-red-500 dark:text-red-400" />
                     Are you sure you want to delete this upload?

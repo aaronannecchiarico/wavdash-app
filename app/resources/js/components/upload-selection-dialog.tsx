@@ -146,7 +146,7 @@ export function UploadSelectionDialog({ title, description, actionLabel, actionT
                                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                                                                 : upload.status === 'processing'
                                                                   ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                                                  : 'bg-[--surface-2] text-muted-foreground'
                                                         }`}
                                                     >
                                                         {upload.status}
@@ -156,7 +156,7 @@ export function UploadSelectionDialog({ title, description, actionLabel, actionT
                                             <Button
                                                 size="sm"
                                                 className="mt-3 w-full"
-                                                variant={isCompleted ? 'neutral' : 'default'}
+                                                variant={isCompleted ? 'secondary' : 'default'}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleUploadSelect(upload);
