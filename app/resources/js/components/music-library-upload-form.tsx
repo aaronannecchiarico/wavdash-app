@@ -1,7 +1,7 @@
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,7 @@ import { useClientAudioProcessing } from '@/hooks/useClientAudioProcessing';
 import { checkMediaBunnySupport } from '@/lib/browser-support';
 import { formatFileSize } from '@/lib/formatters';
 import { type Upload as UploadType } from '@/types';
-import { Loader2, Music, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Loader2, Music, Upload } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 export interface UploadFormData {
@@ -94,7 +94,6 @@ export function MusicLibraryUploadForm({
     } | null>(null);
     const [fallbackReason, setFallbackReason] = useState<string | null>(null);
 
-    // Use server-provided configuration
     const shouldUseClientProcessing = audioProcessingConfig?.should_use_client_processing ?? false;
     const fallbackOnError = audioProcessingConfig?.fallback_on_error ?? true;
     const { supported: browserSupportsProcessing, missingFeatures } = checkMediaBunnySupport();
@@ -105,10 +104,8 @@ export function MusicLibraryUploadForm({
         }
     }, [wasSuccessful, onReset, resetFileInput]);
 
-    // Set file from existing upload in edit mode
     useEffect(() => {
         if (mode === 'edit' && upload && !fileMetadata) {
-            // Let the form know the file is present but don't upload again
             setData('audio_file', null);
         }
     }, [mode, upload, fileMetadata, setData]);
@@ -117,15 +114,11 @@ export function MusicLibraryUploadForm({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Always run the existing audio file metadata extraction
         handleAudioFileChange(e);
-
-        // Reset previous state
         setFallbackReason(null);
         setProcessedFile(null);
         setOriginalFileData(null);
 
-        // Determine if client-side processing should be used
         if (!shouldUseClientProcessing) {
             setFallbackReason('Server-side processing selected by A/B test');
             setData('audio_file', file);
@@ -140,27 +133,19 @@ export function MusicLibraryUploadForm({
             return;
         }
 
-        // Process file on client
         try {
             const startTime = Date.now();
             const result = await processAudioFile(file);
             const processingTimeMs = Date.now() - startTime;
 
             setProcessedFile(result.processedFile);
-            setOriginalFileData({
-                name: file.name,
-                size: file.size,
-                duration: result.duration,
-            });
-            // Update form data immediately so client_processed and metadata are present
+            setOriginalFileData({ name: file.name, size: file.size, duration: result.duration });
             setData('audio_file', result.processedFile);
             setData('client_processed', true);
             setData('original_filename', file.name);
             setData('original_size', file.size);
             setData('duration', result.duration);
             setData('processing_time_ms', processingTimeMs);
-
-            // Notify parent component about the processed file
             onProcessedFile?.({
                 processedFile: result.processedFile,
                 originalFilename: file.name,
@@ -170,14 +155,11 @@ export function MusicLibraryUploadForm({
             });
         } catch (error) {
             console.error('Client processing failed:', error);
-
             if (fallbackOnError) {
                 setFallbackReason(`Client processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                setData('audio_file', file); // Fallback to server processing
-                onProcessedFile?.(null); // Clear processed file data
+                setData('audio_file', file);
+                onProcessedFile?.(null);
             }
-            // When fallbackOnError is false: processingError state is already set by
-            // useClientAudioProcessing. The submit button stays disabled (no audio_file set).
         }
     };
 
@@ -185,41 +167,45 @@ export function MusicLibraryUploadForm({
         <Card>
             <form onSubmit={onSubmit}>
                 <CardHeader>
-                    <CardTitle className="font-heading font-black tracking-widest text-foreground uppercase">
-                        {mode === 'create' ? 'Upload Audio' : 'Edit Audio'}
+                    <CardTitle>
+                        {mode === 'create' ? 'Upload audio' : 'Edit audio'}
                     </CardTitle>
-                    <CardDescription className="font-bold text-foreground uppercase">
-                        {mode === 'create' ? 'Upload an audio file to use in beats and contests.' : 'Update the details for this audio file.'}
+                    <CardDescription>
+                        {mode === 'create'
+                            ? 'Upload an audio file to use in beats and contests.'
+                            : 'Update the details for this audio file.'}
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="audio_file" className="font-heading font-black tracking-wide text-foreground uppercase">
-                            Audio File {mode === 'create' && <span className="text-red-500">*</span>}
+
+                <CardContent className="space-y-5">
+                    {/* File drop zone */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="audio_file">
+                            Audio file {mode === 'create' && <span className="text-destructive ml-0.5">*</span>}
                         </Label>
                         <div
-                            className={`cursor-pointer border-2 border-border bg-chart-3 p-8 transition-all hover:bg-chart-2 dark:bg-chart-1 dark:hover:bg-chart-2 ${errors.audio_file ? 'border-red-500' : ''}`}
-                            style={{ boxShadow: 'var(--shadow)' }}
+                            className={`cursor-pointer rounded-[--radius-lg] border-2 border-dashed p-8 text-center transition-colors hover:bg-muted ${
+                                errors.audio_file ? 'border-destructive' : 'border-[--border-strong] hover:border-[--amber]'
+                            }`}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <div className="space-y-4 text-center">
-                                <div className="mx-auto flex h-24 w-24 items-center justify-center border-2 border-border bg-main-foreground">
-                                    <Upload className="h-12 w-12 text-secondary-background" />
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[--amber]/10">
+                                    <Upload className="h-6 w-6 text-[--amber]" />
                                 </div>
-
                                 <div>
-                                    <h3 className="mb-2 font-heading text-2xl font-black tracking-widest text-main-foreground uppercase">
-                                        DROP YOUR BEATS
-                                    </h3>
-                                    <p className="font-bold text-main-foreground">MP3, WAV, AIFF, FLAC • MAX 50MB</p>
+                                    <p className="font-medium text-sm text-foreground mb-1">
+                                        Drop your audio file here
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">MP3, WAV, AIFF, FLAC — max 50MB</p>
                                 </div>
-
-                                {errors.audio_file && (
-                                    <div className="border-2 border-border bg-red-500 p-3" style={{ boxShadow: 'var(--shadow)' }}>
-                                        <p className="font-heading font-black text-white uppercase">{errors.audio_file}</p>
-                                    </div>
-                                )}
                             </div>
+
+                            {errors.audio_file && (
+                                <div className="mt-3 rounded-[--radius-md] border border-destructive/20 bg-destructive/10 px-3 py-2">
+                                    <p className="text-xs text-destructive">{errors.audio_file}</p>
+                                </div>
+                            )}
 
                             <input
                                 id="audio_file"
@@ -234,180 +220,161 @@ export function MusicLibraryUploadForm({
                         <InputError message={errors.audio_file} />
                     </div>
 
+                    {/* File metadata */}
                     {(isProcessingFile || fileMetadata) && (
-                        <div className="space-y-2">
-                            <Label className="font-heading font-black tracking-wide text-foreground uppercase">File Details</Label>
-                            <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                {isProcessingFile ? (
-                                    <div className="flex items-center text-sm text-secondary-background">
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        <span className="font-bold uppercase">Processing file...</span>
-                                    </div>
-                                ) : (
-                                    fileMetadata && (
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                            <div className="col-span-2 flex items-center space-x-2 font-heading font-black">
-                                                <Music className="h-4 w-4 text-chart-1" />
-                                                <span className="truncate text-secondary-background uppercase">{fileMetadata.name}</span>
-                                            </div>
-                                            <div>
-                                                <strong className="font-heading font-black text-secondary-background">SIZE:</strong>{' '}
-                                                <span className="font-mono text-secondary-background">{fileMetadata.size}</span>
-                                            </div>
-                                            <div>
-                                                <strong className="font-heading font-black text-secondary-background">DURATION:</strong>{' '}
-                                                <span className="font-mono text-secondary-background">{fileMetadata.duration}</span>
-                                            </div>
-                                            <div className="col-span-2">
-                                                <strong className="font-heading font-black text-secondary-background">TYPE:</strong>{' '}
-                                                <span className="font-mono text-secondary-background">{fileMetadata.type}</span>
-                                            </div>
+                        <div className="rounded-[--radius-md] border border-[--border] bg-[--surface-2] p-4">
+                            {isProcessingFile ? (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span>Reading file...</span>
+                                </div>
+                            ) : (
+                                fileMetadata && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <Music className="h-4 w-4 text-[--amber] shrink-0" />
+                                            <span className="text-sm font-medium text-foreground truncate">{fileMetadata.name}</span>
                                         </div>
-                                    )
-                                )}
-                            </div>
+                                        <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
+                                            <div><span className="font-medium text-foreground">Size</span> {fileMetadata.size}</div>
+                                            <div><span className="font-medium text-foreground">Duration</span> {fileMetadata.duration}</div>
+                                            <div><span className="font-medium text-foreground">Type</span> {fileMetadata.type}</div>
+                                        </div>
+                                    </div>
+                                )
+                            )}
                         </div>
                     )}
 
-                    {/* Show processing progress */}
+                    {/* Client processing progress */}
                     {isProcessing && (
-                        <div className="space-y-2">
-                            <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="font-heading font-black text-secondary-background uppercase">
-                                        Converting Audio...
-                                    </span>
-                                    <span className="font-mono text-chart-1">{processingProgress}%</span>
-                                </div>
-                                <Progress value={processingProgress} />
+                        <div className="rounded-[--radius-md] border border-[--border] bg-[--surface-2] p-4 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium text-foreground">Converting audio...</span>
+                                <span className="font-mono text-[--amber]">{processingProgress}%</span>
                             </div>
+                            <Progress value={processingProgress} className="[&_[data-slot=progress-indicator]]:bg-[--amber]" />
                         </div>
                     )}
 
-                    {/* Show file comparison if processed */}
+                    {/* Processing success */}
                     {processedFile && originalFileData && (
-                        <div className="space-y-2">
-                            <div className="border-2 border-border bg-green-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                <div className="text-sm text-green-700">
-                                    <div className="font-heading font-black uppercase mb-2">✅ Audio Processed Successfully</div>
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div>
-                                            <strong>Original:</strong> {originalFileData.name}
-                                        </div>
-                                        <div>
-                                            <strong>Processed:</strong> {processedFile.name}
-                                        </div>
-                                        <div>
-                                            <strong>Size:</strong> {formatFileSize(originalFileData.size)} → {formatFileSize(processedFile.size)}
-                                        </div>
-                                        <div>
-                                            <strong>Format:</strong> OGG Vorbis (128kbps)
-                                        </div>
-                                    </div>
+                        <div className="rounded-[--radius-md] border border-green-200 bg-green-50 px-4 py-3 dark:bg-green-900/20 dark:border-green-800">
+                            <div className="flex items-start gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5 dark:text-green-400" />
+                                <div className="text-xs">
+                                    <p className="font-medium text-green-800 dark:text-green-200 mb-1">Audio processed successfully</p>
+                                    <p className="text-green-700 dark:text-green-300">
+                                        {formatFileSize(originalFileData.size)} → {formatFileSize(processedFile.size)} · OGG Vorbis 128kbps
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Show processing error if any */}
+                    {/* Processing error */}
                     {processingError && (
-                        <div className="space-y-2">
-                            <div className="border-2 border-border bg-red-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                <div className="text-sm text-red-700">
-                                    <div className="font-heading font-black uppercase mb-2">⚠️ Processing Failed</div>
-                                    <div className="text-xs">{processingError}</div>
-                                    <div className="text-xs mt-2">
+                        <div className="rounded-[--radius-md] border border-amber-200 bg-amber-50 px-4 py-3 dark:bg-amber-900/20 dark:border-amber-800">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" />
+                                <div className="text-xs">
+                                    <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">Processing failed</p>
+                                    <p className="text-amber-700 dark:text-amber-300">{processingError}</p>
+                                    <p className="text-amber-600 dark:text-amber-400 mt-1">
                                         {fallbackOnError
                                             ? 'Falling back to server-side processing.'
-                                            : 'Please use a WebCodecs-compatible browser (Chrome or Edge) and try again.'}
-                                    </div>
+                                            : 'Please use Chrome or Edge and try again.'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Show fallback information */}
+                    {/* Fallback info */}
                     {fallbackReason && (
-                        <div className="space-y-2">
-                            <div className="border-2 border-border bg-blue-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                <div className="text-sm text-blue-700">
-                                    <div className="font-heading font-black uppercase mb-2">ℹ️ Using Server Processing</div>
-                                    <div className="text-xs">{fallbackReason}</div>
-                                    <div className="text-xs mt-2">Your file will be processed on our servers after upload.</div>
+                        <div className="rounded-[--radius-md] border border-[--border] bg-[--surface-2] px-4 py-3">
+                            <div className="flex items-start gap-2">
+                                <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                                <div className="text-xs">
+                                    <p className="font-medium text-foreground mb-1">Using server processing</p>
+                                    <p className="text-muted-foreground">Your file will be processed on our servers after upload.</p>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Show A/B test info if enabled */}
+                    {/* A/B test info (dev only) */}
                     {audioProcessingConfig?.ab_test_enabled && (
-                        <div className="space-y-2">
-                            <div className="border-2 border-border bg-gray-100 p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                                <div className="text-sm text-gray-700">
-                                    <div className="font-heading font-black uppercase mb-2">🧪 A/B Testing Active</div>
-                                    <div className="text-xs">
-                                        Processing method: {shouldUseClientProcessing ? 'Client-side' : 'Server-side'}
-                                        <br />
-                                        Browser support: {browserSupportsProcessing ? '✅ Supported' : '❌ Unsupported'}
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="rounded-[--radius-md] border border-[--border] bg-[--surface-2] px-4 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                A/B test active · {shouldUseClientProcessing ? 'Client-side' : 'Server-side'} processing ·
+                                Browser {browserSupportsProcessing ? 'supported' : 'unsupported'}
+                            </p>
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <Label htmlFor="title" className="font-heading font-black tracking-wide text-foreground uppercase">
-                            Title <span className="text-red-500">*</span>
+                    {/* Title */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="title">
+                            Title <span className="text-destructive">*</span>
                         </Label>
-                        <Input id="title" type="text" value={data.title} onChange={(e) => setData('title', e.target.value)} disabled={processing} />
+                        <Input
+                            id="title"
+                            type="text"
+                            value={data.title}
+                            onChange={(e) => setData('title', e.target.value)}
+                            disabled={processing}
+                            placeholder="Track title"
+                        />
                         <InputError message={errors.title} />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="description" className="font-heading font-black tracking-wide text-foreground uppercase">
-                            Description (Optional)
-                        </Label>
+                    {/* Description */}
+                    <div className="space-y-1.5">
+                        <Label htmlFor="description">Description (optional)</Label>
                         <Textarea
                             id="description"
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
                             rows={3}
                             disabled={processing}
+                            placeholder="Add a description..."
                         />
                         <InputError message={errors.description} />
                     </div>
                 </CardContent>
+
+                {/* Upload progress */}
                 {processing && uploadProgress > 0 && (
                     <div className="px-6 pb-4">
-                        <div className="border-2 border-border bg-main-foreground p-4" style={{ boxShadow: 'var(--shadow)' }}>
-                            <div className="mb-2 flex items-center justify-between">
-                                <span className="flex items-center font-heading font-black text-secondary-background uppercase">
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Uploading
-                                </span>
-                                <span className="font-mono text-chart-1">{uploadProgress}%</span>
+                        <div className="rounded-[--radius-md] border border-[--border] bg-[--surface-2] p-4 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin text-[--amber]" />
+                                    <span className="font-medium text-foreground">Uploading</span>
+                                </div>
+                                <span className="font-mono text-[--amber]">{uploadProgress}%</span>
                             </div>
-                            <Progress value={uploadProgress} />
+                            <Progress value={uploadProgress} className="[&_[data-slot=progress-indicator]]:bg-[--amber]" />
                         </div>
                     </div>
                 )}
-                <CardFooter className="flex justify-end space-x-4 px-6 py-4">
+
+                <CardFooter className="flex justify-end gap-3 px-6 py-4">
                     <Button
                         type="button"
                         variant="secondary"
                         onClick={() => window.history.back()}
                         disabled={processing}
-                        className="px-6 py-2 font-heading font-black tracking-wider uppercase"
                     >
                         Cancel
                     </Button>
                     <Button
                         type="submit"
                         disabled={processing || isProcessingFile || (mode === 'create' && !data.audio_file)}
-                        className="px-6 py-2 font-heading font-black tracking-wider uppercase"
                     >
                         {processing && uploadProgress === 0 && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {processing ? 'Uploading...' : mode === 'create' ? 'Upload' : 'Save Changes'}
+                        {processing ? 'Uploading...' : mode === 'create' ? 'Upload' : 'Save changes'}
                     </Button>
                 </CardFooter>
             </form>
