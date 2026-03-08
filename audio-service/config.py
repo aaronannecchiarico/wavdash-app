@@ -78,6 +78,9 @@ class Settings:
     R2_ACCESS_KEY_ID: str = config("R2_ACCESS_KEY_ID", default="")
     R2_SECRET_ACCESS_KEY: str = config("R2_SECRET_ACCESS_KEY", default="")
     R2_BUCKET: str = config("R2_BUCKET", default="")
+    # Bucket where Laravel uploads input files (stream/public bucket).
+    # Defaults to R2_BUCKET when not set (backward-compatible).
+    R2_SOURCE_BUCKET: str = config("R2_SOURCE_BUCKET", default="")
     R2_ENDPOINT: str = config("R2_ENDPOINT", default="")
     R2_PUBLIC_URL: str = config("R2_PUBLIC_URL", default="")
 

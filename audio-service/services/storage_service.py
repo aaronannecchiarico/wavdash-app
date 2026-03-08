@@ -396,6 +396,9 @@ class CloudStorageService(StorageService):
                     )
 
                 self.bucket_name = settings.R2_BUCKET
+                # Source bucket is where Laravel stores uploaded (input) files.
+                # Falls back to bucket_name when R2_SOURCE_BUCKET is not set.
+                self.source_bucket_name = settings.R2_SOURCE_BUCKET or settings.R2_BUCKET
                 self.public_url_base = settings.R2_PUBLIC_URL
 
                 # Configure for Cloudflare R2
@@ -431,9 +434,9 @@ class CloudStorageService(StorageService):
             raise
 
     def file_exists(self, path: str) -> bool:
-        """Check if file exists in cloud storage"""
+        """Check if file exists in cloud storage (reads from source bucket)"""
         try:
-            self.s3_client.head_object(Bucket=self.bucket_name, Key=path)
+            self.s3_client.head_object(Bucket=self.source_bucket_name, Key=path)
             logger.debug(f"File exists in cloud storage: {path}")
             return True
         except self.s3_client.exceptions.NoSuchKey:
@@ -477,14 +480,14 @@ class CloudStorageService(StorageService):
             return False
 
     def download_file(self, remote_path: str, local_path: str) -> bool:
-        """Download file from cloud storage"""
+        """Download file from cloud storage (reads from source bucket)"""
         try:
             # Create parent directories
             from pathlib import Path
 
             Path(local_path).parent.mkdir(parents=True, exist_ok=True)
 
-            self.s3_client.download_file(self.bucket_name, remote_path, local_path)
+            self.s3_client.download_file(self.source_bucket_name, remote_path, local_path)
             logger.info(
                 f"File downloaded from cloud storage: {remote_path} -> {local_path}"
             )
