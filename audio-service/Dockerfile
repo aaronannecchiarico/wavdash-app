@@ -5,7 +5,9 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TORCH_HOME=/tmp/torch_cache \
+    NUMBA_CACHE_DIR=/tmp/numba_cache
 
 # Install system dependencies
 # curl is required by the HEALTHCHECK command
@@ -38,8 +40,8 @@ RUN if [ "$ENABLE_GPU" = "true" ]; then \
     fi
 
 # Create necessary directories
-RUN mkdir -p /app/logs /app/outputs /tmp/audio_processing \
-    && chown -R appuser:appuser /app /tmp/audio_processing
+RUN mkdir -p /app/logs /app/outputs /tmp/audio_processing /tmp/torch_cache /tmp/numba_cache \
+    && chown -R appuser:appuser /app /tmp/audio_processing /tmp/torch_cache /tmp/numba_cache
 
 # Copy application code
 COPY . .

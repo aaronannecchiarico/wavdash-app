@@ -234,6 +234,8 @@ services:
       - LOG_LEVEL=INFO
       - STORAGE_TYPE=local
       - LOCAL_STORAGE_PATH=/app/storage
+      - NUMBA_CACHE_DIR=/tmp/numba_cache
+      - TORCH_HOME=/tmp/torch_cache
     volumes:
       - shared_storage:/app/storage
       - ./audio-service/logs:/app/logs
