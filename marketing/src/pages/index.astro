@@ -37,7 +37,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
     <div class="relative z-10 text-center max-w-3xl mx-auto">
       <!-- Brand mark -->
       <div class="inline-flex h-14 w-14 rounded-full bg-[--amber] items-center justify-center mb-10 shadow-amber mx-auto">
-        <Icon name="Music" size={24} className="text-white" client:load />
+        <Icon name="Music" size={24} className="text-foreground" client:load />
       </div>
 
       <!-- Main headline -->
@@ -190,26 +190,25 @@ const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
   </section>
 
   <!-- Demo Section -->
-  <section id="demo" class="relative px-6 md:px-12 py-24 overflow-hidden">
-    <!-- Subtle orb background -->
-    <div class="absolute inset-0 pointer-events-none opacity-10">
-      <OrbWithFallback
-        colors={["#C8892A", "#2EA88A"]}
-        agentState="thinking"
-        volumeMode="auto"
-        client:idle
-      />
-    </div>
+  <section id="demo" class="relative px-6 md:px-12 py-24 overflow-hidden" style="background: linear-gradient(180deg, var(--surface-2) 0%, var(--background) 40%, var(--surface-2) 100%);">
+    <!-- Radial depth gradient behind the panel -->
+    <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 80% 60% at 50% 55%, rgba(0,0,0,0.04) 0%, transparent 70%);"></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto">
+    <div class="relative z-10 max-w-5xl mx-auto">
       <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5 text-xs font-mono tracking-widest uppercase" style="background: rgba(200,137,42,0.08); border: 1px solid rgba(200,137,42,0.18); color: var(--amber);">
+          <span class="inline-block w-1.5 h-1.5 rounded-full" style="background: currentColor; animation: pulse 2s infinite;"></span>
+          Live demo — interactive
+        </div>
         <h2 class="font-serif text-3xl md:text-4xl text-foreground mb-4">See the analysis in action</h2>
-        <p class="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          Experience real-time audio analysis with our powerful AI-driven tools.
+        <p class="text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
+          A real snapshot of what WavDash surfaces from every track — instantly.
         </p>
       </div>
 
-      <AudioAnalysisDemo client:visible />
+      <AnimatedSection delay={0} client:visible>
+        <AudioAnalysisDemo client:visible />
+      </AnimatedSection>
     </div>
   </section>
 
@@ -379,7 +378,7 @@ const appUrl = import.meta.env.PUBLIC_APP_URL || 'http://localhost:8000';
         <div>
           <div class="flex items-center gap-2.5 mb-3">
             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
-              <Icon name="Music" size={14} className="text-white" client:load />
+              <Icon name="Music" size={14} className="text-foreground" client:load />
             </div>
             <span class="font-sans font-semibold text-base text-foreground">WavDash</span>
           </div>

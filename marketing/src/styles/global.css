@@ -184,6 +184,12 @@ html {
   animation: pulse-bar 2s ease-in-out infinite;
 }
 
+/* Status dot pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
 /* Scroll Reveal Animation */
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(24px); }

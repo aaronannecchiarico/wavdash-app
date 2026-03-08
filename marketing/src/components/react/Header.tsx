@@ -30,7 +30,7 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
           {/* Logo */}
           <a href="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] group-hover:opacity-80 transition-opacity">
-              <Music size={14} className="text-white" />
+              <Music size={14} className="text-foreground" />
             </div>
             <span className="font-sans text-base font-semibold text-foreground tracking-tight">WavDash</span>
           </a>
@@ -90,7 +90,7 @@ export function Header({ isLoggedIn = false }: HeaderProps) {
                 <SheetHeader className="px-5 py-5 border-b border-[--border]">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
-                      <Music size={14} className="text-white" />
+                      <Music size={14} className="text-foreground" />
                     </div>
                     <SheetTitle className="font-sans text-base font-semibold text-foreground tracking-tight">
                       WavDash
