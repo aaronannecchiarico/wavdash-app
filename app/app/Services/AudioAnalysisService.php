@@ -58,7 +58,7 @@ class AudioAnalysisService
             // Call the microservice with the storage path
             $result = $this->client->extractFeatures($storagePath, [
                 'detailed' => false, // We only need summary data
-                'callback_url' => route('api.audio.analysis.callback', $upload->id),
+                'callback_url' => $this->callbackUrl('api.audio.analysis.callback', $upload->id),
                 'metadata' => [
                     'upload_id' => (string) $upload->id,
                     'user_id' => (string) $upload->user_id,
@@ -460,7 +460,7 @@ class AudioAnalysisService
 
             // Call the microservice for stem separation
             $result = $this->client->separateStems($storagePath, [
-                'callback_url' => route('api.audio.analysis.callback', $upload->id),
+                'callback_url' => $this->callbackUrl('api.audio.analysis.callback', $upload->id),
                 'metadata' => [
                     'upload_id' => (string) $upload->id,
                     'user_id' => (string) $upload->user_id,
@@ -662,7 +662,7 @@ class AudioAnalysisService
 
             // Call the microservice for tempo processing
             $result = $this->client->processTempo($storagePath, [
-                'callback_url' => route('api.audio.analysis.callback', $upload->id),
+                'callback_url' => $this->callbackUrl('api.audio.analysis.callback', $upload->id),
                 'metadata' => [
                     'upload_id' => (string) $upload->id,
                     'user_id' => (string) $upload->user_id,
@@ -913,5 +913,23 @@ class AudioAnalysisService
                 ],
             ];
         }
+    }
+
+    /**
+     * Generate a callback URL reachable from the audio service container.
+     * Uses AUDIO_CALLBACK_BASE_URL instead of APP_URL so Docker-internal
+     * hostnames work (e.g. http://app:8000 instead of http://localhost:8000).
+     */
+    private function callbackUrl(string $name, mixed ...$parameters): string
+    {
+        $url = route($name, ...$parameters);
+        $callbackBase = config('services.audio_analysis.callback_base_url');
+        $appUrl = config('app.url');
+
+        if ($callbackBase && $callbackBase !== $appUrl) {
+            $url = str_replace(rtrim($appUrl, '/'), rtrim($callbackBase, '/'), $url);
+        }
+
+        return $url;
     }
 }

@@ -37,6 +37,10 @@ return [
 
     'audio_analysis' => [
         'base_url' => env('AUDIO_ANALYSIS_BASE_URL', 'http://localhost:8001'),
+        // Internal URL used for callback URLs sent to the audio service.
+        // Must be reachable from inside the audio service container.
+        // Defaults to APP_URL if not set.
+        'callback_base_url' => env('AUDIO_CALLBACK_BASE_URL', env('APP_URL')),
         'enabled' => env('AUDIO_ANALYSIS_ENABLED', true),
         'r2_integration_enabled' => env('AUDIO_ANALYSIS_R2_ENABLED', true),
         'migration_timeout' => env('AUDIO_ANALYSIS_MIGRATION_TIMEOUT', 60), // 1 minute
