@@ -14,11 +14,11 @@ export function AppSidebar() {
     const currentPath = url.split('?')[0];
 
     return (
-        <aside className="flex w-60 shrink-0 flex-col bg-sidebar border-r border-[--border] h-full">
+        <aside className="flex w-60 shrink-0 flex-col bg-sidebar border-r border-[--border] min-h-svh">
             {/* Brand header */}
             <div className="flex items-center gap-2.5 px-5 py-5 border-b border-[--border]">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--amber] shrink-0">
-                    <Music className="h-4 w-4 text-white" />
+                    <Music className="h-4 w-4 text-foreground" />
                 </div>
                 <span className="font-sans text-base font-semibold text-sidebar-foreground tracking-tight">WavDash</span>
             </div>
