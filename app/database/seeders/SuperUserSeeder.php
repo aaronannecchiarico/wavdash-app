@@ -69,11 +69,12 @@ class SuperUserSeeder extends Seeder
         }
 
         // Create SuperUser
+        // Note: User model has 'hashed' cast on password, so pass plain text here
         $superUser = User::firstOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
-                'password' => Hash::make($password),
+                'password' => $password,
                 'email_verified_at' => now(),
             ]
         );
@@ -82,7 +83,7 @@ class SuperUserSeeder extends Seeder
         if (! $superUser->wasRecentlyCreated) {
             $superUser->update([
                 'name' => $name,
-                'password' => Hash::make($password),
+                'password' => $password,
             ]);
             $this->command->info('✓ SuperUser account updated');
         } else {
