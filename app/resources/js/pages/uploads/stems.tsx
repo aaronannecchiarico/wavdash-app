@@ -153,8 +153,8 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                         className={cn(
                                             'flex-1 rounded-[--radius-md] border-2 p-4 text-left transition-all',
                                             data.mode === 'standard'
-                                                ? 'border-[--amber] bg-[--amber]/5'
-                                                : 'border-[--border] hover:border-[--amber]/50',
+                                                ? 'border-amber bg-amber/5'
+                                                : 'border-border hover:border-amber/50',
                                         )}
                                     >
                                         <div className="font-semibold text-sm text-foreground">Standard</div>
@@ -166,8 +166,8 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                         className={cn(
                                             'flex-1 rounded-[--radius-md] border-2 p-4 text-left transition-all',
                                             data.mode === 'detailed'
-                                                ? 'border-[--amber] bg-[--amber]/5'
-                                                : 'border-[--border] hover:border-[--amber]/50',
+                                                ? 'border-amber bg-amber/5'
+                                                : 'border-border hover:border-amber/50',
                                         )}
                                     >
                                         <div className="font-semibold text-sm text-foreground">Detailed</div>
