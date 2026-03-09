@@ -400,6 +400,22 @@ def separate_audio_stems_from_storage(
 
         # Process each stem
         stem_names = model.sources
+
+        # Validate stem count matches expectations for the model
+        expected_count = settings.DEMUCS_EXPECTED_STEMS.get(model_name)
+        if expected_count and len(stem_names) != expected_count:
+            logger.warning(
+                f"Stem count mismatch for model {model_name}: "
+                f"expected {expected_count}, got {len(stem_names)}. "
+                f"Stems: {list(stem_names)}"
+            )
+            raise ValueError(
+                f"Stem count mismatch: expected {expected_count} stems from {model_name}, "
+                f"got {len(stem_names)}"
+            )
+
+        logger.info(f"Model {model_name} produced {len(stem_names)} stems: {list(stem_names)}")
+
         stems_paths = {}
         temp_output_dir = tempfile.mkdtemp()
 

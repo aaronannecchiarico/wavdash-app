@@ -54,6 +54,15 @@ class Settings:
     DEMUCS_MODEL: str = config("DEMUCS_MODEL", default="htdemucs")
     DEMUCS_DEVICE: str = config("DEMUCS_DEVICE", default="auto")  # auto, cpu, cuda, mps
 
+    # Expected stem counts per model
+    DEMUCS_EXPECTED_STEMS: dict = {
+        "htdemucs": 4,
+        "htdemucs_ft": 4,
+        "htdemucs_6s": 6,
+        "mdx": 4,
+        "mdx_extra": 4,
+    }
+
     # File Storage
     TEMP_DIR: str = config("TEMP_DIR", default="/tmp/audio_processing")
     # Note: OUTPUT_DIR removed - processed files now go to configured storage (local/R2)
