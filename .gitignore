@@ -21,4 +21,8 @@
 # Docker
 .docker/
 
-.docs/
+docs/
+*.mp3
+
+# Worktrees
+.worktrees/
