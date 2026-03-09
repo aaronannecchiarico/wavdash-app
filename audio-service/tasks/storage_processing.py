@@ -477,6 +477,7 @@ def separate_audio_stems_from_storage(
                     status="completed",
                     processing_type="stems",
                     storage_paths={**uploaded_stems, "original": storage_path},
+                    model_used=model_name,
                     processing_time=processing_time,
                     storage_type=storage_type.value,
                 )

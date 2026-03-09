@@ -215,6 +215,7 @@ class StorageCallbackData(BaseModel):
     analysis_summary: Optional[Dict[str, Any]] = Field(
         None, description="Summary of analysis results"
     )
+    model_used: Optional[str] = Field(None, description="Model used for processing")
     error_message: Optional[str] = Field(None, description="Error message if failed")
     processing_time: float = Field(..., description="Total processing time")
     storage_type: str = Field(..., description="Type of storage used (local/r2)")
