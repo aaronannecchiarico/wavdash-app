@@ -62,6 +62,8 @@ class UploadStem extends Model
             'vocals' => 'Vocals',
             'drums' => 'Drums',
             'bass' => 'Bass',
+            'guitar' => 'Guitar',
+            'piano' => 'Piano',
             'other' => 'Other Instruments',
             default => ucfirst($this->stem_type)
         };
