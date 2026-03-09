@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { generateDynamicBreadcrumbs } from '@/lib/breadcrumb-utils';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type Upload } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Download, Music, Scissors, Trash2, Zap } from 'lucide-react';
@@ -36,7 +37,9 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
     const flash = props.flash as { success?: string; error?: string } | undefined;
     const uploadData = 'data' in upload && upload.data ? (upload.data as Upload) : upload;
 
-    const { post, delete: destroy, processing } = useForm();
+    const { post, delete: destroy, processing, data, setData } = useForm({
+        mode: 'standard' as 'standard' | 'detailed',
+    });
 
     useEffect(() => {
         if (flash?.success) {
@@ -97,8 +100,12 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                 return '🥁';
             case 'bass':
                 return '🎸';
-            case 'other':
+            case 'guitar':
+                return '🎸';
+            case 'piano':
                 return '🎹';
+            case 'other':
+                return '🎵';
             default:
                 return '🎵';
         }
@@ -136,7 +143,38 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                         ) : (
                             <div className="py-8 text-center">
                                 <Scissors className="mx-auto mb-4 h-12 w-12 text-[--amber]" />
-                                <p className="mb-4 text-muted-foreground">No stem separation has been performed yet.</p>
+                                <p className="mb-6 text-muted-foreground">Choose separation mode and start processing.</p>
+
+                                {/* Mode selector */}
+                                <div className="mx-auto mb-6 flex max-w-md gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('mode', 'standard')}
+                                        className={cn(
+                                            'flex-1 rounded-[--radius-md] border-2 p-4 text-left transition-all',
+                                            data.mode === 'standard'
+                                                ? 'border-[--amber] bg-[--amber]/5'
+                                                : 'border-[--border] hover:border-[--amber]/50',
+                                        )}
+                                    >
+                                        <div className="font-semibold text-sm text-foreground">Standard</div>
+                                        <div className="text-xs text-muted-foreground mt-1">4 stems: vocals, drums, bass, other</div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setData('mode', 'detailed')}
+                                        className={cn(
+                                            'flex-1 rounded-[--radius-md] border-2 p-4 text-left transition-all',
+                                            data.mode === 'detailed'
+                                                ? 'border-[--amber] bg-[--amber]/5'
+                                                : 'border-[--border] hover:border-[--amber]/50',
+                                        )}
+                                    >
+                                        <div className="font-semibold text-sm text-foreground">Detailed</div>
+                                        <div className="text-xs text-muted-foreground mt-1">6 stems: vocals, drums, bass, guitar, piano, other</div>
+                                    </button>
+                                </div>
+
                                 <Button onClick={handleStartSeparation} disabled={processing}>
                                     <Zap className="mr-2 h-4 w-4" />
                                     Start Stem Separation
@@ -271,6 +309,10 @@ export default function StemSeparation({ upload, analysis_service }: Props) {
                                                 return 'bg-red-500/20 dark:bg-red-500/20 border-red-200 dark:border-red-800';
                                             case 'bass':
                                                 return 'bg-yellow-500/20 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-800';
+                                            case 'guitar':
+                                                return 'bg-violet-500/20 dark:bg-violet-500/20 border-violet-200 dark:border-violet-800';
+                                            case 'piano':
+                                                return 'bg-rose-500/20 dark:bg-rose-500/20 border-rose-200 dark:border-rose-800';
                                             case 'other':
                                                 return 'bg-green-500/20 dark:bg-green-500/20 border-green-200 dark:border-green-800';
                                             default:
