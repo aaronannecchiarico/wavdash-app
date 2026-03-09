@@ -19,6 +19,7 @@ class UploadStemTask extends Model
     protected $fillable = [
         'upload_id',
         'task_id',
+        'model_name',
         'status',
         'error_message',
         'progress',
