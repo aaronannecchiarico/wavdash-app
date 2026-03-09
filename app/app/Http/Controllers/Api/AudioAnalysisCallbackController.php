@@ -40,6 +40,7 @@ class AudioAnalysisCallbackController extends Controller
                 'analysis_summary' => 'nullable|array',
                 'original_analysis' => 'nullable|array',
                 'tempo_processing' => 'nullable|array',
+                'model_used' => 'nullable|string',
                 'error_message' => 'nullable|string',
                 'processing_time' => 'required|numeric',
                 'storage_type' => 'required|string',
@@ -425,6 +426,11 @@ class AudioAnalysisCallbackController extends Controller
                 'upload_id' => $upload->id,
                 'task_id' => $task->task_id,
             ]);
+        }
+
+        // Store model_used from callback if available
+        if (isset($data['model_used'])) {
+            $task->update(['model_name' => $data['model_used']]);
         }
 
         // Mark the stem task as completed
