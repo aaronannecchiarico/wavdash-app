@@ -38,16 +38,20 @@ class UploadStemController extends Controller
             return redirect()->back()->with('error', 'Stem separation is already in progress for this upload.');
         }
 
-        if ($upload->hasStems()) {
-            return redirect()->back()->with('error', 'Stem separation already completed for this upload.');
-        }
-
         // Check service availability
         if (! $this->analysisService->isServiceAvailable()) {
             return redirect()->back()->with('error', 'Audio analysis service is currently unavailable.');
         }
 
-        $stemTask = $this->analysisService->submitForStemSeparation($upload);
+        // Map mode to model name
+        $mode = $request->input('mode', 'standard');
+        $modelMap = [
+            'standard' => 'htdemucs',
+            'detailed' => 'htdemucs_6s',
+        ];
+        $modelName = $modelMap[$mode] ?? 'htdemucs';
+
+        $stemTask = $this->analysisService->submitForStemSeparation($upload, $modelName);
 
         if (! $stemTask) {
             return redirect()->back()->with('error', 'Failed to submit upload for stem separation.');
@@ -56,10 +60,14 @@ class UploadStemController extends Controller
         Log::info('Stem separation manually triggered', [
             'upload_id' => $upload->id,
             'task_id' => $stemTask->task_id,
+            'mode' => $mode,
+            'model_name' => $modelName,
             'user_id' => Auth::user()->id,
         ]);
 
-        return redirect()->back()->with('success', 'Stem separation started successfully! You will be notified when it completes.');
+        $modeLabel = $mode === 'detailed' ? 'Detailed (6 stems)' : 'Standard (4 stems)';
+
+        return redirect()->back()->with('success', "{$modeLabel} stem separation started! You will be notified when it completes.");
     }
 
     /**

@@ -423,7 +423,7 @@ class AudioAnalysisService
     /**
      * Submit an audio file for stem separation using the new storage-based API.
      */
-    public function submitForStemSeparation(Upload $upload): ?UploadStemTask
+    public function submitForStemSeparation(Upload $upload, string $modelName = 'htdemucs'): ?UploadStemTask
     {
         try {
             // Check if there's already a processing task
@@ -437,16 +437,20 @@ class AudioAnalysisService
                 return null;
             }
 
-            // Clean up any existing deleted or failed tasks before starting a new one
-            if ($upload->stemTask && ($upload->stemTask->isDeleted() || $upload->stemTask->hasFailed())) {
-                Log::info('Removing existing deleted/failed stem task before starting new separation', [
+            // Auto-delete existing stems and task for re-separation
+            if ($upload->stems()->exists()) {
+                $upload->stems()->delete();
+                Log::info('Deleted existing stems for re-separation', [
                     'upload_id' => $upload->id,
-                    'old_task_status' => $upload->stemTask->status,
-                    'old_task_id' => $upload->stemTask->task_id,
                 ]);
+            }
 
+            if ($upload->stemTask) {
                 $upload->stemTask->delete();
-                $upload->unsetRelation('stemTask'); // Clear the relationship cache
+                $upload->unsetRelation('stemTask');
+                Log::info('Deleted existing stem task for re-separation', [
+                    'upload_id' => $upload->id,
+                ]);
             }
 
             // Determine storage path based on how the upload was stored
@@ -455,11 +459,13 @@ class AudioAnalysisService
             Log::info('Submitting upload for stem separation', [
                 'upload_id' => $upload->id,
                 'storage_path' => $storagePath,
+                'model_name' => $modelName,
                 'uses_r2' => $upload->usesR2Storage(),
             ]);
 
             // Call the microservice for stem separation
             $result = $this->client->separateStems($storagePath, [
+                'model' => $modelName,
                 'callback_url' => $this->callbackUrl('api.audio.analysis.callback', $upload->id),
                 'metadata' => [
                     'upload_id' => (string) $upload->id,
@@ -480,6 +486,7 @@ class AudioAnalysisService
             /** @var UploadStemTask $stemTask */
             $stemTask = $upload->stemTask()->create([
                 'task_id' => $taskId,
+                'model_name' => $modelName,
                 'status' => $result['status'] ?? 'pending',
                 'progress' => 0,
                 'submitted_at' => now(),
@@ -488,6 +495,7 @@ class AudioAnalysisService
             Log::info('Stem separation task submitted', [
                 'upload_id' => $upload->id,
                 'task_id' => $taskId,
+                'model_name' => $modelName,
                 'stem_task_id' => $stemTask->id,
                 'storage_path' => $storagePath,
             ]);

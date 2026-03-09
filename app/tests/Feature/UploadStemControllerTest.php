@@ -150,7 +150,7 @@ class UploadStemControllerTest extends TestCase
             ->assertSessionHas('error', 'Stem separation is already in progress for this upload.');
     }
 
-    public function test_store_fails_when_stems_already_exist(): void
+    public function test_store_allows_re_separation_when_stems_exist(): void
     {
         Config::set('services.audio_analysis.enabled', true);
 
@@ -158,14 +158,23 @@ class UploadStemControllerTest extends TestCase
         $upload = Upload::factory()->create(['user_id' => $user->id, 'status' => 'ready']);
         UploadStem::factory()->create(['upload_id' => $upload->id]);
 
-        $this->mock(AudioAnalysisService::class, function ($mock) {
+        $mockTask = UploadStemTask::factory()->make([
+            'upload_id' => $upload->id,
+            'task_id' => 'test-task-456',
+            'status' => 'pending',
+        ]);
+
+        $this->mock(AudioAnalysisService::class, function ($mock) use ($mockTask) {
             $mock->shouldReceive('isServiceAvailable')->andReturn(true);
+            $mock->shouldReceive('submitForStemSeparation')
+                ->with(\Mockery::type(Upload::class), 'htdemucs')
+                ->andReturn($mockTask);
         });
 
         $response = $this->actingAs($user)->post(route('uploads.stems.store', $upload));
 
         $response->assertRedirect()
-            ->assertSessionHas('error', 'Stem separation already completed for this upload.');
+            ->assertSessionHas('success');
     }
 
     public function test_store_successfully_starts_stem_separation(): void
@@ -183,13 +192,15 @@ class UploadStemControllerTest extends TestCase
 
         $this->mock(AudioAnalysisService::class, function ($mock) use ($mockTask) {
             $mock->shouldReceive('isServiceAvailable')->andReturn(true);
-            $mock->shouldReceive('submitForStemSeparation')->andReturn($mockTask);
+            $mock->shouldReceive('submitForStemSeparation')
+                ->with(\Mockery::type(Upload::class), 'htdemucs')
+                ->andReturn($mockTask);
         });
 
         $response = $this->actingAs($user)->post(route('uploads.stems.store', $upload));
 
         $response->assertRedirect()
-            ->assertSessionHas('success', 'Stem separation started successfully! You will be notified when it completes.');
+            ->assertSessionHas('success', 'Standard (4 stems) stem separation started! You will be notified when it completes.');
     }
 
     public function test_destroy_requires_authentication(): void
