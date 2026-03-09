@@ -26,6 +26,8 @@ const STEMS = [
   { id: "vocals", label: "Vocals", color: "#E8A83E", bg: "rgba(232,168,62,0.08)", border: "rgba(232,168,62,0.22)", seed: 7  },
   { id: "drums",  label: "Drums",  color: "#7BAFD4", bg: "rgba(123,175,212,0.08)", border: "rgba(123,175,212,0.22)", seed: 13 },
   { id: "bass",   label: "Bass",   color: "#A78BFA", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.22)", seed: 19 },
+  { id: "guitar", label: "Guitar", color: "#8B5CF6", bg: "rgba(139,92,246,0.08)",  border: "rgba(139,92,246,0.22)",  seed: 23 },
+  { id: "piano",  label: "Piano",  color: "#FB7185", bg: "rgba(251,113,133,0.08)", border: "rgba(251,113,133,0.22)", seed: 29 },
   { id: "other",  label: "Other",  color: "#F87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.22)", seed: 31 },
 ]
 
