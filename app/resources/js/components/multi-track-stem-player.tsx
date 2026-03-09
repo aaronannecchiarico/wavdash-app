@@ -35,8 +35,12 @@ const stemAccent: Record<string, { header: string; bar: string }> = {
     vocals: { header: 'bg-[--amber]/10 border-[--amber]/20', bar: 'var(--amber)' },
     drums:  { header: 'bg-[--jade]/10 border-[--jade]/20',   bar: 'var(--jade)' },
     bass:   { header: 'bg-blue-500/10 border-blue-300/20',    bar: '#60a5fa' },
+    guitar: { header: 'bg-violet-500/10 border-violet-300/20', bar: '#a78bfa' },
+    piano:  { header: 'bg-rose-500/10 border-rose-300/20',     bar: '#fb7185' },
     other:  { header: 'bg-[--surface-2] border-[--border]',   bar: 'var(--muted-foreground)' },
 };
+
+const STEM_ORDER = ['vocals', 'drums', 'bass', 'guitar', 'piano', 'other'];
 
 const getAccent = (stemType: string) => stemAccent[stemType] || stemAccent.other;
 
@@ -253,7 +257,11 @@ export function MultiTrackStemPlayer({ stems, uploadId, analysis }: MultiTrackSt
 
                 {/* Stem tracks */}
                 <div className="space-y-3">
-                    {stems.map((stem) => {
+                    {[...stems].sort((a, b) => {
+                        const aIdx = STEM_ORDER.indexOf(a.stem_type);
+                        const bIdx = STEM_ORDER.indexOf(b.stem_type);
+                        return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+                    }).map((stem) => {
                         const player = players[stem.stem_type] || {
                             wavesurfer: null,
                             isLoading: true,
