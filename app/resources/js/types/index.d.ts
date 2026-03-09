@@ -104,6 +104,7 @@ export interface UploadAnalysis {
 export interface UploadStemTask {
     id: number;
     task_id: string;
+    model_name?: string;
     status: 'pending' | 'processing' | 'completed' | 'failed' | 'deleted';
     progress: number;
     submitted_at: string;
