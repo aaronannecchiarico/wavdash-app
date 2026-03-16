@@ -171,9 +171,16 @@ logs-marketing: ## View marketing site logs
 
 prod: ## Start services in production mode
 	@echo "$(GREEN)Starting WavDash in production mode...$(RESET)"
-	docker-compose up -d
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 	@echo "$(GREEN)Production services started!$(RESET)"
 
 prod-stop: ## Stop production services
 	@echo "$(YELLOW)Stopping production services...$(RESET)"
-	docker-compose down
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+
+prod-logs: ## View production logs
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
+
+prod-build: ## Build production images
+	@echo "$(GREEN)Building production images...$(RESET)"
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml build --parallel
