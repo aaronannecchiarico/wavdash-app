@@ -26,3 +26,5 @@ docs/
 
 # Worktrees
 .worktrees/
+
+.playwright-mcp/*
