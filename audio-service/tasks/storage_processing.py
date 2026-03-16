@@ -414,7 +414,9 @@ def separate_audio_stems_from_storage(
                 f"got {len(stem_names)}"
             )
 
-        logger.info(f"Model {model_name} produced {len(stem_names)} stems: {list(stem_names)}")
+        logger.info(
+            f"Model {model_name} produced {len(stem_names)} stems: {list(stem_names)}"
+        )
 
         stems_paths = {}
         temp_output_dir = tempfile.mkdtemp()
