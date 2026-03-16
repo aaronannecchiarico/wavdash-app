@@ -35,6 +35,11 @@ make dev  # Starts all services including audio service
 - Do NOT include Claude Code attribution links in commit messages
 - Keep commit messages clean and professional without AI co-authorship attribution
 
+## Code Formatting
+
+- Black version is pinned in `requirements.txt` — always format with `pip install -r requirements.txt && black .` to match CI
+- isort and flake8 also run in CI; check with `isort --check-only . && flake8 .`
+
 ## Development Commands
 
 ### Environment Setup

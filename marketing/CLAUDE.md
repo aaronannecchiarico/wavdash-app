@@ -184,6 +184,10 @@ For other packages, install using npm rather than editing package.json directly.
 - JSX is configured for React (`"jsx": "react-jsx"`)
 - JSX import source set to `"react"`
 
+### SSR / Adapter
+- Uses `@astrojs/node` adapter with `output: 'server'` — required for pages with `export const prerender = false`
+- `astro check` runs in CI — fix TypeScript errors before committing
+
 ### React Integration
 - React components must be explicitly marked for client-side hydration using Astro's client directives:
   - `client:load` - Hydrate immediately on page load

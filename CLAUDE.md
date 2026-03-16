@@ -102,6 +102,12 @@ All commands via root `Makefile`. Run `make help` to see all options.
 ### Production
 - `make prod` - Start services in production mode
 - `make prod-stop` - Stop production services
+- `make prod-logs` - View production logs
+- `make prod-build` - Build production images
+- Production uses `docker-compose.yml` + `docker-compose.prod.yml` overlay
+- Nginx configs in `deploy/nginx/` — one per domain (wavdash.com, app.wavdash.com, ws.wavdash.com)
+- VPS provisioning guide: `deploy/RUNBOOK.md`
+- Production env template: `.env.production.example`
 
 ## 🔄 Inter-Service Communication
 
@@ -236,6 +242,9 @@ chore(docker): optimize build caching
 - `chore/*` - Maintenance tasks
 
 ## 🛠️ Troubleshooting
+
+**YAML validation (no pyyaml on macOS):**
+- Use `ruby -ryaml -e "YAML.safe_load(File.read('file.yml'))"` instead of Python yaml module
 
 ### Docker/Colima Issues
 
