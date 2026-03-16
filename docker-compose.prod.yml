@@ -1,0 +1,192 @@
+# Production overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  # ============================================================================
+  # Infrastructure — bind to localhost only (Nginx proxies from host)
+  # ============================================================================
+
+  mysql:
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # ============================================================================
+  # Laravel Application — localhost-only, Nginx proxies from host
+  # ============================================================================
+
+  app:
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=${APP_URL:-https://app.wavdash.com}
+      - APP_KEY=${APP_KEY}
+      - MARKETING_URL=${MARKETING_URL:-https://wavdash.com}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - CACHE_STORE=redis
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=${REVERB_HOST:-ws.wavdash.com}
+      - REVERB_PORT=${REVERB_PORT:-443}
+      - REVERB_SCHEME=${REVERB_SCHEME:-https}
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - AUDIO_ANALYSIS_ENABLED=true
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
+      - AUDIO_CALLBACK_BASE_URL=http://app:8000
+      - FILESYSTEM_DISK=r2
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_PRIVATE_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_PRIVATE_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      - SESSION_DRIVER=database
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-.wavdash.com}
+      - SESSION_SECURE_COOKIE=true
+      - REDIS_DB=1
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://wavdash.com}
+      - ADMIN_PANEL_ENABLED=true
+      - ADMIN_IP_RESTRICTION_ENABLED=true
+      - ADMIN_ALLOWED_IPS=${ADMIN_ALLOWED_IPS:-127.0.0.1}
+      - SUPER_USER_EMAIL=${SUPER_USER_EMAIL:-admin@wavdash.com}
+      - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+      - MAIL_MAILER=log
+      - MAIL_FROM_ADDRESS=hello@wavdash.com
+      - MAIL_FROM_NAME=Wavdash
+      - VITE_APP_NAME=${APP_NAME:-Wavdash}
+      - VITE_R2_URL=${R2_PUBLIC_URL}
+      - VITE_REVERB_APP_KEY=${REVERB_APP_KEY}
+      - VITE_REVERB_HOST=${REVERB_HOST:-ws.wavdash.com}
+      - VITE_REVERB_PORT=${REVERB_PORT:-443}
+      - VITE_REVERB_SCHEME=${REVERB_SCHEME:-https}
+
+  app-queue:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
+      - APP_URL=${APP_URL:-https://app.wavdash.com}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - QUEUE_CONNECTION=redis
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=database
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_HOST=app-reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - AUDIO_ANALYSIS_ENABLED=true
+      - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
+      - AUDIO_CALLBACK_BASE_URL=http://app:8000
+      - FILESYSTEM_DISK=r2
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_PRIVATE_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_PRIVATE_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_PUBLIC_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+
+  app-reverb:
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-wavdash}
+      - DB_USERNAME=${DB_USERNAME:-wavdash}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=${REVERB_APP_ID}
+      - REVERB_APP_KEY=${REVERB_APP_KEY}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET}
+      - REVERB_HOST=0.0.0.0
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+
+  # ============================================================================
+  # Audio Service — localhost-only
+  # ============================================================================
+
+  audio-api:
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - STORAGE_TYPE=r2
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_SOURCE_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      - ALLOWED_ORIGINS=https://app.wavdash.com,https://wavdash.com
+      - DEMUCS_DEVICE=cpu
+      - DEMUCS_MODEL=htdemucs
+      - TASK_TIME_LIMIT=1800
+      - TASK_SOFT_TIME_LIMIT=1500
+
+  audio-worker:
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+      - STORAGE_TYPE=r2
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_BUCKET=${R2_PRIVATE_BUCKET}
+      - R2_SOURCE_BUCKET=${R2_PUBLIC_BUCKET}
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      - DEMUCS_DEVICE=cpu
+      - DEMUCS_MODEL=htdemucs
+      - TASK_TIME_LIMIT=1800
+      - TASK_SOFT_TIME_LIMIT=1500
+      - NUMBA_CACHE_DIR=/tmp/numba_cache
+      - TORCH_HOME=/tmp/torch_cache
+
+  # ============================================================================
+  # Marketing — localhost-only
+  # ============================================================================
+
+  marketing:
+    ports:
+      - "127.0.0.1:4321:4321"
+    environment:
+      - PUBLIC_APP_URL=${APP_URL:-https://app.wavdash.com}
+      - NODE_ENV=production

@@ -398,7 +398,9 @@ class CloudStorageService(StorageService):
                 self.bucket_name = settings.R2_BUCKET
                 # Source bucket is where Laravel stores uploaded (input) files.
                 # Falls back to bucket_name when R2_SOURCE_BUCKET is not set.
-                self.source_bucket_name = settings.R2_SOURCE_BUCKET or settings.R2_BUCKET
+                self.source_bucket_name = (
+                    settings.R2_SOURCE_BUCKET or settings.R2_BUCKET
+                )
                 self.public_url_base = settings.R2_PUBLIC_URL
 
                 # Configure for Cloudflare R2
@@ -487,7 +489,9 @@ class CloudStorageService(StorageService):
 
             Path(local_path).parent.mkdir(parents=True, exist_ok=True)
 
-            self.s3_client.download_file(self.source_bucket_name, remote_path, local_path)
+            self.s3_client.download_file(
+                self.source_bucket_name, remote_path, local_path
+            )
             logger.info(
                 f"File downloaded from cloud storage: {remote_path} -> {local_path}"
             )
