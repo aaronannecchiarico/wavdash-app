@@ -162,7 +162,9 @@ def suggest_presets_for_audio(current_bpm: float, duration_seconds: float):
                 "classification": (
                     "fast"
                     if current_bpm > 140
-                    else "slow" if current_bpm < 80 else "moderate"
+                    else "slow"
+                    if current_bpm < 80
+                    else "moderate"
                 ),
             },
             "suggestions": serializable_suggestions,
