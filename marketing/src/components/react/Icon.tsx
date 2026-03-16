@@ -1,12 +1,14 @@
-import * as Icons from 'lucide-react';
+import { icons, type LucideProps } from 'lucide-react';
+import { createElement } from 'react';
 
-interface IconProps {
-  name: keyof typeof Icons;
+interface IconProps extends Omit<LucideProps, 'ref'> {
+  name: string;
   size?: number;
   className?: string;
 }
 
-export function Icon({ name, size = 24, className = "" }: IconProps) {
-  const LucideIcon = Icons[name];
-  return <LucideIcon size={size} className={className} />;
+export function Icon({ name, size = 24, className = "", ...props }: IconProps) {
+  const IconComponent = icons[name as keyof typeof icons];
+  if (!IconComponent) return null;
+  return createElement(IconComponent, { size, className, ...props });
 }
