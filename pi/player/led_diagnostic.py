@@ -1,7 +1,7 @@
 """LED diagnostic — lights up each pixel pair one at a time.
 
 Run on the Pi to determine the physical pixel-to-fader mapping.
-For each pair, note which physical fader's LEDs light up.
+Each pair stays lit for 4 seconds. Note which physical fader lights up.
 """
 import time
 import board
@@ -24,8 +24,10 @@ COLORS = [
     (255, 0, 255),  # Magenta
     (0, 255, 255),  # Cyan
 ]
+COLOR_NAMES = ["RED", "GREEN", "BLUE", "YELLOW", "MAGENTA", "CYAN"]
 
 print("LED Diagnostic — watch which physical fader LEDs light up")
+print("Each pair lights for 4 seconds. Note the physical fader position.")
 print("=" * 60)
 
 for pair in range(6):
@@ -35,10 +37,19 @@ for pair in range(6):
     color = COLORS[pair]
     pixels[idx_a] = color
     pixels[idx_b] = color
-    color_name = ["RED", "GREEN", "BLUE", "YELLOW", "MAGENTA", "CYAN"][pair]
-    print(f"Pixel pair {pair} (indices {idx_a},{idx_b}) = {color_name}")
-    print(f"  -> Which physical fader position is lit? (1=leftmost, 6=rightmost)")
-    input("  Press Enter for next pair...")
+    print(f"Pixel pair {pair} (indices {idx_a},{idx_b}) = {COLOR_NAMES[pair]}  [4s]")
+    time.sleep(4)
+
+# All on at once with different colors to confirm
+print("\nAll pairs lit with different colors:")
+for pair in range(6):
+    pixels[pair * 2] = COLORS[pair]
+    pixels[pair * 2 + 1] = COLORS[pair]
+    print(f"  Pair {pair} = {COLOR_NAMES[pair]}")
+
+print("\nLeaving all lit for 10 seconds — note the color at each physical fader position")
+print("Report: fader 1 (leftmost) = ?, fader 2 = ?, ... fader 6 (rightmost) = ?")
+time.sleep(10)
 
 pixels.fill((0, 0, 0))
-print("\nDone! Report the mapping: pixel pair -> physical fader position")
+print("Done!")

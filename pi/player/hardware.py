@@ -158,8 +158,10 @@ class HardwareController:
     def update_leds(self, mixer_state):
         """Update all 12 NeoPixels based on mixer state.
 
-        LED mapping: 2 LEDs per fader. NeoPixel chain is wired in reverse
-        physical order, so stem 0 maps to the last pixel pair.
+        PCB layout: two rows of 6 LEDs each.
+        - Top row (pixels 0-5): idle dim green
+        - Bottom row (pixels 6-11): active stem indicators near buttons
+        Stem 0 = pixel 6, stem 1 = pixel 7, ... stem 5 = pixel 11.
         """
         for stem_idx in range(NUM_STEMS):
             if mixer_state.solo_states[stem_idx]:
@@ -172,7 +174,7 @@ class HardwareController:
             else:
                 color = (30, 30, 30)  # Dim white
 
-            # Reverse mapping — pixel 0,1 = last stem; pixel 10,11 = first stem
-            pixel_base = (5 - stem_idx) * 2
-            self.pixels[pixel_base] = color
-            self.pixels[pixel_base + 1] = color
+            # Bottom row: pixels 6-11 = stems 0-5
+            self.pixels[6 + stem_idx] = color
+            # Top row: dim green idle
+            self.pixels[stem_idx] = (0, 30, 0)
