@@ -25,7 +25,7 @@ except (ImportError, RuntimeError):
     HAS_HARDWARE = False
 
 try:
-    from display import Display
+    from display import Display, MockDisplay
     HAS_DISPLAY = True
 except (ImportError, RuntimeError):
     from display import MockDisplay
@@ -76,6 +76,21 @@ class StemMixerApp:
                     on_long_press=lambda idx=i: self.engine.state.toggle_solo(idx),
                 )
                 self.button_handlers.append(handler)
+
+        # Encoder state — shared between hardware and display threads
+        self.encoder_delta = 0  # Accumulated scroll delta
+        self._encoder_lock = threading.Lock()
+
+        # Encoder select button handler — sets flag consumed by display loop
+        def _encoder_select():
+            self.encoder_pressed = True
+
+        self.encoder_handler = ButtonHandler(
+            on_short_press=_encoder_select,
+            on_long_press=lambda: None,
+            long_press_ms=300,
+        ) if HAS_HARDWARE else None
+        self.encoder_pressed = False
 
     def load_song(self, song: Song):
         """Load a song's stems into the audio engine."""
@@ -134,20 +149,19 @@ class StemMixerApp:
                 except Exception:
                     pass
 
-                # Read rotary encoder for master volume
+                # Read rotary encoder — accumulate delta for display loop
                 try:
                     delta = self.hw.read_encoder_delta()
                     if delta != 0:
-                        new_vol = self.engine.state.master_volume + delta * 0.02
-                        self.engine.state.master_volume = max(0.0, min(1.0, new_vol))
+                        with self._encoder_lock:
+                            self.encoder_delta += delta
                 except Exception:
                     pass
 
-                # Rotary select button = play/pause
+                # Encoder select button — use ButtonHandler for proper short press detection
                 try:
-                    if self.hw.read_encoder_select():
-                        self.engine.state.playing = not self.engine.state.playing
-                        time.sleep(0.3)  # Debounce
+                    pressed = self.hw.read_encoder_select()
+                    self.encoder_handler.update(pressed, now)
                 except Exception:
                     pass
 
@@ -183,14 +197,27 @@ class StemMixerApp:
                 except Exception:
                     pass
 
+            # Consume encoder scroll delta
+            enc_delta = 0
+            with self._encoder_lock:
+                enc_delta = self.encoder_delta
+                self.encoder_delta = 0
+
+            # Consume encoder select press
+            enc_pressed = self.encoder_pressed
+            self.encoder_pressed = False
+
             if self.screen == "library":
-                if btn.get("down") and self.selected_index < len(self.songs) - 1:
-                    self.selected_index += 1
-                    time.sleep(0.15)  # Debounce
-                elif btn.get("up") and self.selected_index > 0:
-                    self.selected_index -= 1
-                    time.sleep(0.15)
-                elif btn.get("press") and self.songs:
+                # Navigation: joystick, ANO up/down, or encoder scroll
+                if (btn.get("down") or enc_delta > 0) and self.selected_index < len(self.songs) - 1:
+                    self.selected_index += min(abs(enc_delta), len(self.songs) - 1 - self.selected_index) if enc_delta > 0 else 1
+                    if not enc_delta:
+                        time.sleep(0.15)  # Debounce for buttons only
+                elif (btn.get("up") or enc_delta < 0) and self.selected_index > 0:
+                    self.selected_index -= min(abs(enc_delta), self.selected_index) if enc_delta < 0 else 1
+                    if not enc_delta:
+                        time.sleep(0.15)
+                elif (btn.get("press") or btn.get("b") or enc_pressed) and self.songs:
                     self.load_song(self.songs[self.selected_index])
 
                 self.display.render_library(self.songs, self.selected_index)
@@ -199,6 +226,15 @@ class StemMixerApp:
                 if btn.get("left") or btn.get("a"):
                     self.engine.state.playing = False
                     self.screen = "library"
+                elif btn.get("b") or enc_pressed:
+                    self.engine.state.playing = not self.engine.state.playing
+
+                # Encoder scroll = seek
+                if enc_delta != 0:
+                    seek_seconds = enc_delta * 2.0  # 2 seconds per detent
+                    seek_frames = int(seek_seconds * self.engine.sample_rate)
+                    new_pos = self.engine.position + seek_frames
+                    self.engine.position = max(0, min(new_pos, self.engine.num_frames - 1))
 
                 if self.current_song:
                     self.display.render_now_playing(
