@@ -6,337 +6,68 @@
 
 **Architecture:** WavDash (MacBook/Docker) auto-pushes OGG stems to Pi via HTTP. Pi runs two services: a FastAPI receiver (port 9000) and a Python player app with threaded audio/hardware/UI. Laravel dispatches a PushStemsToDevice job after all stem conversions complete.
 
-**Tech Stack:** Laravel 12 (PHP), FastAPI (Python), sounddevice/numpy (audio), Adafruit Blinka/seesaw (hardware I/O), CircuitPython (KB2040 firmware), Pillow (TFT rendering)
+**Tech Stack:** Laravel 12 (PHP), FastAPI (Python), sounddevice/numpy (audio), Adafruit Blinka/seesaw (hardware I/O), Pillow (TFT rendering)
 
 **Design Doc:** `docs/plans/2026-03-17-pi-stem-mixer-design.md`
 
 ---
 
-## Task 1: Hardware Assembly Guide
+## Task 1: Hardware Assembly & Validation ✅ DONE
 
-**Files:**
-- Create: `pi/docs/hardware-assembly.md`
+**Status:** Complete (2026-03-18). Hardware assembled and all controls validated.
 
-**Step 1: Write the hardware assembly guide**
+**Hardware verified working:**
+- Custom PCB with seesaw at `0x49`: 6 faders (pins 0,1,2,3,6,7), 6 buttons (pins 19,18,14,13,12,9), 12 NeoPixels (pin 20)
+- ANO Rotary Encoder at `0x4A`: rotary position + 5 buttons (select/up/left/down/right on pins 1-5)
+- TFT Bonnet (ST7789 240x240): display + joystick (GPIO D17/D22/D27/D23/D4) + buttons A/B (GPIO D5/D6)
+- Behringer UM2 USB audio output
+- Audio playback tested with pydub
 
-Create `pi/docs/hardware-assembly.md` with these sections:
+**Test scripts (validated):**
+- `pi/main.py` — Full hardware test: PCB faders/buttons/LEDs + ANO encoder + audio playback
+- `pi/rotary_encoder_example.py` — ANO encoder standalone test
+- `pi/bonnet_example.py` — TFT bonnet display + joystick/button test
 
-```markdown
-# WavDash Stem Mixer — Hardware Assembly Guide
-
-## Parts List
-
-| Component | Quantity | Notes |
-|-----------|----------|-------|
-| Raspberry Pi 5 (4GB) | 1 | With active cooling fan/heatsink |
-| Custom PCB | 1 | 6 faders, 6 buttons, 12 WS2812 LEDs |
-| Adafruit KB2040 | 2 | RP2040-based I2C ADC boards |
-| Adafruit ANO Rotary Encoder (seesaw) | 1 | I2C rotary encoder |
-| Adafruit TFT Bonnet | 1 | Mini TFT + joystick + 2 buttons |
-| OzzMaker QWIIC HAT | 1 | I2C breakout for Pi GPIO |
-| QWIIC/Stemma QT cables | 4+ | I2C daisy-chain cables |
-| Behringer UPhoria UM2 | 1 | USB audio interface |
-| USB-C power supply (5V/5A) | 1 | For Pi 5 |
-| USB-A to USB-B cable | 1 | Pi to UM2 |
-
-## Step 1: Install the QWIIC HAT on the Pi
-
-1. Power off the Pi
-2. Solder the OzzMaker QWIIC HAT onto the Pi's 40-pin GPIO header
-3. The HAT exposes QWIIC ports while passing through all GPIO pins
-4. Verify: the TFT Bonnet will sit on TOP of the QWIIC HAT's pass-through header
-
-## Step 2: Connect the TFT Bonnet
-
-1. Press the TFT Bonnet onto the GPIO pass-through header on the QWIIC HAT
-2. The bonnet uses SPI (GPIO 10/11) for display and GPIO for joystick/buttons
-3. It does NOT use I2C pins (GPIO 2/3), so no conflict
-
-## Step 3: Wire KB2040 #1 (Faders 1–3)
-
-**On the KB2040 board:**
-| KB2040 Pin | Wire To |
-|------------|---------|
-| A0 | Fader S1 wiper (center pin) |
-| A1 | Fader S2 wiper |
-| A2 | Fader S3 wiper |
-| D2 | Button S1 (one leg, other leg to GND) |
-| D3 | Button S2 |
-| D4 | Button S3 |
-| D5 | LED7 data-in (first NeoPixel in chain of 6: LED7→LED8→LED3→LED4→LED9→LED10) |
-| 3.3V | Fader top pins (all 3) |
-| GND | Fader bottom pins (all 3) + button common GND |
-
-1. Connect a QWIIC cable from the QWIIC HAT to KB2040 #1's QWIIC port
-2. Wire fader wipers to analog pins A0–A2
-3. Wire buttons with internal pull-ups (active low)
-4. Daisy-chain 6 NeoPixels from D5 (LEDs flanking faders 1–3)
-
-## Step 4: Wire KB2040 #2 (Faders 4–6)
-
-Same wiring pattern as KB2040 #1 but:
-| KB2040 Pin | Wire To |
-|------------|---------|
-| A0 | Fader S4 wiper |
-| A1 | Fader S5 wiper |
-| A2 | Fader S6 wiper |
-| D2 | Button S4 |
-| D3 | Button S5 |
-| D4 | Button S6 |
-| D5 | LED11 data-in (chain of 6: LED11→LED12→LED5→LED6→LED1→LED2) |
-
-1. Connect a QWIIC cable from KB2040 #1's second QWIIC port to KB2040 #2
-2. Wire as above
-
-**IMPORTANT:** KB2040 #2 must use a different I2C address than #1. This is set in firmware (Task 2).
-
-## Step 5: Connect the Rotary Encoder
-
-1. Connect a QWIIC cable from the QWIIC HAT's second port to the ANO rotary encoder's QWIIC port
-2. The encoder uses I2C address 0x36 (seesaw default) — no conflict with KB2040s
-
-## Step 6: Connect Audio Output
-
-1. Plug the Behringer UM2 into the Pi via USB-A
-2. The UM2 appears as a USB audio device
-3. Connect speakers/PA to UM2's main outputs (1/4" or XLR)
-
-## Step 7: Power Up and Verify
-
-1. Connect USB-C power to the Pi
-2. Boot and verify I2C devices are detected:
-   ```bash
-   sudo i2cdetect -y 1
-   ```
-   Expected addresses:
-   - 0x30 — KB2040 #1
-   - 0x31 — KB2040 #2
-   - 0x36 — ANO Rotary Encoder
-3. Verify TFT Bonnet displays on boot
-4. Verify UM2 is detected:
-   ```bash
-   aplay -l
-   ```
-   Should show "USB Audio CODEC" or similar
-
-## I2C Bus Diagram
-
-```
-Pi 5 GPIO (I2C1: SDA=GPIO2, SCL=GPIO3)
-  │
-  └─ OzzMaker QWIIC HAT
-       │
-       ├─── QWIIC ──→ KB2040 #1 (0x30) ──→ KB2040 #2 (0x31)
-       │               faders 1-3            faders 4-6
-       │               buttons 1-3           buttons 4-6
-       │               LEDs 1-6              LEDs 7-12
-       │
-       └─── QWIIC ──→ ANO Rotary Encoder (0x36)
-                       master volume + play/pause
-```
-```
-
-**Step 2: Commit**
-
-```bash
-git add -f pi/docs/hardware-assembly.md
-git commit -m "docs(pi): add hardware assembly guide for stem mixer"
-```
+> **Note:** The original plan assumed two KB2040 boards with custom I2C peripheral firmware. The actual hardware uses a single seesaw (ATTiny8x7) on the custom PCB, which is simpler — no separate firmware is needed. The seesaw is controlled directly from the Pi using `adafruit-circuitpython-seesaw`.
 
 ---
 
-## Task 2: KB2040 Firmware
+## Dev Workflow: Code Sync to Pi
 
-The KB2040 boards act as I2C peripherals. Each reads 3 analog faders + 3 buttons, drives 6 NeoPixels, and exposes data over I2C to the Pi.
+All Pi code lives locally in `pi/` and is synced to the Raspberry Pi for execution and testing. The Pi already has a working Python venv with hardware dependencies installed.
 
-**Files:**
-- Create: `pi/firmware/kb2040_peripheral/code.py`
-- Create: `pi/firmware/README.md`
+**Connection:**
+- Host: `aannecchiarico@raspberrypi.local`
+- Target dir: `/home/aannecchiarico/wavdash/`
+- Venv: `/home/aannecchiarico/venv/`
 
-**Step 1: Write the CircuitPython firmware**
+**Makefile targets (from repo root):**
 
-```python
-# pi/firmware/kb2040_peripheral/code.py
-#
-# CircuitPython firmware for Adafruit KB2040.
-# Acts as an I2C peripheral exposing fader/button state and accepting LED commands.
-#
-# I2C Register Map:
-#   Read registers:
-#     0x00: fader 0 high byte (10-bit ADC, big-endian)
-#     0x01: fader 0 low byte
-#     0x02: fader 1 high byte
-#     0x03: fader 1 low byte
-#     0x04: fader 2 high byte
-#     0x05: fader 2 low byte
-#     0x06: button states (bit 0=btn0, bit 1=btn1, bit 2=btn2, 1=pressed)
-#   Write registers:
-#     0x10-0x21: LED data (6 LEDs x 3 bytes RGB = 18 bytes)
-#       0x10: LED0 R, 0x11: LED0 G, 0x12: LED0 B
-#       0x13: LED1 R, 0x14: LED1 G, 0x15: LED1 B
-#       ... etc
+| Command | Description |
+|---------|-------------|
+| `make pi-sync` | rsync `pi/` → Pi's `~/wavdash/` (excludes `__pycache__`, `.pytest_cache`) |
+| `make pi-ssh` | Open an SSH shell on the Pi |
+| `make pi-test` | Sync + run `pytest -v` on Pi |
+| `make pi-run` | Sync + run `main.py` on Pi |
+| `make pi-receiver` | Sync + start the FastAPI receiver on Pi (port 9000) |
 
-import board
-import analogio
-import digitalio
-import neopixel
-from i2c_peripheral import I2CPeripheral
+**Workflow for each task:**
+1. Write/edit code locally in `pi/`
+2. Run `make pi-sync` to push changes to Pi
+3. Run `make pi-test` to execute tests on Pi (or `make pi-ssh` for interactive debugging)
+4. Iterate until tests pass, then commit locally
 
-# ─── Configuration ───
-# Change I2C_ADDRESS to 0x31 for the second KB2040
-I2C_ADDRESS = 0x30
-
-NUM_FADERS = 3
-NUM_BUTTONS = 3
-NUM_LEDS = 6
-
-FADER_PINS = [board.A0, board.A1, board.A2]
-BUTTON_PINS = [board.D2, board.D3, board.D4]
-NEOPIXEL_PIN = board.D5
-
-# ─── Hardware Setup ───
-faders = []
-for pin in FADER_PINS:
-    adc = analogio.AnalogIn(pin)
-    faders.append(adc)
-
-buttons = []
-for pin in BUTTON_PINS:
-    btn = digitalio.DigitalInOut(pin)
-    btn.direction = digitalio.Direction.INPUT
-    btn.pull = digitalio.Pull.UP  # Active low
-    buttons.append(btn)
-
-pixels = neopixel.NeoPixel(NEOPIXEL_PIN, NUM_LEDS, brightness=0.5, auto_write=False)
-
-# ─── I2C Register State ───
-# 6 bytes faders (3x 16-bit) + 1 byte buttons = 7 bytes readable
-# 18 bytes LED data (6x RGB) writable
-read_buffer = bytearray(7)
-led_buffer = bytearray(18)  # 6 LEDs * 3 bytes (RGB)
-
-# ─── I2C Peripheral ───
-i2c_peripheral = I2CPeripheral(
-    board.SDA, board.SCL, (I2C_ADDRESS,),
-    read_buffer, led_buffer
-)
-
-def update_read_buffer():
-    """Read faders and buttons into the I2C read buffer."""
-    for i in range(NUM_FADERS):
-        # AnalogIn returns 0-65535, scale to 0-1023 (10-bit)
-        val = faders[i].value >> 6
-        read_buffer[i * 2] = (val >> 8) & 0xFF
-        read_buffer[i * 2 + 1] = val & 0xFF
-
-    btn_byte = 0
-    for i in range(NUM_BUTTONS):
-        if not buttons[i].value:  # Active low
-            btn_byte |= (1 << i)
-    read_buffer[6] = btn_byte
-
-def update_leds():
-    """Apply LED buffer to NeoPixels."""
-    for i in range(NUM_LEDS):
-        r = led_buffer[i * 3]
-        g = led_buffer[i * 3 + 1]
-        b = led_buffer[i * 3 + 2]
-        pixels[i] = (r, g, b)
-    pixels.show()
-
-# ─── Main Loop ───
-led_dirty = False
-
-while True:
-    update_read_buffer()
-
-    # Check for I2C write (LED update from Pi)
-    if i2c_peripheral.request_received:
-        request = i2c_peripheral.request
-        if request is not None:
-            if request.is_write:
-                # Pi wrote LED data starting at register 0x10
-                data = request.read()
-                if len(data) > 0:
-                    reg = data[0]
-                    if reg == 0x10 and len(data) > 1:
-                        payload = data[1:]
-                        for i in range(min(len(payload), 18)):
-                            led_buffer[i] = payload[i]
-                        led_dirty = True
-            elif request.is_read:
-                request.write(read_buffer)
-
-    if led_dirty:
-        update_leds()
-        led_dirty = False
-```
-
-**Note:** The `i2c_peripheral` module may need the `adafruit_bus_device` library. The exact CircuitPython I2C peripheral API depends on the CircuitPython version. This code provides the register map contract — the actual implementation may need adjustment when flashing to real hardware. The key contract is:
-- Read: 7 bytes (3x 16-bit fader values + 1 byte button bitmask)
-- Write: register 0x10 + 18 bytes of RGB LED data
-
-**Step 2: Write the firmware README**
-
-```markdown
-# KB2040 Firmware
-
-CircuitPython firmware for the two Adafruit KB2040 boards that interface
-between the custom PCB (faders, buttons, LEDs) and the Raspberry Pi via I2C.
-
-## Setup
-
-1. Install CircuitPython on each KB2040:
-   - Download from https://circuitpython.org/board/adafruit_kb2040/
-   - Hold BOOT button, plug in USB, drag UF2 file to RPI-RP2 drive
-
-2. Install required libraries:
-   - Copy `adafruit_bus_device` folder to `CIRCUITPY/lib/`
-   - Copy `neopixel.mpy` to `CIRCUITPY/lib/`
-
-3. Flash firmware:
-   - Copy `kb2040_peripheral/code.py` to `CIRCUITPY/code.py`
-
-4. Set I2C address:
-   - KB2040 #1 (faders 1–3): `I2C_ADDRESS = 0x30` (default)
-   - KB2040 #2 (faders 4–6): Edit `I2C_ADDRESS = 0x31` before copying
-
-## I2C Register Map
-
-### Read Registers (Pi reads from KB2040)
-
-| Register | Description |
-|----------|-------------|
-| 0x00–0x01 | Fader 0 (16-bit big-endian, 0–1023) |
-| 0x02–0x03 | Fader 1 |
-| 0x04–0x05 | Fader 2 |
-| 0x06 | Button states (bit 0=btn0, bit 1=btn1, bit 2=btn2; 1=pressed) |
-
-### Write Registers (Pi writes to KB2040)
-
-| Register | Description |
-|----------|-------------|
-| 0x10–0x21 | 6 LEDs × 3 bytes (R, G, B) = 18 bytes |
-
-## Verification
-
-After flashing, check I2C from the Pi:
+**SSH key setup (recommended) ✅ COMPLETED:** To avoid typing the password on every sync/test:
 ```bash
-sudo i2cdetect -y 1
-# Should show 0x30 and/or 0x31
-```
+ssh-copy-id aannecchiarico@raspberrypi.local
+# Enter password once, then all future connections are passwordless
 ```
 
-**Step 3: Commit**
-
-```bash
-git add -f pi/firmware/kb2040_peripheral/code.py pi/firmware/README.md
-git commit -m "feat(pi): add KB2040 CircuitPython I2C peripheral firmware"
-```
+> **For Claude agents:** When implementing tasks that need Pi execution, use `make pi-sync` after writing code and `make pi-test` to validate. For interactive hardware testing, describe what the user should verify manually via `make pi-ssh`.
 
 ---
 
-## Task 3: Pi Receiver Service
+## Task 2: Pi Receiver Service
 
 FastAPI service on Pi that accepts stem uploads from WavDash.
 
@@ -505,7 +236,8 @@ class TestDeleteSong:
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd pi/receiver && pip install fastapi uvicorn python-multipart pytest httpx && pytest test_receiver.py -v`
+Run locally: `cd pi/receiver && pip install fastapi uvicorn python-multipart pytest httpx && pytest test_receiver.py -v`
+Or on Pi: `make pi-sync && make pi-test`
 Expected: FAIL (main.py doesn't exist yet)
 
 **Step 3: Write the receiver implementation**
@@ -656,7 +388,8 @@ httpx==0.28.*
 
 **Step 4: Run tests to verify they pass**
 
-Run: `cd pi/receiver && pytest test_receiver.py -v`
+Run locally: `cd pi/receiver && pytest test_receiver.py -v`
+Or on Pi: `make pi-test`
 Expected: All 7 tests PASS
 
 **Step 5: Commit**
@@ -668,7 +401,7 @@ git commit -m "feat(pi): add FastAPI stem receiver service with tests"
 
 ---
 
-## Task 4: Pi Player — Audio Engine
+## Task 3: Pi Player — Audio Engine
 
 The core audio mixing engine. Testable without hardware using mock data.
 
@@ -893,7 +626,7 @@ class AudioEngine:
             if stem_type in stems_dict:
                 self.stems.append(stems_dict[stem_type])
             else:
-                # Missing stem → silence
+                # Missing stem -> silence
                 ref = next(iter(stems_dict.values()))
                 self.stems.append(np.zeros_like(ref))
 
@@ -955,8 +688,8 @@ sounddevice==0.5.*
 soundfile==0.13.*
 adafruit-blinka==8.*
 adafruit-circuitpython-seesaw==1.*
+adafruit-circuitpython-rgb-display==4.*
 Pillow==11.*
-RPi.GPIO==0.7.*
 pytest==8.*
 ```
 
@@ -974,9 +707,9 @@ git commit -m "feat(pi): add audio mixing engine with tests"
 
 ---
 
-## Task 5: Pi Player — Hardware I/O
+## Task 4: Pi Player — Hardware I/O
 
-Reads KB2040s, rotary encoder over I2C. Updates LEDs. Detects button short/long press.
+Reads PCB seesaw (faders, buttons, LEDs) and ANO encoder over I2C. Detects button short/long press.
 
 **Files:**
 - Create: `pi/player/hardware.py`
@@ -991,7 +724,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from hardware import ButtonHandler, HardwareController
+from hardware import ButtonHandler
 
 
 class TestButtonHandler:
@@ -1001,7 +734,7 @@ class TestButtonHandler:
         handler = ButtonHandler(on_short_press=on_short, on_long_press=on_long, long_press_ms=500)
 
         handler.update(pressed=True, now=0.0)
-        handler.update(pressed=False, now=0.2)  # Released after 200ms → short press
+        handler.update(pressed=False, now=0.2)  # Released after 200ms -> short press
 
         on_short.assert_called_once()
         on_long.assert_not_called()
@@ -1013,7 +746,7 @@ class TestButtonHandler:
 
         handler.update(pressed=True, now=0.0)
         handler.update(pressed=True, now=0.3)
-        handler.update(pressed=True, now=0.6)  # Still held at 600ms → long press fires
+        handler.update(pressed=True, now=0.6)  # Still held at 600ms -> long press fires
         handler.update(pressed=False, now=0.7)  # Release after long press — no short press
 
         on_long.assert_called_once()
@@ -1029,79 +762,58 @@ class TestButtonHandler:
 
         on_short.assert_not_called()
         on_long.assert_not_called()
-
-
-class TestHardwareController:
-    @patch("hardware.smbus2")
-    def test_read_faders(self, mock_smbus):
-        """Test that fader values are correctly parsed from I2C register data."""
-        bus = MagicMock()
-        mock_smbus.SMBus.return_value = bus
-
-        # Simulate KB2040 #1 returning fader values: 512, 1023, 0
-        # 512 = 0x02 0x00, 1023 = 0x03 0xFF, 0 = 0x00 0x00
-        bus.read_i2c_block_data.side_effect = [
-            [0x02, 0x00, 0x03, 0xFF, 0x00, 0x00, 0x00],  # KB2040 #1
-            [0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00],  # KB2040 #2
-        ]
-
-        controller = HardwareController()
-        faders = controller.read_faders()
-
-        assert len(faders) == 6
-        assert abs(faders[0] - 0.5) < 0.01  # 512/1023
-        assert abs(faders[1] - 1.0) < 0.01  # 1023/1023
-        assert faders[2] == 0.0              # 0/1023
-
-    @patch("hardware.smbus2")
-    def test_read_buttons(self, mock_smbus):
-        """Test that button bitmask is correctly parsed."""
-        bus = MagicMock()
-        mock_smbus.SMBus.return_value = bus
-
-        # KB2040 #1: button 0 pressed (bit 0 = 1), buttons 1,2 not pressed
-        # KB2040 #2: button 1 pressed (bit 1 = 1)
-        bus.read_i2c_block_data.side_effect = [
-            [0, 0, 0, 0, 0, 0, 0b001],  # KB2040 #1: btn0 pressed
-            [0, 0, 0, 0, 0, 0, 0b010],  # KB2040 #2: btn1 pressed (= global btn4)
-        ]
-
-        controller = HardwareController()
-        buttons = controller.read_buttons()
-
-        assert buttons == [True, False, False, False, True, False]
 ```
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd pi/player && pip install smbus2 && pytest test_hardware.py -v`
+Run: `cd pi/player && pytest test_hardware.py -v`
 Expected: FAIL (hardware.py doesn't exist)
 
 **Step 3: Write the hardware controller**
 
 ```python
 # pi/player/hardware.py
+"""Hardware I/O for the Pi Stem Mixer.
+
+Uses Adafruit seesaw library to communicate with:
+- Custom PCB seesaw (0x49): 6 faders, 6 buttons, 12 NeoPixels
+- ANO Rotary Encoder seesaw (0x4A): rotary encoder + 5 buttons
+
+Uses GPIO (via digitalio) for TFT bonnet joystick/buttons.
+"""
 import time
 from typing import Callable, Optional
 
 try:
-    import smbus2
+    import board
+    from adafruit_seesaw.seesaw import Seesaw
+    from adafruit_seesaw.analoginput import AnalogInput
+    from adafruit_seesaw.digitalio import DigitalIO
+    from adafruit_seesaw.neopixel import NeoPixel
+    from adafruit_seesaw.rotaryio import IncrementalEncoder
+    import digitalio
+    HAS_HARDWARE = True
 except ImportError:
-    smbus2 = None  # Allow importing on non-Pi systems for testing
+    HAS_HARDWARE = False
 
 # I2C addresses
-KB2040_ADDR_1 = 0x30
-KB2040_ADDR_2 = 0x31
-ROTARY_ADDR = 0x36
+PCB_SEESAW_ADDR = 0x49  # Default seesaw address for custom PCB
+ANO_ENCODER_ADDR = 0x4A  # ANO rotary encoder
 
-# Seesaw registers for ANO rotary encoder
-SEESAW_STATUS = 0x00
-SEESAW_ENCODER_POSITION = 0x11
-SEESAW_GPIO_BULK = 0x01
+# PCB seesaw pin assignments
+SLIDER_PINS = [0, 1, 2, 3, 6, 7]  # Analog pins for 6 faders
+BUTTON_PINS = [19, 18, 14, 13, 12, 9]  # Digital pins for 6 buttons
+NEOPIXEL_PIN = 20  # NeoPixel data pin
+NEOPIXEL_COUNT = 12  # 2 LEDs per fader
 
-I2C_BUS = 1
-NUM_FADERS_PER_BOARD = 3
-READ_LENGTH = 7  # 6 bytes faders + 1 byte buttons
+# ANO encoder seesaw pin assignments
+ANO_SELECT_PIN = 1
+ANO_UP_PIN = 2
+ANO_LEFT_PIN = 3
+ANO_DOWN_PIN = 4
+ANO_RIGHT_PIN = 5
+
+NUM_STEMS = 6
 
 
 class ButtonHandler:
@@ -1139,96 +851,121 @@ class ButtonHandler:
 
 
 class HardwareController:
-    """Reads faders, buttons, rotary encoder via I2C. Writes LED colors."""
+    """Reads faders, buttons, rotary encoder via I2C seesaw. Writes LED colors."""
 
-    def __init__(self, bus_num: int = I2C_BUS):
-        if smbus2 is None:
-            raise RuntimeError("smbus2 not available — are you on a Raspberry Pi?")
-        self.bus = smbus2.SMBus(bus_num)
+    def __init__(self):
+        if not HAS_HARDWARE:
+            raise RuntimeError("Hardware libraries not available — are you on a Raspberry Pi?")
+
+        i2c = board.I2C()
+
+        # PCB seesaw — faders, buttons, LEDs
+        self.pcb = Seesaw(i2c)  # default addr 0x49
+
+        # Set up analog inputs for faders
+        self.sliders = []
+        for pin in SLIDER_PINS:
+            self.sliders.append(AnalogInput(self.pcb, pin))
+
+        # Set up digital inputs for buttons (pull-up, active low)
+        self.buttons = []
+        for pin in BUTTON_PINS:
+            btn = DigitalIO(self.pcb, pin)
+            btn.direction = digitalio.Direction.INPUT
+            btn.pull = digitalio.Pull.UP
+            self.buttons.append(btn)
+
+        # Set up NeoPixels
+        self.pixels = NeoPixel(self.pcb, NEOPIXEL_PIN, NEOPIXEL_COUNT)
+        self.pixels.brightness = 0.3
+
+        # ANO rotary encoder seesaw
+        self.ano = Seesaw(i2c, addr=ANO_ENCODER_ADDR)
+
+        # Set up ANO buttons (pull-up, active low)
+        for pin in [ANO_SELECT_PIN, ANO_UP_PIN, ANO_LEFT_PIN, ANO_DOWN_PIN, ANO_RIGHT_PIN]:
+            self.ano.pin_mode(pin, self.ano.INPUT_PULLUP)
+
+        self.ano_select = DigitalIO(self.ano, ANO_SELECT_PIN)
+        self.ano_up = DigitalIO(self.ano, ANO_UP_PIN)
+        self.ano_left = DigitalIO(self.ano, ANO_LEFT_PIN)
+        self.ano_down = DigitalIO(self.ano, ANO_DOWN_PIN)
+        self.ano_right = DigitalIO(self.ano, ANO_RIGHT_PIN)
+
+        # Set up rotary encoder
+        self.encoder = IncrementalEncoder(self.ano)
+        self._last_encoder_pos = self.encoder.position
 
     def read_faders(self) -> list[float]:
-        """Read 6 fader values (0.0–1.0) from both KB2040s."""
+        """Read 6 fader values (0.0–1.0) from PCB seesaw analog inputs."""
         faders = []
-        for addr in [KB2040_ADDR_1, KB2040_ADDR_2]:
-            data = self.bus.read_i2c_block_data(addr, 0x00, READ_LENGTH)
-            for i in range(NUM_FADERS_PER_BOARD):
-                high = data[i * 2]
-                low = data[i * 2 + 1]
-                raw = (high << 8) | low
-                faders.append(raw / 1023.0 if raw <= 1023 else 1.0)
+        for slider in self.sliders:
+            # AnalogInput returns 0–1023
+            raw = slider.value
+            faders.append(raw / 1023.0)
         return faders
 
     def read_buttons(self) -> list[bool]:
-        """Read 6 button states from both KB2040s."""
-        buttons = []
-        for addr in [KB2040_ADDR_1, KB2040_ADDR_2]:
-            data = self.bus.read_i2c_block_data(addr, 0x00, READ_LENGTH)
-            btn_byte = data[6]
-            for i in range(NUM_FADERS_PER_BOARD):
-                buttons.append(bool(btn_byte & (1 << i)))
-        return buttons
+        """Read 6 button states from PCB seesaw. True = pressed (active low)."""
+        return [not btn.value for btn in self.buttons]
 
-    def write_leds(self, addr: int, colors: list[tuple[int, int, int]]):
-        """Write RGB colors to 6 LEDs on a KB2040. colors = [(r,g,b), ...]."""
-        payload = []
-        for r, g, b in colors[:6]:
-            payload.extend([r, g, b])
-        # Pad to 18 bytes if fewer than 6 LEDs provided
-        payload.extend([0] * (18 - len(payload)))
-        self.bus.write_i2c_block_data(addr, 0x10, payload)
+    def read_encoder_delta(self) -> int:
+        """Read rotary encoder position change since last call."""
+        pos = self.encoder.position
+        delta = pos - self._last_encoder_pos
+        self._last_encoder_pos = pos
+        return delta
 
-    def update_all_leds(self, mixer_state):
-        """Update LEDs on both KB2040s based on mixer state."""
-        for board_idx, addr in enumerate([KB2040_ADDR_1, KB2040_ADDR_2]):
-            colors = []
-            for i in range(NUM_FADERS_PER_BOARD):
-                stem_idx = board_idx * NUM_FADERS_PER_BOARD + i
-                if mixer_state.solo_states[stem_idx]:
-                    color = (0, 0, 255)  # Blue
-                elif mixer_state.mute_states[stem_idx]:
-                    color = (255, 0, 0)  # Red
-                elif mixer_state.playing:
-                    brightness = int(mixer_state.fader_values[stem_idx] * 255)
-                    color = (0, brightness, 0)  # Green, brightness follows fader
-                else:
-                    color = (30, 30, 30)  # Dim white
-                # Each fader has 2 LEDs (left + right) showing same color
-                colors.append(color)
-                colors.append(color)
-            self.write_leds(addr, colors)
+    def read_encoder_select(self) -> bool:
+        """Read ANO center/select button. True = pressed."""
+        return not self.ano_select.value
 
-    def read_rotary_position(self) -> int:
-        """Read rotary encoder position via seesaw."""
-        data = self.bus.read_i2c_block_data(ROTARY_ADDR, SEESAW_ENCODER_POSITION, 4)
-        position = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]
-        # Handle signed 32-bit
-        if position >= 0x80000000:
-            position -= 0x100000000
-        return position
+    def read_ano_buttons(self) -> dict[str, bool]:
+        """Read ANO directional buttons. Returns dict with True = pressed."""
+        return {
+            "select": not self.ano_select.value,
+            "up": not self.ano_up.value,
+            "left": not self.ano_left.value,
+            "down": not self.ano_down.value,
+            "right": not self.ano_right.value,
+        }
 
-    def read_rotary_button(self) -> bool:
-        """Read rotary encoder center button via seesaw GPIO."""
-        data = self.bus.read_i2c_block_data(ROTARY_ADDR, SEESAW_GPIO_BULK, 4)
-        gpio_state = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3]
-        # Button is typically on pin 1, active low
-        return not bool(gpio_state & (1 << 1))
+    def update_leds(self, mixer_state):
+        """Update all 12 NeoPixels based on mixer state.
+
+        LED mapping: 2 LEDs per fader (pixel 0,1 = fader 0; pixel 2,3 = fader 1; etc.)
+        """
+        for stem_idx in range(NUM_STEMS):
+            if mixer_state.solo_states[stem_idx]:
+                color = (0, 0, 255)  # Blue
+            elif mixer_state.mute_states[stem_idx]:
+                color = (255, 0, 0)  # Red
+            elif mixer_state.playing:
+                brightness = int(mixer_state.fader_values[stem_idx] * 255)
+                color = (0, brightness, 0)  # Green, brightness follows fader
+            else:
+                color = (30, 30, 30)  # Dim white
+
+            # Each fader has 2 LEDs
+            self.pixels[stem_idx * 2] = color
+            self.pixels[stem_idx * 2 + 1] = color
 ```
 
 **Step 4: Run tests to verify they pass**
 
 Run: `cd pi/player && pytest test_hardware.py -v`
-Expected: All 5 tests PASS
+Expected: All 3 tests PASS (ButtonHandler tests — HardwareController requires real hardware)
 
 **Step 5: Commit**
 
 ```bash
 git add -f pi/player/hardware.py pi/player/test_hardware.py
-git commit -m "feat(pi): add I2C hardware controller with button handler"
+git commit -m "feat(pi): add seesaw-based hardware controller with button handler"
 ```
 
 ---
 
-## Task 6: Pi Player — Song Library
+## Task 5: Pi Player — Song Library
 
 Reads the `~/wavdash-stems/` directory and loads OGG files into the audio engine.
 
@@ -1403,25 +1140,26 @@ git commit -m "feat(pi): add song library scanner"
 
 ---
 
-## Task 7: Pi Player — Main Application
+## Task 6: Pi Player — TFT Display
 
-Ties together audio engine, hardware I/O, song library, and TFT display into the main threaded application.
+TFT Bonnet display driver and joystick/button input.
 
 **Files:**
-- Create: `pi/player/main.py`
 - Create: `pi/player/display.py`
 
-**Step 1: Write the TFT display module**
+**Step 1: Write the display module**
 
 ```python
 # pi/player/display.py
-"""TFT Bonnet display driver using Pillow for rendering."""
-import time
+"""TFT Bonnet display driver using Pillow + ST7789.
+
+Based on validated bonnet_example.py — uses the same GPIO pin assignments.
+"""
 from typing import Optional
 
 try:
     import board
-    import digitalio
+    from digitalio import DigitalInOut, Direction
     from adafruit_rgb_display import st7789
     from PIL import Image, ImageDraw, ImageFont
     HAS_DISPLAY = True
@@ -1430,14 +1168,15 @@ except ImportError:
 
 from audio_engine import MixerState, STEM_TYPES
 
-# TFT Bonnet button/joystick GPIO pins (Adafruit Mini PiTFT)
-BUTTON_A_PIN = 23
-BUTTON_B_PIN = 24
-JOYSTICK_UP = 17
-JOYSTICK_DOWN = 22
-JOYSTICK_LEFT = 27
-JOYSTICK_RIGHT = 5
-JOYSTICK_PRESS = 4
+# TFT Bonnet GPIO pins (from bonnet_example.py — validated working)
+BUTTON_A_PIN = board.D5 if HAS_DISPLAY else None
+BUTTON_B_PIN = board.D6 if HAS_DISPLAY else None
+JOYSTICK_UP_PIN = board.D17 if HAS_DISPLAY else None
+JOYSTICK_DOWN_PIN = board.D22 if HAS_DISPLAY else None
+JOYSTICK_LEFT_PIN = board.D27 if HAS_DISPLAY else None
+JOYSTICK_RIGHT_PIN = board.D23 if HAS_DISPLAY else None
+JOYSTICK_PRESS_PIN = board.D4 if HAS_DISPLAY else None
+BACKLIGHT_PIN = board.D26 if HAS_DISPLAY else None
 
 WIDTH = 240
 HEIGHT = 240
@@ -1451,16 +1190,21 @@ class Display:
         if not HAS_DISPLAY:
             raise RuntimeError("Display libraries not available")
 
-        cs_pin = digitalio.DigitalInOut(board.CE0)
-        dc_pin = digitalio.DigitalInOut(board.D25)
-        reset_pin = digitalio.DigitalInOut(board.D24)
+        cs_pin = DigitalInOut(board.CE0)
+        dc_pin = DigitalInOut(board.D25)
+        reset_pin = DigitalInOut(board.D24)
         spi = board.SPI()
 
         self.display = st7789.ST7789(
-            spi, height=HEIGHT, width=WIDTH,
+            spi, height=HEIGHT, y_offset=80, rotation=180,
             cs=cs_pin, dc=dc_pin, rst=reset_pin,
             baudrate=24000000,
         )
+
+        # Turn on backlight
+        self.backlight = DigitalInOut(BACKLIGHT_PIN)
+        self.backlight.switch_to_output()
+        self.backlight.value = True
 
         self._setup_buttons()
         self.image = Image.new("RGB", (WIDTH, HEIGHT), (0, 0, 0))
@@ -1475,19 +1219,18 @@ class Display:
 
     def _setup_buttons(self):
         self.buttons = {}
-        for name, pin_num in [
+        for name, pin in [
             ("a", BUTTON_A_PIN), ("b", BUTTON_B_PIN),
-            ("up", JOYSTICK_UP), ("down", JOYSTICK_DOWN),
-            ("left", JOYSTICK_LEFT), ("right", JOYSTICK_RIGHT),
-            ("press", JOYSTICK_PRESS),
+            ("up", JOYSTICK_UP_PIN), ("down", JOYSTICK_DOWN_PIN),
+            ("left", JOYSTICK_LEFT_PIN), ("right", JOYSTICK_RIGHT_PIN),
+            ("press", JOYSTICK_PRESS_PIN),
         ]:
-            pin = digitalio.DigitalInOut(getattr(board, f"D{pin_num}"))
-            pin.direction = digitalio.Direction.INPUT
-            pin.pull = digitalio.Pull.UP
-            self.buttons[name] = pin
+            dio = DigitalInOut(pin)
+            dio.direction = Direction.INPUT
+            self.buttons[name] = dio
 
     def read_buttons(self) -> dict[str, bool]:
-        """Read joystick + button states. Returns dict with True = pressed."""
+        """Read joystick + button states. Returns dict with True = pressed (active low)."""
         return {name: not pin.value for name, pin in self.buttons.items()}
 
     def render_library(self, songs: list, selected_index: int):
@@ -1520,7 +1263,7 @@ class Display:
         """Render the now-playing screen with fader levels."""
         self.draw.rectangle((0, 0, WIDTH, HEIGHT), fill=(0, 0, 0))
 
-        # Header — play state + song title
+        # Header
         play_icon = "||" if mixer_state.playing else ">"
         self.draw.text((10, 5), f"{play_icon} {song.title[:18]}", fill=(0, 255, 100), font=self.font_large)
         bpm_str = f"{song.bpm:.0f} BPM" if song.bpm else ""
@@ -1591,7 +1334,23 @@ class MockDisplay:
         pass
 ```
 
-**Step 2: Write the main application**
+**Step 2: Commit**
+
+```bash
+git add -f pi/player/display.py
+git commit -m "feat(pi): add TFT bonnet display driver"
+```
+
+---
+
+## Task 7: Pi Player — Main Application
+
+Ties together audio engine, hardware I/O, song library, and TFT display into the main threaded application.
+
+**Files:**
+- Create: `pi/player/main.py`
+
+**Step 1: Write the main application**
 
 ```python
 # pi/player/main.py
@@ -1614,7 +1373,7 @@ except ImportError:
 from audio_engine import AudioEngine, STEM_TYPES
 from song_library import SongLibrary, Song
 
-# Try hardware imports — fall back to mocks for development
+# Try hardware imports — fall back for development
 try:
     from hardware import HardwareController, ButtonHandler
     HAS_HARDWARE = True
@@ -1631,7 +1390,7 @@ except (ImportError, RuntimeError):
 STEMS_DIR = Path(os.environ.get("WAVDASH_STEMS_DIR", os.path.expanduser("~/wavdash-stems")))
 POLL_HZ = 60
 DISPLAY_FPS = 15
-LIBRARY_RESCAN_INTERVAL = 5.0  # Seconds between library rescans
+LIBRARY_RESCAN_INTERVAL = 5.0
 
 
 class StemMixerApp:
@@ -1664,17 +1423,19 @@ class StemMixerApp:
         else:
             self.display = MockDisplay()
 
-        # Button handlers for mute/solo
+        # Button handlers for mute/solo (PCB buttons)
         self.button_handlers: list[ButtonHandler] = []
-        for i in range(6):
-            handler = ButtonHandler(
-                on_short_press=lambda idx=i: self.engine.state.toggle_mute(idx),
-                on_long_press=lambda idx=i: self.engine.state.toggle_solo(idx),
-            )
-            self.button_handlers.append(handler)
+        if HAS_HARDWARE:
+            from hardware import ButtonHandler
+            for i in range(6):
+                handler = ButtonHandler(
+                    on_short_press=lambda idx=i: self.engine.state.toggle_mute(idx),
+                    on_long_press=lambda idx=i: self.engine.state.toggle_solo(idx),
+                )
+                self.button_handlers.append(handler)
 
-        # Rotary state
-        self._last_rotary_pos = 0
+        # ANO encoder select button handler (play/pause)
+        self._ano_select_held = False
 
     def load_song(self, song: Song):
         """Load a song's stems into the audio engine."""
@@ -1688,7 +1449,7 @@ class StemMixerApp:
             if stem_type in song.stem_paths:
                 data, sr = sf.read(str(song.stem_paths[stem_type]), dtype="float32")
                 if data.ndim == 1:
-                    data = np.column_stack([data, data])  # Mono → stereo
+                    data = np.column_stack([data, data])  # Mono -> stereo
                 stems[stem_type] = data
                 self.engine.sample_rate = sr
 
@@ -1711,7 +1472,7 @@ class StemMixerApp:
             now = time.monotonic()
 
             if self.hw:
-                # Read faders
+                # Read faders from PCB seesaw
                 try:
                     faders = self.hw.read_faders()
                     for i, val in enumerate(faders):
@@ -1719,7 +1480,7 @@ class StemMixerApp:
                 except Exception:
                     pass
 
-                # Read buttons
+                # Read buttons from PCB seesaw
                 try:
                     buttons = self.hw.read_buttons()
                     for i, pressed in enumerate(buttons):
@@ -1727,25 +1488,27 @@ class StemMixerApp:
                 except Exception:
                     pass
 
-                # Update LEDs
+                # Update LEDs on PCB seesaw
                 try:
-                    self.hw.update_all_leds(self.engine.state)
+                    self.hw.update_leds(self.engine.state)
                 except Exception:
                     pass
 
-                # Read rotary encoder
+                # Read rotary encoder (master volume)
                 try:
-                    pos = self.hw.read_rotary_position()
-                    delta = pos - self._last_rotary_pos
+                    delta = self.hw.read_encoder_delta()
                     if delta != 0:
                         new_vol = self.engine.state.master_volume + delta * 0.02
                         self.engine.state.master_volume = max(0.0, min(1.0, new_vol))
-                    self._last_rotary_pos = pos
+                except Exception:
+                    pass
 
-                    # Rotary button = play/pause
-                    if self.hw.read_rotary_button():
+                # ANO select button = play/pause (with debounce)
+                try:
+                    select_pressed = self.hw.read_encoder_select()
+                    if select_pressed and not self._ano_select_held:
                         self.engine.state.playing = not self.engine.state.playing
-                        time.sleep(0.3)  # Debounce
+                    self._ano_select_held = select_pressed
                 except Exception:
                     pass
 
@@ -1767,11 +1530,19 @@ class StemMixerApp:
             # Read TFT bonnet inputs
             btn = self.display.read_buttons()
 
+            # Also read ANO up/down for library navigation
+            ano_btn = {}
+            if self.hw:
+                try:
+                    ano_btn = self.hw.read_ano_buttons()
+                except Exception:
+                    pass
+
             if self.screen == "library":
-                if btn.get("down") and self.selected_index < len(self.songs) - 1:
+                if (btn.get("down") or ano_btn.get("down")) and self.selected_index < len(self.songs) - 1:
                     self.selected_index += 1
                     time.sleep(0.15)  # Debounce
-                elif btn.get("up") and self.selected_index > 0:
+                elif (btn.get("up") or ano_btn.get("up")) and self.selected_index > 0:
                     self.selected_index -= 1
                     time.sleep(0.15)
                 elif btn.get("press") and self.songs:
@@ -1848,11 +1619,11 @@ if __name__ == "__main__":
     app.run()
 ```
 
-**Step 3: Commit**
+**Step 2: Commit**
 
 ```bash
-git add -f pi/player/main.py pi/player/display.py
-git commit -m "feat(pi): add main stem mixer application with display driver"
+git add -f pi/player/main.py
+git commit -m "feat(pi): add main stem mixer application"
 ```
 
 ---
@@ -2223,7 +1994,7 @@ git commit -m "chore(pi): add systemd services and setup script"
 
 ## Task 10: End-to-End Integration Test
 
-Verify the full flow works: WavDash → Pi receiver → song appears in library.
+Verify the full flow works: WavDash -> Pi receiver -> song appears in library.
 
 **Files:**
 - Create: `pi/test_integration.py`
@@ -2361,17 +2132,19 @@ git commit -m "test(pi): add end-to-end integration test for receiver + library"
 
 ## Summary
 
-| Task | Component | Tests |
-|------|-----------|-------|
-| 1 | Hardware Assembly Guide | N/A (docs) |
-| 2 | KB2040 Firmware | Manual (flash + i2cdetect) |
-| 3 | Pi Receiver Service | 7 pytest tests |
-| 4 | Audio Engine | 9 pytest tests |
-| 5 | Hardware I/O | 5 pytest tests |
-| 6 | Song Library | 4 pytest tests |
-| 7 | Main Application + Display | Manual (requires Pi hardware) |
-| 8 | Laravel PushStemsToDevice | 2 PHPUnit tests |
-| 9 | Systemd Services | Manual (deploy to Pi) |
-| 10 | Integration Test | 1 end-to-end script |
+| Task | Status | Component | Tests |
+|------|--------|-----------|-------|
+| 1 | ✅ DONE | Hardware Assembly & Validation | Manual (all controls verified) |
+| 2 | | Pi Receiver Service | 7 pytest tests |
+| 3 | | Audio Engine | 9 pytest tests |
+| 4 | | Hardware I/O | 3 pytest tests (ButtonHandler) |
+| 5 | | Song Library | 4 pytest tests |
+| 6 | | TFT Display | Manual (requires Pi hardware) |
+| 7 | | Main Application | Manual (requires Pi hardware) |
+| 8 | | Laravel PushStemsToDevice | 2 PHPUnit tests |
+| 9 | | Systemd Services | Manual (deploy to Pi) |
+| 10 | | Integration Test | 1 end-to-end script |
 
-**Recommended execution order:** Tasks 1–6 can be done without Pi hardware. Tasks 7–9 are best done on or with access to the Pi. Task 10 validates the full chain.
+**Key change from original plan:** The custom PCB uses a single Adafruit seesaw (ATTiny8x7) at I2C `0x49` instead of two KB2040 boards. This eliminates the need for separate CircuitPython firmware — the seesaw is controlled directly from the Pi using `adafruit-circuitpython-seesaw`. The KB2040 firmware task has been removed.
+
+**Recommended execution order:** Tasks 2–5 can be done without Pi hardware (pure Python, testable anywhere). Tasks 6–7 need the Pi with display/hardware attached. Task 8 is Laravel-side (MacBook). Task 9 deploys to Pi. Task 10 validates the full chain.
