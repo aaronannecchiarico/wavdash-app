@@ -1,8 +1,7 @@
 # Pi Stem Mixer — Design Document
 
 **Date:** 2026-03-17
-**Updated:** 2026-03-18
-**Status:** Approved — Hardware Complete
+**Status:** Approved
 
 ## Overview
 
@@ -13,9 +12,10 @@ Host WavDash on a MacBook for demo/local use. After stem separation, automatical
 ### Components
 
 - **Raspberry Pi 5** (4GB) with active cooling
-- **Custom PCB** with 6 linear faders (S1–S6), 6 tactile buttons, 12 RGB LEDs (WS2812, 2 per fader), onboard **Adafruit seesaw (ATTiny8x7)** for I2C control
-- **Adafruit ANO Rotary Encoder** (I2C seesaw at `0x4A` — master volume + 5 navigation buttons)
-- **Adafruit Mini PiTFT Bonnet** (ST7789 240x240 TFT + 5-way joystick + 2 buttons — song browsing/UI)
+- **Custom PCB** with 6 linear faders (S1–S6), 6 tactile buttons, 12 RGB LEDs (WS2812, 2 per fader)
+- **2x Adafruit KB2040** (RP2040-based, I2C ADC for faders + button/LED control)
+- **Adafruit ANO Rotary Encoder** (I2C seesaw — master volume, center button = play/pause)
+- **Adafruit TFT Bonnet** (TFT screen + joystick + 2 buttons — song browsing/UI)
 - **OzzMaker QWIIC HAT** + QWIIC/Stemma QT cables (I2C daisy-chain)
 - **Behringer UPhoria UM2** (USB audio interface — stereo output)
 
@@ -28,74 +28,39 @@ Pi 5 GPIO (I2C1: SDA=GPIO2, SCL=GPIO3)
   │
   └─ OzzMaker QWIIC HAT (solders to Pi GPIO, exposes QWIIC ports)
        │
-       ├─── QWIIC cable ──→ Custom PCB seesaw (0x49 default)
-       │                     6 faders + 6 buttons + 12 NeoPixels
+       ├─── QWIIC cable ──→ KB2040 #1 (faders 1-3 + buttons 1-3 + LEDs 1-6)
+       │                        │
+       │                        └─── QWIIC cable ──→ KB2040 #2 (faders 4-6 + buttons 4-6 + LEDs 7-12)
        │
-       └─── QWIIC cable ──→ Adafruit ANO Rotary Encoder (0x4A)
-                             rotary position + select/up/left/down/right buttons
+       └─── QWIIC cable ──→ Adafruit ANO Rotary Encoder (seesaw I2C)
 ```
 
 ### TFT Bonnet
 
-- Sits directly on Pi 5 GPIO header (on top of QWIIC HAT pass-through)
-- Uses SPI for display (ST7789, 240x240, `board.CE0`/`board.D25`/`board.D24`)
-- GPIO for joystick and buttons (does not conflict with I2C pins)
+- Sits directly on Pi 5 GPIO header
+- Uses SPI for display (GPIO 10/11) + GPIO for joystick and buttons
+- Does not conflict with I2C pins
 
-### Custom PCB — Seesaw Pin Map
+### KB2040 Connections (each board)
 
-The PCB has a single Adafruit seesaw (ATTiny8x7) at I2C address `0x49` (default). All faders, buttons, and LEDs are connected to seesaw pins:
+| KB2040 Pin | Connected To |
+|------------|-------------|
+| A0, A1, A2 | 3 fader wipers (voltage divider, 3.3V to GND) |
+| D2, D3, D4 | 3 tactile buttons (pull-up, active low) |
+| D5 | NeoPixel data out (6 LEDs daisy-chained per board) |
+| SDA/SCL | QWIIC connector (I2C to Pi) |
 
-| Seesaw Pin | Connected To | Code Reference |
-|------------|-------------|----------------|
-| 0 | Fader S1 wiper (analog) | `slider_0` — Vocals |
-| 1 | Fader S2 wiper (analog) | `slider_1` — Drums |
-| 2 | Fader S3 wiper (analog) | `slider_2` — Bass |
-| 3 | Fader S4 wiper (analog) | `slider_3` — Guitar |
-| 6 | Fader S5 wiper (analog) | `slider_4` — Piano |
-| 7 | Fader S6 wiper (analog) | `slider_5` — Other |
-| 19 | Button S1 (digital, pull-up, active low) | `btn_0` — Vocals |
-| 18 | Button S2 (digital, pull-up, active low) | `btn_1` — Drums |
-| 14 | Button S3 (digital, pull-up, active low) | `btn_2` — Bass |
-| 13 | Button S4 (digital, pull-up, active low) | `btn_3` — Guitar |
-| 12 | Button S5 (digital, pull-up, active low) | `btn_4` — Piano |
-| 9 | Button S6 (digital, pull-up, active low) | `btn_5` — Other |
-| 20 | NeoPixel data out (12 LEDs daisy-chained) | `pixels` |
+### KB2040 Firmware
 
-### ANO Rotary Encoder — Seesaw Pin Map
-
-The ANO rotary encoder is a separate seesaw device at I2C address `0x4A`:
-
-| Seesaw Pin | Connected To | Code Reference |
-|------------|-------------|----------------|
-| encoder | Rotary position (quadrature) | `encoder.position` — Master volume |
-| 1 | Select/center button (pull-up, active low) | `select` — Play/pause |
-| 2 | Up button (pull-up, active low) | `up` |
-| 3 | Left button (pull-up, active low) | `left` |
-| 4 | Down button (pull-up, active low) | `down` |
-| 5 | Right button (pull-up, active low) | `right` |
-
-### TFT Bonnet — GPIO Pin Map
-
-| GPIO Pin | Board Ref | Connected To | Code Reference |
-|----------|-----------|-------------|----------------|
-| GPIO 5 | `board.D5` | Button A | `button_A` |
-| GPIO 6 | `board.D6` | Button B | `button_B` |
-| GPIO 27 | `board.D27` | Joystick Left | `button_L` |
-| GPIO 23 | `board.D23` | Joystick Right | `button_R` |
-| GPIO 17 | `board.D17` | Joystick Up | `button_U` |
-| GPIO 22 | `board.D22` | Joystick Down | `button_D` |
-| GPIO 4 | `board.D4` | Joystick Center/Press | `button_C` |
-| GPIO 26 | `board.D26` | Backlight control | `backlight` |
-| CE0 | `board.CE0` | SPI chip select | Display CS |
-| GPIO 25 | `board.D25` | Data/command | Display DC |
-| GPIO 24 | `board.D24` | Reset | Display RST |
-| SPI0 | `board.SPI()` | SPI bus (MOSI/SCLK) | Display data |
+- CircuitPython or Arduino sketch
+- Reads 3 ADC channels + 3 button states, drives 6 NeoPixels
+- Exposes values over I2C as a seesaw-compatible or custom register map
+- Unique I2C addresses: `0x30` (KB2040 #1) and `0x31` (KB2040 #2)
 
 ### Power
 
 - Pi 5: USB-C (5V/5A recommended)
-- Custom PCB seesaw: 3.3V via QWIIC from Pi
-- ANO Encoder seesaw: 3.3V via QWIIC from Pi
+- KB2040s: 3.3V via QWIIC from Pi
 - Faders: wiper between 3.3V and GND
 - UM2: separate USB connection to Pi
 
@@ -174,14 +139,15 @@ Python application handling hardware I/O, audio mixing, and TFT UI.
 1. **Audio thread** — `sounddevice` OutputStream callback. Pre-loads all 6 stems into memory as numpy arrays. Mixes 6 channels applying fader volumes and mute/solo states, outputs stereo to UM2. Target latency: ~20ms.
 
 2. **Hardware I/O thread** — Polls I2C bus at ~60Hz:
-   - PCB seesaw (`0x49`): reads 6 analog faders via `AnalogInput`, reads 6 buttons via `DigitalIO`, writes 12 NeoPixels via `NeoPixel`
-   - ANO encoder seesaw (`0x4A`): reads rotary position via `IncrementalEncoder`, reads 5 navigation buttons via `DigitalIO`
+   - 2x KB2040 (ADC for 6 faders → volume values 0.0–1.0)
+   - Rotary encoder via seesaw (master volume + play/pause button)
    - Button state reading with short-press/long-press detection (mute/solo)
+   - LED color updates
 
 3. **Main thread** — Drives TFT bonnet UI:
    - Song browser screen
    - Now-playing screen
-   - Joystick + bonnet button input (GPIO direct read)
+   - Joystick + bonnet button input
 
 **Shared state (protected by lock):**
 
@@ -206,19 +172,18 @@ for each frame:
 
 ### Controls
 
-| Control | Hardware | Action |
-|---------|----------|--------|
-| Faders 1–6 | PCB seesaw pins 0,1,2,3,6,7 | Individual stem volume (vocals, drums, bass, guitar, piano, other) |
-| Buttons 1–6 (short press) | PCB seesaw pins 19,18,14,13,12,9 | Toggle mute on that stem |
-| Buttons 1–6 (long press) | PCB seesaw pins 19,18,14,13,12,9 | Solo that stem |
-| Rotary encoder turn | ANO seesaw `0x4A` encoder | Master volume |
-| Rotary encoder select | ANO seesaw `0x4A` pin 1 | Play / pause |
-| ANO up/down | ANO seesaw `0x4A` pins 2,4 | Alternative: scroll song library |
-| Joystick up/down | Bonnet GPIO D17/D22 | Scroll song library |
-| Joystick press | Bonnet GPIO D4 | Load & play selected song |
-| Joystick left | Bonnet GPIO D27 | Back to library from now-playing |
-| Bonnet Button A | GPIO D5 | Stop (return to library) |
-| Bonnet Button B | GPIO D6 | Reserved |
+| Control | Action |
+|---------|--------|
+| Faders 1–6 | Individual stem volume (vocals, drums, bass, guitar, piano, other) |
+| Buttons 1–6 (short press) | Toggle mute on that stem |
+| Buttons 1–6 (long press) | Solo that stem |
+| Rotary encoder turn | Master volume |
+| Rotary encoder press | Play / pause |
+| Joystick up/down | Scroll song library |
+| Joystick press | Load & play selected song |
+| Joystick left | Back to library from now-playing |
+| Bonnet Button A | Stop (return to library) |
+| Bonnet Button B | Reserved |
 
 ### LED Behavior
 
@@ -229,20 +194,7 @@ for each frame:
 | Soloed | Blue | Solid |
 | Stopped / No song | Dim white | Solid |
 
-Both LEDs per fader (2 of 12 total on seesaw pin 20) show the same color.
-
-**LED-to-Fader Mapping** (12 NeoPixels on single chain, pin 20):
-
-| Pixel Index | Position | Fader |
-|-------------|----------|-------|
-| 0, 1 | Top row left pair | S1 (Vocals) |
-| 2, 3 | Top row center-left pair | S2 (Drums) |
-| 4, 5 | Top row center-right pair | S3 (Bass) |
-| 6, 7 | Bottom row left pair | S4 (Guitar) |
-| 8, 9 | Bottom row center pair | S5 (Piano) |
-| 10, 11 | Bottom row right pair | S6 (Other) |
-
-> **Note:** The exact pixel-to-fader mapping may need adjustment based on how the NeoPixels are physically wired on the PCB. Update this table after verifying on hardware.
+Both LEDs per fader show the same color.
 
 ### TFT Screens
 
@@ -250,14 +202,14 @@ Both LEDs per fader (2 of 12 total on seesaw pin 20) show the same color.
 
 ```
 ┌──────────────────────┐
-│  WavDash Stems       │
+│  ♫ WavDash Stems     │
 │──────────────────────│
 │  > Song Title A      │
 │    Song Title B      │
 │    Song Title C      │
 │    Song Title D      │
 │──────────────────────│
-│  4 songs  up/dn      │
+│  4 songs  ↑↓ scroll  │
 └──────────────────────┘
 ```
 
@@ -265,7 +217,7 @@ Both LEDs per fader (2 of 12 total on seesaw pin 20) show the same color.
 
 ```
 ┌──────────────────────┐
-│  > Song Title A      │
+│  ▶ Song Title A      │
 │  120 BPM             │
 │──────────────────────│
 │  VOC ████████░░ 80%  │
@@ -288,28 +240,8 @@ Both LEDs per fader (2 of 12 total on seesaw pin 20) show the same color.
 | Pi receiver service | `pi/receiver/` |
 | Pi player app | `pi/player/` |
 | Pi systemd units | `pi/deploy/` |
-| Hardware test scripts | `pi/main.py`, `pi/rotary_encoder_example.py`, `pi/bonnet_example.py` |
-
-## Hardware-to-Code Reference
-
-### I2C Device Summary
-
-| Device | I2C Address | Library | Purpose |
-|--------|-------------|---------|---------|
-| Custom PCB seesaw | `0x49` (default) | `adafruit_seesaw.seesaw.Seesaw(i2c)` | Faders, buttons, LEDs |
-| ANO Rotary Encoder | `0x4A` | `adafruit_seesaw.seesaw.Seesaw(i2c, addr=0x4A)` | Rotary + nav buttons |
-
-### Python Libraries Required
-
-| Library | Used For |
-|---------|----------|
-| `adafruit-blinka` | Board/GPIO/I2C/SPI abstraction |
-| `adafruit-circuitpython-seesaw` | PCB + ANO encoder I2C comms (`AnalogInput`, `DigitalIO`, `NeoPixel`, `IncrementalEncoder`) |
-| `adafruit-circuitpython-rgb-display` | ST7789 TFT bonnet display |
-| `Pillow` | Image rendering for TFT |
-| `sounddevice` | Audio output stream to UM2 |
-| `soundfile` | OGG file decoding |
-| `numpy` | Audio buffer manipulation |
+| Hardware assembly guide | `pi/docs/hardware-assembly.md` |
+| KB2040 firmware | `pi/firmware/` |
 
 ## End-to-End Flow
 
