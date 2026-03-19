@@ -146,10 +146,12 @@ class Display:
                 status = "MUTE"
             elif any_soloed:
                 color = (80, 80, 80)
-                status = f"{int(fader * 100)}%"
+                pct = 100 if fader > 0.99 else int(fader * 100)
+                status = f"{pct}%"
             else:
                 color = (0, 200, 80)
-                status = f"{int(fader * 100)}%"
+                pct = 100 if fader > 0.99 else int(fader * 100)
+                status = f"{pct}%"
 
             self.draw.text((10, y), label, fill=color, font=self.font)
 
