@@ -1,0 +1,16 @@
+[Unit]
+Description=WavDash Stem Receiver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wavdash-monorepo/pi/receiver
+Environment=WAVDASH_STEMS_DIR=/home/pi/wavdash-stems
+ExecStart=/home/pi/wavdash-monorepo/pi/receiver/venv/bin/uvicorn main:app --host 0.0.0.0 --port 9000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

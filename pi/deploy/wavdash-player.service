@@ -1,0 +1,16 @@
+[Unit]
+Description=WavDash Stem Mixer Player
+After=network-online.target wavdash-receiver.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wavdash-monorepo/pi/player
+Environment=WAVDASH_STEMS_DIR=/home/pi/wavdash-stems
+ExecStart=/home/pi/wavdash-monorepo/pi/player/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
