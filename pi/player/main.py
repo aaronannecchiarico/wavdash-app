@@ -99,6 +99,8 @@ class StemMixerApp:
             return
 
         self.engine.state.playing = False
+        self.display.render_loading(song)
+
         stems = {}
         for stem_type in STEM_TYPES:
             if stem_type in song.stem_paths:

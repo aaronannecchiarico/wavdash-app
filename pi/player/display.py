@@ -106,6 +106,19 @@ class Display:
 
         self.display.image(self.image)
 
+    def render_loading(self, song):
+        """Render a loading screen while stems are being buffered."""
+        self.draw.rectangle((0, 0, WIDTH, HEIGHT), fill=(0, 0, 0))
+
+        self.draw.text((10, 80), "Loading...", fill=(0, 200, 255), font=self.font_large)
+        self.draw.text((10, 110), song.title[:22], fill=(255, 255, 255), font=self.font)
+
+        # Simple loading bar outline
+        bar_y = 145
+        self.draw.rectangle((30, bar_y, WIDTH - 30, bar_y + 10), outline=(100, 100, 100))
+
+        self.display.image(self.image)
+
     def render_now_playing(self, song, mixer_state: MixerState, position_s: float, duration_s: float):
         """Render the now-playing screen with fader levels."""
         self.draw.rectangle((0, 0, WIDTH, HEIGHT), fill=(0, 0, 0))
@@ -175,6 +188,9 @@ class MockDisplay:
         return {k: False for k in ["a", "b", "up", "down", "left", "right", "press"]}
 
     def render_library(self, songs, selected_index):
+        pass
+
+    def render_loading(self, song):
         pass
 
     def render_now_playing(self, song, mixer_state, position_s, duration_s):
