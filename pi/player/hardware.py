@@ -48,7 +48,7 @@ class ButtonHandler:
         self,
         on_short_press: Callable = lambda: None,
         on_long_press: Callable = lambda: None,
-        long_press_ms: int = 300,
+        long_press_ms: int = 700,
     ):
         self.on_short_press = on_short_press
         self.on_long_press = on_long_press

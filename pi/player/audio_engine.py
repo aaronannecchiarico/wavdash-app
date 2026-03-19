@@ -45,6 +45,7 @@ class AudioEngine:
         self.stems: list[np.ndarray] = []  # 6 numpy arrays, each (frames, 2)
         self.num_frames: int = 0
         self.position: int = 0
+        self._pending_seek: int | None = None  # Set by seek(), consumed by mix_frames()
         self.sample_rate: int = 44100
 
     def load_stems(self, stems_dict: dict[str, np.ndarray]):
@@ -61,8 +62,18 @@ class AudioEngine:
         self.num_frames = self.stems[0].shape[0]
         self.position = 0
 
+    def seek(self, frame: int):
+        """Request a seek — applied atomically by the next mix_frames call."""
+        self._pending_seek = max(0, min(frame, self.num_frames - 1))
+
     def mix_frames(self, start: int, count: int) -> np.ndarray:
         """Mix `count` frames from position `start`. Returns (count, 2) array."""
+        # Apply pending seek atomically
+        pending = self._pending_seek
+        if pending is not None:
+            start = pending
+            self._pending_seek = None
+
         if not self.state.playing or not self.stems:
             self.position = start + count
             return np.zeros((count, 2), dtype=np.float32)

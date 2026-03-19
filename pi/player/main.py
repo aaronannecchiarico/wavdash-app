@@ -210,14 +210,17 @@ class StemMixerApp:
             self.encoder_pressed = False
 
             if self.screen == "library":
+                # Clamp encoder to ±1 for menu navigation (raw delta used for seeking)
+                enc_nav = max(-1, min(1, enc_delta))
+
                 # Navigation: joystick, ANO up/down, or encoder scroll
-                if (btn.get("down") or enc_delta > 0) and self.selected_index < len(self.songs) - 1:
-                    self.selected_index += min(abs(enc_delta), len(self.songs) - 1 - self.selected_index) if enc_delta > 0 else 1
-                    if not enc_delta:
+                if (btn.get("down") or enc_nav > 0) and self.selected_index < len(self.songs) - 1:
+                    self.selected_index += 1
+                    if not enc_nav:
                         time.sleep(0.15)  # Debounce for buttons only
-                elif (btn.get("up") or enc_delta < 0) and self.selected_index > 0:
-                    self.selected_index -= min(abs(enc_delta), self.selected_index) if enc_delta < 0 else 1
-                    if not enc_delta:
+                elif (btn.get("up") or enc_nav < 0) and self.selected_index > 0:
+                    self.selected_index -= 1
+                    if not enc_nav:
                         time.sleep(0.15)
                 elif (btn.get("press") or btn.get("b") or enc_pressed) and self.songs:
                     self.load_song(self.songs[self.selected_index])
@@ -231,12 +234,13 @@ class StemMixerApp:
                 elif btn.get("b") or enc_pressed:
                     self.engine.state.playing = not self.engine.state.playing
 
-                # Encoder scroll = seek
+                # Encoder scroll = seek (clamp to ±5 detents to avoid huge jumps)
                 if enc_delta != 0:
-                    seek_seconds = enc_delta * 2.0  # 2 seconds per detent
+                    clamped = max(-5, min(5, enc_delta))
+                    seek_seconds = clamped * 2.0  # 2 seconds per detent
                     seek_frames = int(seek_seconds * self.engine.sample_rate)
                     new_pos = self.engine.position + seek_frames
-                    self.engine.position = max(0, min(new_pos, self.engine.num_frames - 1))
+                    self.engine.seek(new_pos)
 
                 if self.current_song:
                     self.display.render_now_playing(
