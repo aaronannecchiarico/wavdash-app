@@ -5,10 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/wavdash-monorepo/pi/player
-Environment=WAVDASH_STEMS_DIR=/home/pi/wavdash-stems
-ExecStart=/home/pi/wavdash-monorepo/pi/player/venv/bin/python main.py
+User=aannecchiarico
+WorkingDirectory=/home/aannecchiarico/wavdash/player
+Environment=WAVDASH_STEMS_DIR=/home/aannecchiarico/wavdash-stems
+ExecStart=/home/aannecchiarico/env/bin/python main.py
 Restart=always
 RestartSec=5
 

@@ -182,11 +182,11 @@ prod-stop: ## Stop production services
 
 PI_HOST ?= aannecchiarico@raspberrypi.local
 PI_DIR ?= /home/aannecchiarico/wavdash
-PI_VENV ?= /home/aannecchiarico/venv
+PI_VENV ?= /home/aannecchiarico/env
 
 pi-sync: ## Sync pi/ folder to Raspberry Pi
 	@echo "$(GREEN)Syncing pi/ to $(PI_HOST):$(PI_DIR)...$(RESET)"
-	rsync -avz --delete --exclude='__pycache__' --exclude='.pytest_cache' --exclude='*.pyc' \
+	rsync -avz --delete --exclude='__pycache__' --exclude='.pytest_cache' --exclude='*.pyc' --exclude='.venv' \
 		pi/ $(PI_HOST):$(PI_DIR)/
 	@echo "$(GREEN)Sync complete!$(RESET)"
 

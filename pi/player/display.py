@@ -1,10 +1,12 @@
-"""TFT Bonnet display driver using Pillow for rendering."""
-import time
+"""TFT Bonnet display driver using Pillow + ST7789.
+
+Based on validated bonnet_example.py — uses the same GPIO pin assignments.
+"""
 from typing import Optional
 
 try:
     import board
-    import digitalio
+    from digitalio import DigitalInOut, Direction
     from adafruit_rgb_display import st7789
     from PIL import Image, ImageDraw, ImageFont
     HAS_DISPLAY = True
@@ -13,14 +15,15 @@ except ImportError:
 
 from audio_engine import MixerState, STEM_TYPES
 
-# TFT Bonnet button/joystick GPIO pins (Adafruit Mini PiTFT)
-BUTTON_A_PIN = 23
-BUTTON_B_PIN = 24
-JOYSTICK_UP = 17
-JOYSTICK_DOWN = 22
-JOYSTICK_LEFT = 27
-JOYSTICK_RIGHT = 5
-JOYSTICK_PRESS = 4
+# TFT Bonnet GPIO pins (from bonnet_example.py — validated working)
+BUTTON_A_PIN = board.D5 if HAS_DISPLAY else None
+BUTTON_B_PIN = board.D6 if HAS_DISPLAY else None
+JOYSTICK_UP_PIN = board.D17 if HAS_DISPLAY else None
+JOYSTICK_DOWN_PIN = board.D22 if HAS_DISPLAY else None
+JOYSTICK_LEFT_PIN = board.D27 if HAS_DISPLAY else None
+JOYSTICK_RIGHT_PIN = board.D23 if HAS_DISPLAY else None
+JOYSTICK_PRESS_PIN = board.D4 if HAS_DISPLAY else None
+BACKLIGHT_PIN = board.D26 if HAS_DISPLAY else None
 
 WIDTH = 240
 HEIGHT = 240
@@ -34,16 +37,21 @@ class Display:
         if not HAS_DISPLAY:
             raise RuntimeError("Display libraries not available")
 
-        cs_pin = digitalio.DigitalInOut(board.CE0)
-        dc_pin = digitalio.DigitalInOut(board.D25)
-        reset_pin = digitalio.DigitalInOut(board.D24)
+        cs_pin = DigitalInOut(board.CE0)
+        dc_pin = DigitalInOut(board.D25)
+        reset_pin = DigitalInOut(board.D24)
         spi = board.SPI()
 
         self.display = st7789.ST7789(
-            spi, height=HEIGHT, width=WIDTH,
+            spi, height=HEIGHT, y_offset=80, rotation=180,
             cs=cs_pin, dc=dc_pin, rst=reset_pin,
             baudrate=24000000,
         )
+
+        # Turn on backlight
+        self.backlight = DigitalInOut(BACKLIGHT_PIN)
+        self.backlight.switch_to_output()
+        self.backlight.value = True
 
         self._setup_buttons()
         self.image = Image.new("RGB", (WIDTH, HEIGHT), (0, 0, 0))
@@ -58,19 +66,18 @@ class Display:
 
     def _setup_buttons(self):
         self.buttons = {}
-        for name, pin_num in [
+        for name, pin in [
             ("a", BUTTON_A_PIN), ("b", BUTTON_B_PIN),
-            ("up", JOYSTICK_UP), ("down", JOYSTICK_DOWN),
-            ("left", JOYSTICK_LEFT), ("right", JOYSTICK_RIGHT),
-            ("press", JOYSTICK_PRESS),
+            ("up", JOYSTICK_UP_PIN), ("down", JOYSTICK_DOWN_PIN),
+            ("left", JOYSTICK_LEFT_PIN), ("right", JOYSTICK_RIGHT_PIN),
+            ("press", JOYSTICK_PRESS_PIN),
         ]:
-            pin = digitalio.DigitalInOut(getattr(board, f"D{pin_num}"))
-            pin.direction = digitalio.Direction.INPUT
-            pin.pull = digitalio.Pull.UP
-            self.buttons[name] = pin
+            dio = DigitalInOut(pin)
+            dio.direction = Direction.INPUT
+            self.buttons[name] = dio
 
     def read_buttons(self) -> dict[str, bool]:
-        """Read joystick + button states. Returns dict with True = pressed."""
+        """Read joystick + button states. Returns dict with True = pressed (active low)."""
         return {name: not pin.value for name, pin in self.buttons.items()}
 
     def render_library(self, songs: list, selected_index: int):
@@ -103,7 +110,7 @@ class Display:
         """Render the now-playing screen with fader levels."""
         self.draw.rectangle((0, 0, WIDTH, HEIGHT), fill=(0, 0, 0))
 
-        # Header — play state + song title
+        # Header
         play_icon = "||" if mixer_state.playing else ">"
         self.draw.text((10, 5), f"{play_icon} {song.title[:18]}", fill=(0, 255, 100), font=self.font_large)
         bpm_str = f"{song.bpm:.0f} BPM" if song.bpm else ""

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Run this on the Raspberry Pi to set up both services.
+# Assumes code has been synced to ~/wavdash/ via `make pi-sync`
+# and the shared venv at ~/venv/ already has dependencies installed.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+WAVDASH_DIR="$HOME/wavdash"
+VENV_DIR="$HOME/env"
 STEMS_DIR="$HOME/wavdash-stems"
+DEPLOY_DIR="$WAVDASH_DIR/deploy"
 
 echo "=== WavDash Stem Mixer Setup ==="
 
@@ -11,22 +15,15 @@ echo "=== WavDash Stem Mixer Setup ==="
 mkdir -p "$STEMS_DIR/songs"
 echo "Created $STEMS_DIR"
 
-# Set up receiver venv
-echo "Setting up receiver..."
-cd "$REPO_DIR/receiver"
-python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
-
-# Set up player venv
-echo "Setting up player..."
-cd "$REPO_DIR/player"
-python3 -m venv venv
-./venv/bin/pip install -r requirements.txt
+# Install Python dependencies into shared venv
+echo "Installing dependencies into $VENV_DIR..."
+"$VENV_DIR/bin/pip" install -r "$WAVDASH_DIR/receiver/requirements.txt"
+"$VENV_DIR/bin/pip" install -r "$WAVDASH_DIR/player/requirements.txt"
 
 # Install systemd services
 echo "Installing systemd services..."
-sudo cp "$REPO_DIR/deploy/wavdash-receiver.service" /etc/systemd/system/
-sudo cp "$REPO_DIR/deploy/wavdash-player.service" /etc/systemd/system/
+sudo cp "$DEPLOY_DIR/wavdash-receiver.service" /etc/systemd/system/
+sudo cp "$DEPLOY_DIR/wavdash-player.service" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable wavdash-receiver wavdash-player
 sudo systemctl start wavdash-receiver
