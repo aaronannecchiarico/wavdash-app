@@ -3,6 +3,6 @@ sounddevice==0.5.*
 soundfile==0.13.*
 adafruit-blinka==8.*
 adafruit-circuitpython-seesaw==1.*
-adafruit-circuitpython-rgb-display==4.*
+adafruit-circuitpython-rgb-display==3.*
 Pillow==11.*
 pytest==8.*
