@@ -28,3 +28,6 @@ docs/
 .worktrees/
 
 .playwright-mcp/*
+
+__pycache__/
+*.pyc
