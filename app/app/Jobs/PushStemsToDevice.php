@@ -55,10 +55,15 @@ class PushStemsToDevice implements ShouldQueue
         $songId = $response->json('song_id');
 
         // Step 2: Upload each stem file
+        $pushed = 0;
+        $total = 0;
+
         foreach ($upload->stems as $stem) {
             if (! $stem->converted_to_ogg || empty($stem->public_path)) {
                 continue;
             }
+
+            $total++;
 
             try {
                 $filePath = $stem->public_path;
@@ -85,7 +90,9 @@ class PushStemsToDevice implements ShouldQueue
                         'stem_type' => $stem->stem_type,
                     ]);
 
-                if (! $stemResponse->successful()) {
+                if ($stemResponse->successful()) {
+                    $pushed++;
+                } else {
                     Log::warning('PushStemsToDevice: Failed to push stem', [
                         'stem_type' => $stem->stem_type,
                         'status' => $stemResponse->status(),
@@ -99,9 +106,17 @@ class PushStemsToDevice implements ShouldQueue
             }
         }
 
-        Log::info('PushStemsToDevice: Successfully pushed stems to device', [
+        if ($pushed === 0 && $total > 0) {
+            $this->fail(new \RuntimeException("Failed to push any of {$total} stems to device"));
+
+            return;
+        }
+
+        Log::info('PushStemsToDevice: Pushed stems to device', [
             'upload_id' => $upload->id,
             'device_song_id' => $songId,
+            'pushed' => $pushed,
+            'total' => $total,
         ]);
     }
 }

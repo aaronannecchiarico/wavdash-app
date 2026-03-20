@@ -1,6 +1,3 @@
-import threading
-from dataclasses import dataclass, field
-
 import numpy as np
 
 STEM_TYPES = ["vocals", "drums", "bass", "guitar", "piano", "other"]
@@ -8,10 +5,15 @@ NUM_STEMS = 6
 
 
 class MixerState:
-    """Thread-safe shared state for the mixer."""
+    """Shared state for the mixer.
+
+    Thread safety relies on CPython's GIL for simple attribute reads/writes.
+    No lock is used because mix_frames runs in a real-time audio callback
+    where locking risks priority inversion. The worst case is a single buffer
+    (~23ms) seeing a partially updated state, which is inaudible.
+    """
 
     def __init__(self):
-        self._lock = threading.Lock()
         self.fader_values: list[float] = [1.0] * NUM_STEMS
         self.mute_states: list[bool] = [False] * NUM_STEMS
         self.solo_states: list[bool] = [False] * NUM_STEMS
@@ -19,22 +21,19 @@ class MixerState:
         self.playing: bool = False
 
     def set_fader(self, index: int, value: float):
-        with self._lock:
-            self.fader_values[index] = max(0.0, min(1.0, value))
+        self.fader_values[index] = max(0.0, min(1.0, value))
 
     def toggle_mute(self, index: int):
-        with self._lock:
-            self.mute_states[index] = not self.mute_states[index]
+        self.mute_states[index] = not self.mute_states[index]
 
     def toggle_solo(self, index: int):
-        with self._lock:
-            if self.solo_states[index]:
-                self.solo_states[index] = False
-            else:
-                # Exclusive solo — clear others
-                for i in range(NUM_STEMS):
-                    self.solo_states[i] = False
-                self.solo_states[index] = True
+        if self.solo_states[index]:
+            self.solo_states[index] = False
+        else:
+            # Exclusive solo — clear others
+            for i in range(NUM_STEMS):
+                self.solo_states[i] = False
+            self.solo_states[index] = True
 
 
 class AudioEngine:
@@ -66,13 +65,19 @@ class AudioEngine:
         """Request a seek — applied atomically by the next mix_frames call."""
         self._pending_seek = max(0, min(frame, self.num_frames - 1))
 
-    def mix_frames(self, start: int, count: int) -> np.ndarray:
-        """Mix `count` frames from position `start`. Returns (count, 2) array."""
+    def mix_frames(self, count: int) -> np.ndarray:
+        """Mix `count` frames from current position. Returns (count, 2) array.
+
+        This method owns the playback position entirely — it reads, advances,
+        and applies pending seeks atomically within the audio callback thread.
+        """
         # Apply pending seek atomically
         pending = self._pending_seek
         if pending is not None:
-            start = pending
+            self.position = pending
             self._pending_seek = None
+
+        start = self.position
 
         if not self.state.playing or not self.stems:
             self.position = start + count

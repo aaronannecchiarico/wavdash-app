@@ -95,7 +95,7 @@ services:
       - REVERB_APP_SECRET=${REVERB_APP_SECRET}
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
       - MARKETING_URL=${MARKETING_URL:-http://marketing:4321}
-      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-http://100.71.145.35:9000}
+      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-}
     volumes:
       - shared_storage:/app/storage/app
       - ./app/storage/logs:/app/storage/logs
@@ -141,7 +141,7 @@ services:
       - REVERB_APP_KEY=${REVERB_APP_KEY}
       - REVERB_APP_SECRET=${REVERB_APP_SECRET}
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
-      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-http://100.71.145.35:9000}
+      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-}
     volumes:
       - shared_storage:/app/storage/app
       - ./app/storage/logs:/app/storage/logs

@@ -80,35 +80,56 @@ class StemMixerApp:
         # Encoder select button — handled in display loop directly
         self.encoder_pressed = False
 
+        # Background loading state
+        self._loading = False
+        self._loading_song: Song | None = None
+
     def load_song(self, song: Song):
-        """Load a song's stems into the audio engine."""
+        """Start loading a song's stems in a background thread."""
         if sf is None:
             print("soundfile not available — cannot load audio")
             return
 
         self.engine.state.playing = False
-        self.display.render_loading(song)
+        self._loading = True
+        self._loading_song = song
+        self.screen = "loading"
 
-        stems = {}
-        for stem_type in STEM_TYPES:
-            if stem_type in song.stem_paths:
-                data, sr = sf.read(str(song.stem_paths[stem_type]), dtype="float32")
-                if data.ndim == 1:
-                    data = np.column_stack([data, data])  # Mono → stereo
-                stems[stem_type] = data
-                self.engine.sample_rate = sr
+        thread = threading.Thread(target=self._load_stems_worker, args=(song,), daemon=True)
+        thread.start()
 
-        if stems:
-            self.engine.load_stems(stems)
-            self.current_song = song
-            self.screen = "playing"
-            self.engine.state.playing = True
-            print(f"Loaded: {song.title}")
+    def _load_stems_worker(self, song: Song):
+        """Background worker that reads stem files from disk."""
+        try:
+            stems = {}
+            for stem_type in STEM_TYPES:
+                if stem_type in song.stem_paths:
+                    data, sr = sf.read(str(song.stem_paths[stem_type]), dtype="float32")
+                    if data.ndim == 1:
+                        data = np.column_stack([data, data])  # Mono → stereo
+                    stems[stem_type] = data
+                    self.engine.sample_rate = sr
+
+            if stems:
+                self.engine.load_stems(stems)
+                self.current_song = song
+                self.screen = "playing"
+                self.engine.state.playing = True
+                print(f"Loaded: {song.title}")
+            else:
+                self.screen = "library"
+        except Exception as e:
+            print(f"Failed to load {song.title}: {e}", file=sys.stderr)
+            self.screen = "library"
+        finally:
+            self._loading = False
+            self._loading_song = None
 
     def _audio_callback(self, outdata, frames, time_info, status):
         """sounddevice output callback — called from audio thread."""
-        output = self.engine.mix_frames(self.engine.position, frames)
-        outdata[:] = output
+        if status:
+            print(f"Audio: {status}", file=sys.stderr)
+        outdata[:] = self.engine.mix_frames(frames)
 
     def _hardware_loop(self):
         """Hardware I/O polling thread."""
@@ -188,6 +209,12 @@ class StemMixerApp:
                     self.encoder_pressed = sel
                 except Exception:
                     pass
+
+            if self.screen == "loading":
+                if self._loading_song:
+                    self.display.render_loading(self._loading_song)
+                time.sleep(display_interval)
+                continue
 
             if self.screen == "library":
                 # Clamp encoder to ±1 for single-step menu navigation

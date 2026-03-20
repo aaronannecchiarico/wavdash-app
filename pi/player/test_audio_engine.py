@@ -65,7 +65,7 @@ class TestAudioEngine:
         engine.state.playing = True
 
         # All faders at 1.0, no mute/solo — output = sum of all stems
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         expected = sum((i + 1) * 0.1 for i in range(6))  # 2.1
         np.testing.assert_allclose(output[0, 0], expected, atol=1e-5)
 
@@ -76,7 +76,7 @@ class TestAudioEngine:
         engine.state.playing = True
         engine.state.toggle_mute(0)  # Mute vocals (0.1)
 
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         expected = sum((i + 1) * 0.1 for i in range(6)) - 0.1  # 2.0
         np.testing.assert_allclose(output[0, 0], expected, atol=1e-5)
 
@@ -87,7 +87,7 @@ class TestAudioEngine:
         engine.state.playing = True
         engine.state.toggle_solo(1)  # Solo drums (0.2)
 
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         expected = 0.2
         np.testing.assert_allclose(output[0, 0], expected, atol=1e-5)
 
@@ -98,7 +98,7 @@ class TestAudioEngine:
         engine.state.playing = True
         engine.state.master_volume = 0.5
 
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         expected = 2.1 * 0.5  # 1.05
         np.testing.assert_allclose(output[0, 0], expected, atol=1e-5)
 
@@ -109,7 +109,7 @@ class TestAudioEngine:
         engine.state.playing = True
         engine.state.set_fader(0, 0.5)  # Vocals at half
 
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         expected = 0.1 * 0.5 + sum((i + 1) * 0.1 for i in range(1, 6))  # 0.05 + 2.0
         np.testing.assert_allclose(output[0, 0], expected, atol=1e-5)
 
@@ -119,7 +119,7 @@ class TestAudioEngine:
         engine.load_stems(stems)
         # state.playing is False by default
 
-        output = engine.mix_frames(0, 512)
+        output = engine.mix_frames(512)
         np.testing.assert_allclose(output, 0.0)
 
     def test_playback_position_advances(self):
@@ -128,9 +128,9 @@ class TestAudioEngine:
         engine.load_stems(stems)
         engine.state.playing = True
 
-        engine.mix_frames(0, 512)
+        engine.mix_frames(512)
         assert engine.position == 512
-        engine.mix_frames(512, 512)
+        engine.mix_frames(512)
         assert engine.position == 1024
 
     def test_playback_stops_at_end(self):
@@ -139,7 +139,7 @@ class TestAudioEngine:
         engine.load_stems(stems)
         engine.state.playing = True
 
-        output = engine.mix_frames(0, 200)
+        output = engine.mix_frames(200)
         # Should be zero-padded after frame 100
         assert output.shape[0] == 200
         assert engine.state.playing is False
