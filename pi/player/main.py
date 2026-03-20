@@ -77,19 +77,7 @@ class StemMixerApp:
                 )
                 self.button_handlers.append(handler)
 
-        # Encoder state — shared between hardware and display threads
-        self.encoder_delta = 0  # Accumulated scroll delta
-        self._encoder_lock = threading.Lock()
-
-        # Encoder select button handler — sets flag consumed by display loop
-        def _encoder_select():
-            self.encoder_pressed = True
-
-        self.encoder_handler = ButtonHandler(
-            on_short_press=_encoder_select,
-            on_long_press=lambda: None,
-            long_press_ms=300,
-        ) if HAS_HARDWARE else None
+        # Encoder select button — handled in display loop directly
         self.encoder_pressed = False
 
     def load_song(self, song: Song):
@@ -151,21 +139,7 @@ class StemMixerApp:
                 except Exception:
                     pass
 
-                # Read rotary encoder — accumulate delta for display loop
-                try:
-                    delta = self.hw.read_encoder_delta()
-                    if delta != 0:
-                        with self._encoder_lock:
-                            self.encoder_delta += delta
-                except Exception:
-                    pass
-
-                # Encoder select button — use ButtonHandler for proper short press detection
-                try:
-                    pressed = self.hw.read_encoder_select()
-                    self.encoder_handler.update(pressed, now)
-                except Exception:
-                    pass
+                # Encoder is read in the display loop — no accumulation needed
 
             time.sleep(poll_interval)
 
@@ -199,18 +173,24 @@ class StemMixerApp:
                 except Exception:
                     pass
 
-            # Consume encoder scroll delta
+            # Read encoder directly — no accumulation, just current delta
             enc_delta = 0
-            with self._encoder_lock:
-                enc_delta = self.encoder_delta
-                self.encoder_delta = 0
-
-            # Consume encoder select press
-            enc_pressed = self.encoder_pressed
-            self.encoder_pressed = False
+            enc_pressed = False
+            if self.hw:
+                try:
+                    enc_delta = self.hw.read_encoder_delta()
+                except Exception:
+                    pass
+                try:
+                    sel = self.hw.read_encoder_select()
+                    if sel and not self.encoder_pressed:
+                        enc_pressed = True  # Rising edge only
+                    self.encoder_pressed = sel
+                except Exception:
+                    pass
 
             if self.screen == "library":
-                # Clamp encoder to ±1 for menu navigation (raw delta used for seeking)
+                # Clamp encoder to ±1 for single-step menu navigation
                 enc_nav = max(-1, min(1, enc_delta))
 
                 # Navigation: joystick, ANO up/down, or encoder scroll
@@ -234,10 +214,10 @@ class StemMixerApp:
                 elif btn.get("b") or enc_pressed:
                     self.engine.state.playing = not self.engine.state.playing
 
-                # Encoder scroll = seek (clamp to ±5 detents to avoid huge jumps)
+                # Encoder scroll = seek (clamp to ±2, 0.5s per detent)
                 if enc_delta != 0:
-                    clamped = max(-5, min(5, enc_delta))
-                    seek_seconds = clamped * 2.0  # 2 seconds per detent
+                    clamped = max(-2, min(2, enc_delta))
+                    seek_seconds = clamped * 0.5
                     seek_frames = int(seek_seconds * self.engine.sample_rate)
                     new_pos = self.engine.position + seek_frames
                     self.engine.seek(new_pos)

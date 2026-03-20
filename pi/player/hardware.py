@@ -42,26 +42,38 @@ NUM_STEMS = 6
 
 
 class ButtonHandler:
-    """Detects short press vs long press on a single button."""
+    """Detects short press vs long press on a single button.
+
+    Includes debounce to reject contact bounce (rapid press/release
+    transitions within the debounce window are ignored).
+    """
 
     def __init__(
         self,
         on_short_press: Callable = lambda: None,
         on_long_press: Callable = lambda: None,
         long_press_ms: int = 700,
+        debounce_ms: int = 50,
     ):
         self.on_short_press = on_short_press
         self.on_long_press = on_long_press
         self.long_press_s = long_press_ms / 1000.0
+        self.debounce_s = debounce_ms / 1000.0
         self._pressed = False
         self._press_start: float = 0.0
         self._long_fired = False
+        self._last_transition: float = 0.0
 
     def update(self, pressed: bool, now: float):
+        # Ignore transitions within debounce window
+        if pressed != self._pressed and (now - self._last_transition) < self.debounce_s:
+            return
+
         if pressed and not self._pressed:
             # Just pressed
             self._press_start = now
             self._long_fired = False
+            self._last_transition = now
         elif pressed and self._pressed:
             # Held down — check for long press
             if not self._long_fired and (now - self._press_start) >= self.long_press_s:
@@ -69,6 +81,7 @@ class ButtonHandler:
                 self._long_fired = True
         elif not pressed and self._pressed:
             # Just released
+            self._last_transition = now
             if not self._long_fired:
                 self.on_short_press()
 
