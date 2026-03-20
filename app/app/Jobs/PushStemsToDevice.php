@@ -65,7 +65,7 @@ class PushStemsToDevice implements ShouldQueue
 
                 // Get file contents from storage
                 if ($upload->usesR2Storage()) {
-                    $fileContents = Storage::disk('r2')->get($filePath);
+                    $fileContents = Storage::disk('r2_public')->get($filePath);
                 } else {
                     $fileContents = Storage::disk('public')->get($filePath);
                 }

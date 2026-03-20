@@ -118,6 +118,14 @@ class ConvertAndPublishAudio implements ShouldQueue
                     $totalStems = $upload->stems()->count();
                     $convertedStems = $upload->stems()->where('converted_to_ogg', true)->count();
 
+                    Log::debug('ConvertAndPublishAudio - Checking stem conversion status', [
+                        'upload_id' => $this->upload->id,
+                        'final_public_path' => $finalPublicPath,
+                        'file_type' => $this->fileType,
+                        'total_stems' => $totalStems,
+                        'converted_stems' => $convertedStems,
+                    ]);
+
                     if ($totalStems > 0 && $totalStems === $convertedStems) {
                         PushStemsToDevice::dispatch($upload);
                     }
