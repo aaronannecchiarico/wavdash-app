@@ -99,6 +99,13 @@ All commands via root `Makefile`. Run `make help` to see all options.
 - `make migrate` - Run Laravel migrations
 - `make migrate-fresh` - Fresh migration with seeding
 
+### Raspberry Pi
+- `make pi-sync` - Rsync `pi/` to Raspberry Pi
+- `make pi-test` - Sync + run tests on Pi
+- `make pi-run` - Sync + run player interactively
+- `make pi-receiver` - Sync + start receiver interactively
+- `make pi-ssh` - SSH to Pi
+
 ### Production
 - `make prod` - Start services in production mode
 - `make prod-stop` - Stop production services

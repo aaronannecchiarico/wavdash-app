@@ -79,6 +79,7 @@ cd marketing && npm run dev
 - **[app/CLAUDE.md](app/CLAUDE.md)** - Laravel app specifics
 - **[audio-service/CLAUDE.md](audio-service/CLAUDE.md)** - Audio service details
 - **[marketing/CLAUDE.md](marketing/CLAUDE.md)** - Marketing site architecture
+- **[pi/README.md](pi/README.md)** - Raspberry Pi stem mixer
 
 ## 🏗️ Architecture
 
@@ -130,6 +131,16 @@ make test-audio       # Test audio service only
 make app-shell        # Shell into Laravel container
 make audio-shell      # Shell into audio container
 make logs-app         # Laravel logs only
+```
+
+### Raspberry Pi Commands
+
+```bash
+make pi-sync          # Rsync pi/ to Raspberry Pi
+make pi-test          # Sync + run tests on Pi
+make pi-run           # Sync + run player interactively
+make pi-receiver      # Sync + start receiver interactively
+make pi-ssh           # SSH to Pi
 ```
 
 ## 🧪 Testing
@@ -196,6 +207,11 @@ wavdash/
 │   ├── public/             # Static assets
 │   ├── Dockerfile          # Node Docker config
 │   └── CLAUDE.md           # Marketing docs
+├── pi/                     # Raspberry Pi stem mixer
+│   ├── receiver/           # FastAPI stem receiver
+│   ├── player/             # Audio engine + hardware I/O
+│   ├── deploy/             # systemd services + setup
+│   └── README.md           # Pi-specific docs
 ├── docker-compose.yml      # Production orchestration
 ├── docker-compose.dev.yml  # Development config
 ├── Makefile                # Dev commands

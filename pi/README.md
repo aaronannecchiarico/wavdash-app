@@ -101,9 +101,9 @@ Songs are stored as:
 ### Player (`wavdash-player.service`)
 
 Threaded Python application with three loops:
-- **Audio callback** (sounddevice) — Mixes stems in real-time at 44.1kHz
-- **Hardware poll** (60Hz) — Reads faders/buttons/encoder, updates LEDs
-- **Display loop** (15fps) — Renders TFT, reads joystick, rescans library every 5s
+- **Audio callback** (sounddevice) — Mixes stems in real-time at 44.1kHz. Owns playback position internally to avoid race conditions with the main thread.
+- **Hardware poll** (60Hz daemon thread) — Reads faders/buttons/encoder, updates LEDs
+- **Display loop** (15fps, main thread) — Renders TFT, reads joystick, rescans library every 5s. Song loading happens in a background thread so the display stays responsive.
 
 ## Dev Workflow
 
@@ -186,6 +186,7 @@ Run on Pi: `make pi-test`
 **Job:** `app/app/Jobs/PushStemsToDevice.php`
 - Dispatched automatically when all stems for an upload finish OGG conversion
 - Creates song on Pi receiver, then uploads each stem file
+- Tracks per-stem success/failure — fails the job if zero stems are delivered
 - 3 retries, 120s timeout
 - Gated by `services.stem_device.url` config (empty = disabled)
 
