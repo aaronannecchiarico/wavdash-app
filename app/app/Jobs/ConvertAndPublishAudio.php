@@ -111,6 +111,25 @@ class ConvertAndPublishAudio implements ShouldQueue
                     'final_public_path' => $finalPublicPath,
                     'file_type' => $this->fileType,
                 ]);
+
+                // Check if all stems for this upload are now converted — if so, push to device
+                if ($this->fileType === 'stem') {
+                    $upload = $this->upload->fresh();
+                    $totalStems = $upload->stems()->count();
+                    $convertedStems = $upload->stems()->where('converted_to_ogg', true)->count();
+
+                    Log::debug('ConvertAndPublishAudio - Checking stem conversion status', [
+                        'upload_id' => $this->upload->id,
+                        'final_public_path' => $finalPublicPath,
+                        'file_type' => $this->fileType,
+                        'total_stems' => $totalStems,
+                        'converted_stems' => $convertedStems,
+                    ]);
+
+                    if ($totalStems > 0 && $totalStems === $convertedStems) {
+                        PushStemsToDevice::dispatch($upload);
+                    }
+                }
             } else {
                 throw new \Exception('Conversion returned null path');
             }

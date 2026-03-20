@@ -458,19 +458,19 @@ def validate_tempo_processing_params(
 
     # Duration-based recommendations
     if audio_duration > 600:  # 10 minutes
-        warnings[
-            "long_duration"
-        ] = "Long audio files may take significant processing time"
+        warnings["long_duration"] = (
+            "Long audio files may take significant processing time"
+        )
     elif audio_duration < 10:  # Very short
-        warnings[
-            "short_duration"
-        ] = "Very short audio may not benefit from tempo processing"
+        warnings["short_duration"] = (
+            "Very short audio may not benefit from tempo processing"
+        )
 
     # Combined effects warnings
     if tempo_factor > 1.5 and abs(pitch_shift_semitones) > 4:
-        warnings[
-            "aggressive_processing"
-        ] = "Combining high tempo and pitch changes may degrade quality"
+        warnings["aggressive_processing"] = (
+            "Combining high tempo and pitch changes may degrade quality"
+        )
 
     return warnings
 

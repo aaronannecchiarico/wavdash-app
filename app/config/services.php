@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'stem_device' => [
+        'url' => env('STEM_DEVICE_URL'),
+    ],
+
     'audio_analysis' => [
         'base_url' => env('AUDIO_ANALYSIS_BASE_URL', 'http://localhost:8001'),
         // Internal URL used for callback URLs sent to the audio service.

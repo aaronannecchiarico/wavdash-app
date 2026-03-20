@@ -15,13 +15,9 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
-      # Explicitly override DB_CONNECTION so the host .env (sqlite) is ignored
       - DB_CONNECTION=mysql
-      # Override audio service URL so the host .env (localhost:8001) is ignored
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
-      # Callback URL sent to audio service — must be reachable from inside Docker network
       - AUDIO_CALLBACK_BASE_URL=http://app:8000
-      # Override domain settings so cookies work with localhost:8000 in Docker
       - APP_URL=http://localhost:8000
       - SESSION_DOMAIN=
       # Storage Configuration
@@ -69,8 +65,6 @@ services:
 
   app-queue:
     build:
-      # Use development target (has composer) so the queue worker can install
-      # vendor dependencies at startup (same pattern as the app service).
       target: development
     command: >
       sh -c "
@@ -85,11 +79,8 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - LOG_LEVEL=debug
-      # Explicitly override DB_CONNECTION so the host .env (sqlite) is ignored
       - DB_CONNECTION=mysql
-      # Override audio service URL so the host .env (localhost:8001) is ignored
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
-      # Callback URL sent to audio service — must be reachable from inside Docker network
       - AUDIO_CALLBACK_BASE_URL=http://app:8000
       # Storage Configuration
       - FILESYSTEM_DISK=${STORAGE_MODE:-r2}
@@ -220,8 +211,6 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    # Override the Dockerfile HEALTHCHECK (which targets port 8000/the API) with
-    # one that targets port 5555 (flower's web UI port).
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5555"]
       interval: 30s
@@ -247,8 +236,6 @@ services:
       - /app/node_modules
     ports:
       - "4321:4321"
-    # Use npx astro directly so we can override --host without conflicting with
-    # the `--host local.wavdash.com` hardcoded in the package.json dev script.
     command: npx astro dev --host 0.0.0.0 --port 4321
 
   # ============================================================================
@@ -285,8 +272,5 @@ services:
 # ============================================================================
 
 volumes:
-  # Shared storage volume for local storage mode
-  # Used when STORAGE_MODE=local
-  # All services mount this volume to share audio files
   shared-storage:
     driver: local

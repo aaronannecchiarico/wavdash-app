@@ -177,3 +177,30 @@ prod: ## Start services in production mode
 prod-stop: ## Stop production services
 	@echo "$(YELLOW)Stopping production services...$(RESET)"
 	docker-compose down
+
+##@ Pi Development
+
+PI_HOST ?= aannecchiarico@raspberrypi.local
+PI_DIR ?= /home/aannecchiarico/wavdash
+PI_VENV ?= /home/aannecchiarico/env
+
+pi-sync: ## Sync pi/ folder to Raspberry Pi
+	@echo "$(GREEN)Syncing pi/ to $(PI_HOST):$(PI_DIR)...$(RESET)"
+	rsync -avz --delete --exclude='__pycache__' --exclude='.pytest_cache' --exclude='*.pyc' --exclude='.venv' \
+		pi/ $(PI_HOST):$(PI_DIR)/
+	@echo "$(GREEN)Sync complete!$(RESET)"
+
+pi-ssh: ## Open SSH session to Raspberry Pi
+	ssh $(PI_HOST)
+
+pi-test: pi-sync ## Sync code then run tests on Pi
+	@echo "$(GREEN)Running tests on Pi...$(RESET)"
+	ssh $(PI_HOST) "cd $(PI_DIR) && source $(PI_VENV)/bin/activate && python -m pytest -v"
+
+pi-run: pi-sync ## Sync code then run the player on Pi
+	@echo "$(GREEN)Starting player on Pi...$(RESET)"
+	ssh $(PI_HOST) "cd $(PI_DIR) && source $(PI_VENV)/bin/activate && python main.py"
+
+pi-receiver: pi-sync ## Sync code then start the receiver service on Pi
+	@echo "$(GREEN)Starting receiver on Pi...$(RESET)"
+	ssh $(PI_HOST) "cd $(PI_DIR) && source $(PI_VENV)/bin/activate && cd receiver && uvicorn main:app --host 0.0.0.0 --port 9000"

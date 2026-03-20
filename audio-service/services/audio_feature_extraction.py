@@ -370,9 +370,7 @@ class AudioFeatureExtractor:
                 "bpm": (
                     float(tempo)
                     if np.isscalar(tempo)
-                    else float(tempo[0])
-                    if len(tempo) > 0
-                    else 0.0
+                    else float(tempo[0]) if len(tempo) > 0 else 0.0
                 ),
                 "beat_count": len(beats),
                 "avg_beat_interval": float(avg_interval),
@@ -533,9 +531,7 @@ class AudioFeatureExtractor:
                 tempo1 = (
                     float(tempo1)
                     if np.isscalar(tempo1)
-                    else float(tempo1[0])
-                    if len(tempo1) > 0
-                    else 0.0
+                    else float(tempo1[0]) if len(tempo1) > 0 else 0.0
                 )
                 tempos.append(tempo1)
                 beats_list.append(beats1)
@@ -555,9 +551,7 @@ class AudioFeatureExtractor:
                 tempo2 = (
                     float(tempo2)
                     if np.isscalar(tempo2)
-                    else float(tempo2[0])
-                    if len(tempo2) > 0
-                    else 0.0
+                    else float(tempo2[0]) if len(tempo2) > 0 else 0.0
                 )
                 tempos.append(tempo2)
                 beats_list.append(beats2)

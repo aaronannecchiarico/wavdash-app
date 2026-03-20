@@ -95,13 +95,13 @@ services:
       - REVERB_APP_SECRET=${REVERB_APP_SECRET}
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
       - MARKETING_URL=${MARKETING_URL:-http://marketing:4321}
+      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-}
     volumes:
       - shared_storage:/app/storage/app
       - ./app/storage/logs:/app/storage/logs
     networks:
       - wavdash
     healthcheck:
-      # Use Laravel's built-in /up endpoint (available in Laravel 11+)
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/up || exit 1"]
       interval: 30s
       timeout: 10s
@@ -141,6 +141,7 @@ services:
       - REVERB_APP_KEY=${REVERB_APP_KEY}
       - REVERB_APP_SECRET=${REVERB_APP_SECRET}
       - AUDIO_ANALYSIS_BASE_URL=http://audio-api:8000
+      - STEM_DEVICE_URL=${STEM_DEVICE_URL:-}
     volumes:
       - shared_storage:/app/storage/app
       - ./app/storage/logs:/app/storage/logs
