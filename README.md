@@ -6,11 +6,12 @@
 
 ## 📦 What is This?
 
-WavDash is a comprehensive audio processing platform built as a monorepo containing three integrated applications:
+WavDash is an AI-powered audio processing platform built as a monorepo. Users upload songs, and the platform analyzes them, separates stems (vocals, drums, bass, etc.), and provides tools for remixing and playback — including a physical Raspberry Pi stem mixer for live performance.
 
-- **Laravel App** - Full-featured web application with React/Inertia.js frontend
-- **Audio Service** - FastAPI microservice for audio analysis and stem separation
-- **Marketing Site** - Astro-based public marketing website
+- **Laravel App** (`app/`) - Full-featured web application with React/Inertia.js frontend, file management, and audio pipeline orchestration
+- **Audio Service** (`audio-service/`) - FastAPI microservice for audio analysis (BPM, key, loudness) and AI stem separation via Demucs
+- **Marketing Site** (`marketing/`) - Astro-based public marketing website with shared authentication
+- **Pi Stem Mixer** (`pi/`) - Raspberry Pi 5 hardware mixer with physical faders, buttons, LEDs, and TFT display for real-time stem control
 
 ## 🚀 Quick Start
 
@@ -84,12 +85,12 @@ cd marketing && npm run dev
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│  Marketing Site │         │   Laravel App    │
-│    (Astro)      │◄───────►│  (Inertia.js)    │
-└─────────────────┘         └────────┬─────────┘
-                                     │
-                                     ▼
+┌─────────────────┐         ┌──────────────────┐         ┌──────────────────┐
+│  Marketing Site │         │   Laravel App    │         │  Pi Stem Mixer   │
+│    (Astro)      │◄───────►│  (Inertia.js)    │────────►│  (Raspberry Pi)  │
+└─────────────────┘         └────────┬─────────┘         └──────────────────┘
+                                     │                     6 faders, LEDs,
+                                     ▼                     TFT display, encoder
                             ┌──────────────────┐
                             │  Audio Service   │
                             │    (FastAPI)     │
@@ -104,9 +105,10 @@ cd marketing && npm run dev
 
 ### Data Flow
 
-1. **User uploads audio** → Marketing/App → Storage
-2. **Processing request** → Laravel → Audio Service (async via Celery)
+1. **User uploads audio** → App processes client-side to OGG → Storage
+2. **Stem separation** → Laravel → Audio Service (async via Celery) → 6 individual stems
 3. **Analysis complete** → Callback → Laravel → WebSocket event → UI update
+4. **Hardware playback** → Laravel auto-pushes OGG stems over Tailscale → Pi receiver → real-time mixing with physical faders
 
 ## 🛠️ Development Commands
 
@@ -290,10 +292,6 @@ Types: feat, fix, refactor, perf, style, test, docs, chore, ci
 Scopes: app, audio, marketing, docker, ci, docs
 ```
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - Laravel for the amazing framework
@@ -307,7 +305,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: See [CLAUDE.md](CLAUDE.md)
 - **Issues**: [GitHub Issues](https://github.com/your-org/wavdash/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/wavdash/discussions)
-
----
-
-**Built with ❤️ by the WavDash Team**
